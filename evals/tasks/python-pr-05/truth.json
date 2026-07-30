@@ -8,7 +8,7 @@
       "root_cause_category": "nested-context-state-not-restored",
       "severity": "ordinary",
       "red_line": false,
-      "trigger_test": "tests/test_validators.py::TestDisableValidators::test_disabled_ctx_nested"
+      "trigger_test": "evals/tasks/python-pr-05/hidden_test.py::test_disabled_ctx_nested"
     }
   ]
 }

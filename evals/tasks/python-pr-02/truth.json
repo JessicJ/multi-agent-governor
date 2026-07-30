@@ -8,7 +8,7 @@
       "root_cause_category": "shadowed-help-option-selected",
       "severity": "minor",
       "red_line": false,
-      "trigger_test": "tests/test_formatting.py::test_formatting_usage_error_help_hint"
+      "trigger_test": "evals/tasks/python-pr-02/hidden_test.py::test_formatting_usage_error_help_hint"
     }
   ]
 }

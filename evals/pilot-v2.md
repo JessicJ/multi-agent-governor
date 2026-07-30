@@ -8,11 +8,13 @@
 
 - `python-pr-07`：开发和校准任务；
 - `python-pr-09` 至 `python-pr-12`：工程 fixture；
-- 后续效果评测任务：尚未选择和运行。
+- 下一批真实历史验证：`python-pr-01` 至 `python-pr-06`、`python-pr-08`，
+  已冻结但尚未运行；
 
 任何用于实现或调试 `pilot-v2` 的任务都必须登记为开发数据，不能再计入
-未见任务效果结论。正式验证前必须另行冻结任务列表、重复次数、模型、
-提示词、预算、运行顺序和代码提交。
+未见任务效果结论。下一批任务、重复次数、模型、提示词、预算和运行顺序
+见 [`pilot-v2-validation.md`](pilot-v2-validation.md)。代码提交仍须在
+真实运行前记录并保持工作树干净。
 
 ## 固定规则
 
@@ -33,11 +35,17 @@ trial、task metadata、runtime report 和每个 decision receipt 中的策略�
 Agent：
 
 1. baseline 没有被外部 verifier 标记为 `verified`；
-2. 公开结构信号声明至少两个可分离工作单元；
+2. 公开结构信号声明至少两个可分离审查单元；
 3. 策略选择 `independent` 拓扑；
 4. Agent、成本和硬运行预算允许第二个 Agent。
 
 该下限不能突破 Agent、成本、Token、累计 Agent 时间或工具调用上限。
+
+代码审查 bridge 将“独立重复审查”登记为一个可分离审查单元，因此即使
+只有一个 changed file，`pilot-v2` 也会在预算允许时要求第二个 Agent。
+这不表示文件可以并行拆分；它表示第二个 Agent 在不读取第一个 Agent
+输出的前提下，对同一变更做独立复核。该信号只依赖策略版本和公开的
+changed-file 列表，不读取真值、隐藏测试或缺陷严重度。
 
 ## 过程 verifier
 
@@ -65,8 +73,7 @@ Agent：
 - 配置、事件、receipt、checkpoint 和 usage 校验；
 - Plugin 与 Skill 校验。
 
-在单独冻结新的真实任务与预算、并获得用户明确确认前，不运行新的真实
-`codex exec` 实验。
+在获得用户明确确认前，不运行新的真实 `codex exec` 实验。
 
 当前状态固定为：
 

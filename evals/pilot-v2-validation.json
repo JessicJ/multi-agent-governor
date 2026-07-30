@@ -1,0 +1,96 @@
+{
+  "protocol_version": "pilot-v2-validation-v1",
+  "status": "preregistered_not_run",
+  "development_task": "python-pr-07",
+  "evaluation_tasks": [
+    "python-pr-01",
+    "python-pr-02",
+    "python-pr-03",
+    "python-pr-04",
+    "python-pr-05",
+    "python-pr-06",
+    "python-pr-08"
+  ],
+  "excluded_tasks": {
+    "python-pr-09": "synthetic_engineering_fixture",
+    "python-pr-10": "synthetic_engineering_fixture",
+    "python-pr-11": "synthetic_engineering_fixture",
+    "python-pr-12": "synthetic_engineering_fixture"
+  },
+  "repetitions": 1,
+  "task_order": [
+    "python-pr-01",
+    "python-pr-02",
+    "python-pr-03",
+    "python-pr-04",
+    "python-pr-05",
+    "python-pr-06",
+    "python-pr-08"
+  ],
+  "arm_order": [
+    "fixed-1",
+    "adaptive-max-4",
+    "fixed-4"
+  ],
+  "runtime": {
+    "model_id": "gpt-5.6-sol",
+    "allow_model_substitution": false,
+    "prompt_version": "python-review-v2",
+    "policy_version": "pilot-v2",
+    "sandbox": "read-only",
+    "ignore_user_config": true,
+    "native_multi_agent": false,
+    "single_agent_timeout_seconds": 900,
+    "deterministic_aggregation": true
+  },
+  "arms": [
+    {
+      "arm": "fixed-1",
+      "exact_total_agents": 1,
+      "max_total_tokens": 300000,
+      "max_agent_time_seconds": 1200,
+      "max_tool_calls": 100
+    },
+    {
+      "arm": "adaptive-max-4",
+      "initial_agents": 1,
+      "max_agents": 4,
+      "policy_version": "pilot-v2",
+      "max_total_tokens": 600000,
+      "max_agent_time_seconds": 3600,
+      "max_tool_calls": 200
+    },
+    {
+      "arm": "fixed-4",
+      "exact_total_agents": 4,
+      "max_total_tokens": 1200000,
+      "max_agent_time_seconds": 3600,
+      "max_tool_calls": 400
+    }
+  ],
+  "estimated_usage": {
+    "expected_total_tokens_min": 3500000,
+    "expected_total_tokens_max": 7000000,
+    "hard_total_tokens": 14700000,
+    "maximum_total_agents": 63
+  },
+  "isolation": {
+    "independent_materialized_directory_per_arm": true,
+    "cross_arm_output_sharing": false,
+    "truth_visible_during_agent_run": false,
+    "hidden_tests_visible_during_agent_run": false,
+    "git_history_visible_during_agent_run": false,
+    "governor_repository_visible_during_agent_run": false
+  },
+  "adaptation_constraints": {
+    "later_prompts_may_change_after_results": false,
+    "later_budgets_may_change_after_results": false,
+    "later_signals_may_change_after_results": false,
+    "later_agent_counts_may_change_after_results": false
+  },
+  "result_boundary": {
+    "status": "descriptive_only",
+    "claim_allowed": false,
+    "engineering_result": "inconclusive"
+  }
+}

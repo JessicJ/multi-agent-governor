@@ -102,8 +102,46 @@ def _materialize(args: argparse.Namespace) -> dict[str, Any]:
     matching = [task for task in tasks if task.task_id == args.task_id]
     if len(matching) != 1:
         raise ValueError(f"task_id must match exactly one task: {args.task_id}")
+    task = matching[0]
+    redactions: list[str] = []
+    if task.source.value == "historical":
+        provenance_path = Path(args.provenance)
+        if not provenance_path.is_absolute():
+            provenance_path = Path(args.workspace) / provenance_path
+        provenance = _load_json(str(provenance_path))
+        matching_provenance = [
+            item
+            for item in _items(provenance, "tasks")
+            if item.get("task_id") == task.task_id
+        ]
+        if len(matching_provenance) != 1:
+            raise ValueError(
+                f"provenance must match exactly one task: {task.task_id}"
+            )
+        provenance_item = matching_provenance[0]
+        for key in (
+            "fix_commit",
+            "original_buggy_revision",
+            "source",
+            "pull_request",
+            "issue",
+            "fix_subject",
+        ):
+            value = provenance_item.get(key)
+            if isinstance(value, str):
+                redactions.append(value)
+        hints = provenance_item.get("forbidden_agent_hints", ())
+        if isinstance(hints, (str, bytes)) or not isinstance(hints, list):
+            raise ValueError(
+                "forbidden_agent_hints must be an array of strings"
+            )
+        if any(not isinstance(item, str) for item in hints):
+            raise ValueError(
+                "forbidden_agent_hints must be an array of strings"
+            )
+        redactions.extend(hints)
     return materialize_task(
-        matching[0],
+        task,
         workspace=Path(args.workspace),
         destination=Path(args.destination),
         review_instructions=(
@@ -111,6 +149,7 @@ def _materialize(args: argparse.Namespace) -> dict[str, Any]:
             if args.review_instructions
             else None
         ),
+        review_diff_redactions=redactions,
     )
 
 
@@ -272,7 +311,16 @@ def _adaptive_config(args: argparse.Namespace) -> dict[str, Any]:
         task_directory=str(Path(args.working_directory).resolve()),
         trial_id=trial.trial_id,
     )
-    return {
+    budget = Budget(
+        max_agents=args.max_agents,
+        max_cost_multiplier=5.0,
+        target_confidence=0.95,
+        min_expected_gain=0.005,
+        max_total_tokens=args.max_total_tokens,
+        max_wall_time_seconds=args.max_wall_time_seconds,
+        max_tool_calls=args.max_tool_calls,
+    )
+    envelope = {
         "trial": trial.to_dict(),
         "run": build_adaptive_run_payload(
             matching_tasks[0],
@@ -285,8 +333,16 @@ def _adaptive_config(args: argparse.Namespace) -> dict[str, Any]:
             artifacts_directory=str(
                 Path(args.artifacts_directory).resolve()
             ),
+            budget=budget,
         ),
     }
+    if args.scripted_dry_run:
+        _use_scripted_runtime(
+            envelope,
+            task=matching_tasks[0],
+            total_results=trial.max_agents,
+        )
+    return envelope
 
 
 def _fixed_config(args: argparse.Namespace) -> dict[str, Any]:
@@ -308,7 +364,7 @@ def _fixed_config(args: argparse.Namespace) -> dict[str, Any]:
         task_directory=str(Path(args.working_directory).resolve()),
         trial_id=trial.trial_id,
     )
-    return {
+    envelope = {
         "trial": trial.to_dict(),
         "run": build_fixed_run_payload(
             matching_tasks[0],
@@ -341,6 +397,50 @@ def _fixed_config(args: argparse.Namespace) -> dict[str, Any]:
                 max_tool_calls=args.max_tool_calls,
             ),
         ),
+    }
+    if args.scripted_dry_run:
+        _use_scripted_runtime(
+            envelope,
+            task=matching_tasks[0],
+            total_results=trial.exact_total_agents,
+        )
+    return envelope
+
+
+def _use_scripted_runtime(
+    envelope: dict[str, Any],
+    *,
+    task: ReviewTask,
+    total_results: int,
+) -> None:
+    """Replace a generated Codex runtime with explicit non-real fixtures."""
+
+    envelope["dry_run"] = {
+        "scripted": True,
+        "real_experiment": False,
+    }
+    envelope["run"]["runtime"] = {
+        "kind": "scripted",
+        "results": [
+            {
+                "agent_index": index,
+                "output": {
+                    "findings": [],
+                    "reviewed_files": list(task.changed_files),
+                    "unresolved_conflicts": 0,
+                },
+                "usage": {
+                    "agent_input_tokens": 900 + 100 * index,
+                    "cached_input_tokens": 150 + 50 * index,
+                    "agent_output_tokens": 90 + 10 * index,
+                    "reasoning_output_tokens": 35 + 5 * index,
+                    "model_calls": 1,
+                    "tool_calls": 2 + index,
+                    "wall_time_seconds": 1.0 + 0.25 * index,
+                },
+            }
+            for index in range(1, total_results + 1)
+        ],
     }
 
 
@@ -609,6 +709,16 @@ def build_parser() -> argparse.ArgumentParser:
     adaptive_config.add_argument("--output-schema", required=True)
     adaptive_config.add_argument("--artifacts-directory", required=True)
     adaptive_config.add_argument("--max-agents", type=int, default=4)
+    adaptive_config.add_argument(
+        "--max-total-tokens", type=int, default=500_000
+    )
+    adaptive_config.add_argument(
+        "--max-wall-time-seconds", type=float, default=3600
+    )
+    adaptive_config.add_argument(
+        "--max-tool-calls", type=int, default=200
+    )
+    adaptive_config.add_argument("--scripted-dry-run", action="store_true")
     adaptive_config.add_argument("--repetition", type=int, default=1)
     adaptive_config.set_defaults(handler=_adaptive_config)
 
@@ -630,6 +740,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--max-wall-time-seconds", type=float, default=3600
     )
     fixed_config.add_argument("--max-tool-calls", type=int, default=400)
+    fixed_config.add_argument("--scripted-dry-run", action="store_true")
     fixed_config.add_argument("--repetition", type=int, default=1)
     fixed_config.set_defaults(handler=_fixed_config)
 
@@ -657,6 +768,10 @@ def build_parser() -> argparse.ArgumentParser:
     materialize.add_argument("task_id")
     materialize.add_argument("destination")
     materialize.add_argument("--workspace", default=".")
+    materialize.add_argument(
+        "--provenance",
+        default="evals/historical_provenance.json",
+    )
     materialize.add_argument(
         "--review-instructions",
         help="copy this workspace-local file as REVIEW_INSTRUCTIONS.md",

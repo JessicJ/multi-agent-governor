@@ -69,8 +69,9 @@ is installed and authenticated.
 
 - Preserve a forced single-Agent baseline.
 - Reject unknown or mismatched policy versions; never silently fall back.
-- Under `pilot-v2`, require one independent review before an unverified,
-  separable independent review task may stop, unless a budget blocks admission.
+- Under `pilot-v2`, count independent replication as a separable code-review
+  unit and require one independent review before an unverified review may stop,
+  including single-file reviews, unless a budget blocks admission.
 - Treat `total_agents` as including the baseline Agent.
 - Respect the user's cap even when the policy proposes more Agents.
 - Prefer two Agents as the first real scale-out step; add later Agents one at

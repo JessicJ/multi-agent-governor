@@ -53,6 +53,10 @@ PYTHONPATH=src python3 -m magov.eval_cli adaptive-plan \
 该任务现已转为策略开发和校准数据。下一版
 [`pilot-v2`](pilot-v2.md) 只完成了规则与 scripted 验证；在另行冻结新的
 真实任务前，不得把 `python-pr-07` 重跑结果当作 v2 的未见验证证据。
+下一批七个历史任务的冻结条件与无模型预检见
+[`pilot-v2-validation.md`](pilot-v2-validation.md) 和
+[`pilot-v2-validation.json`](pilot-v2-validation.json)；预检摘要见
+[`pilot-v2-preflight-20260730.json`](pilot-v2-preflight-20260730.json)。
 
 已有的 `python-review-v1` 局部结果不能与 `python-review-v2` 自适应结果
 混用。正式配对比较必须用 v2 重新运行所选固定数量参考组。
@@ -70,10 +74,13 @@ PYTHONPATH=src python3 -m magov.eval_cli materialize \
 
 在物化目录中执行 manifest 的 `test_command`。其中 `{hidden_test}` 由评测执行器替换为 Agent 运行时不可见的测试路径；带 `PYTHONPATH` 的命令是为了确保导入当前物化目录的源码，而不是机器上已安装的同名包。任务有效性的最低要求是：缺陷版本的触发测试失败，原始安全基线的同一测试通过。
 
-`python-pr-07` 直接物化已登记的原始缺陷 revision，避免把修复提交新增的
-回归测试、changelog、提交说明或 Git 历史带入 Agent 目录；其
-`.magov-review.diff` 仍是从真实修复提交到该缺陷 revision 的生产代码
-反向补丁。物化后运行：
+所有八个历史任务都直接物化已登记的原始缺陷 revision，避免把修复提交
+新增的回归测试、changelog、提交说明或 Git 历史带入 Agent 目录；各任务
+的已登记 `change.diff` 仍是从真实修复提交到该缺陷 revision 的逐字节
+生产代码反向补丁。若原始补丁文本包含已登记的 Issue、PR 或修复提示，
+物化器只在 Agent 可见的 `.magov-review.diff` 副本中替换这些文本；
+代码增删与缺陷状态不变，原始补丁继续保存在评分侧。触发测试统一保存在
+Agent 不可见的任务私有目录中。物化后运行：
 
 ```bash
 PYTHONPATH=src python3 -m magov.eval_cli leak-scan \

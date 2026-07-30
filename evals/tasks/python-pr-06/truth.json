@@ -8,7 +8,7 @@
       "root_cause_category": "keyword-default-embedded-in-argument-name",
       "severity": "serious",
       "red_line": false,
-      "trigger_test": "tests/test_make.py::TestAttributes::test_pre_init_kw_only_work_with_defaults"
+      "trigger_test": "evals/tasks/python-pr-06/hidden_test.py::test_pre_init_kw_only_work_with_defaults"
     }
   ]
 }

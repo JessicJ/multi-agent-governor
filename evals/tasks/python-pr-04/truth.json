@@ -8,7 +8,7 @@
       "root_cause_category": "empty-sequence-negative-index",
       "severity": "ordinary",
       "red_line": false,
-      "trigger_test": "tests/test_more.py::NumericRangeTests::test_empty_reversed"
+      "trigger_test": "evals/tasks/python-pr-04/hidden_test.py::test_empty_reversed"
     }
   ]
 }

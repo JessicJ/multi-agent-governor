@@ -88,10 +88,11 @@ recorded in the runtime report and every decision receipt. Unknown or
 mismatched versions are rejected.
 
 `pilot-v1` preserves the original high-risk-file independent-review contract.
-For an unverified separable task using independent topology, `pilot-v2`
-requires one independent review before stopping when budgets allow it.
-`pilot-v2` also requires independent review of every changed file before
-`coverage_complete` can be true.
+For code review, `pilot-v2` counts independent replication as a second
+separable review unit, including when only one file changed. An unverified
+review using independent topology therefore requires one independent review
+before stopping when budgets allow it. `pilot-v2` also requires independent
+review of every changed file before `coverage_complete` can be true.
 
 It does not read hidden truth and never treats a model's self-reported
 confidence as evidence. `coverage_complete: true` means the declared review

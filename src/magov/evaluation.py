@@ -367,6 +367,7 @@ def materialize_task(
     workspace: Path,
     destination: Path,
     review_instructions: Path | None = None,
+    review_diff_redactions: Sequence[str] = (),
 ) -> dict[str, Any]:
     """Create an isolated review worktree without copying truth or hidden tests."""
 
@@ -427,7 +428,19 @@ def materialize_task(
         else:
             _run(["git", "apply", "--check", str(patch_path)], cwd=destination)
             _run(["git", "apply", str(patch_path)], cwd=destination)
-        shutil.copy2(patch_path, destination / ".magov-review.diff")
+        review_diff = patch_path.read_text()
+        applied_redactions = 0
+        for literal in dict.fromkeys(
+            value.strip() for value in review_diff_redactions if value.strip()
+        ):
+            occurrences = review_diff.count(literal)
+            if occurrences:
+                review_diff = review_diff.replace(
+                    literal,
+                    "[redacted-for-blind-review]",
+                )
+                applied_redactions += occurrences
+        (destination / ".magov-review.diff").write_text(review_diff)
         _remove_git_metadata(destination)
         if instructions_path is not None:
             shutil.copy2(
@@ -459,6 +472,7 @@ def materialize_task(
         "task_id": task.task_id,
         "destination": str(destination),
         "truth_included": False,
+        "review_diff_redactions": applied_redactions,
     }
 
 
@@ -780,6 +794,21 @@ class ScoreReport:
                 "missed_red_line_defects",
             ),
         )
+
+
+def _pooled_defect_recall(
+    scores: Sequence[ScoreReport],
+    *,
+    serious: bool,
+) -> float:
+    total_name = "serious_defects" if serious else "total_known_defects"
+    found_name = (
+        "found_serious_defects" if serious else "found_known_defects"
+    )
+    total = sum(getattr(score, total_name) for score in scores)
+    if total == 0:
+        return 1.0
+    return sum(getattr(score, found_name) for score in scores) / total
 
 
 def score_findings(
@@ -1259,10 +1288,28 @@ def summarize_outcomes(outcomes: Sequence[TrialOutcome]) -> dict[str, Any]:
             "trials": len(group),
             "complete_scores": len(complete),
             "mean_serious_recall": (
-                round(fmean(item.score.serious_recall for item in complete), 6)
+                round(
+                    _pooled_defect_recall(
+                        [item.score for item in complete],
+                        serious=True,
+                    ),
+                    6,
+                )
                 if complete
                 else None
             ),
+            "total_recall": (
+                round(
+                    _pooled_defect_recall(
+                        [item.score for item in complete],
+                        serious=False,
+                    ),
+                    6,
+                )
+                if complete
+                else None
+            ),
+            "recall_aggregation": "micro_over_registered_defects",
             "mean_false_positive_share": (
                 round(
                     fmean(

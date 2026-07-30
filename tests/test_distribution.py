@@ -91,6 +91,90 @@ class DistributionMetadataTests(unittest.TestCase):
         for task in manifest["tasks"]:
             self.assertTrue((ROOT / task["truth_path"]).is_file())
 
+    def test_historical_tasks_materialize_exact_buggy_revisions(self) -> None:
+        manifest = json.loads((ROOT / "evals" / "pilot_manifest.json").read_text())
+        provenance = json.loads(
+            (ROOT / "evals" / "historical_provenance.json").read_text()
+        )
+        provenance_by_task = {
+            item["task_id"]: item for item in provenance["tasks"]
+        }
+
+        for task in manifest["tasks"]:
+            if task["source"] != "historical":
+                continue
+            with self.subTest(task_id=task["task_id"]):
+                source = provenance_by_task[task["task_id"]]
+                self.assertEqual(
+                    task["materialization_revision"],
+                    source["original_buggy_revision"],
+                )
+                self.assertEqual(
+                    task["test_command"],
+                    (
+                        "PYTHONPATH=src python -m pytest -q {hidden_test}"
+                        if task["changed_files"][0].startswith("src/")
+                        else "python -m pytest -q {hidden_test}"
+                    ),
+                )
+                hidden_test = (
+                    ROOT
+                    / "evals"
+                    / "tasks"
+                    / task["task_id"]
+                    / "hidden_test.py"
+                )
+                self.assertTrue(hidden_test.is_file())
+                self.assertTrue(source["fix_subject"])
+                self.assertTrue(source["forbidden_agent_hints"])
+
+    def test_pilot_v2_validation_freezes_all_remaining_history(self) -> None:
+        manifest = json.loads((ROOT / "evals" / "pilot_manifest.json").read_text())
+        preregistration = json.loads(
+            (ROOT / "evals" / "pilot-v2-validation.json").read_text()
+        )
+        historical = {
+            task["task_id"]
+            for task in manifest["tasks"]
+            if task["source"] == "historical"
+        }
+
+        self.assertEqual(preregistration["status"], "preregistered_not_run")
+        self.assertEqual(preregistration["development_task"], "python-pr-07")
+        self.assertEqual(
+            set(preregistration["evaluation_tasks"]),
+            historical - {"python-pr-07"},
+        )
+        self.assertEqual(
+            preregistration["task_order"],
+            preregistration["evaluation_tasks"],
+        )
+        self.assertEqual(
+            preregistration["arm_order"],
+            ["fixed-1", "adaptive-max-4", "fixed-4"],
+        )
+        self.assertEqual(
+            preregistration["runtime"]["policy_version"],
+            "pilot-v2",
+        )
+        self.assertFalse(
+            preregistration["runtime"]["allow_model_substitution"]
+        )
+        self.assertFalse(
+            preregistration["result_boundary"]["claim_allowed"]
+        )
+        self.assertEqual(
+            preregistration["result_boundary"]["engineering_result"],
+            "inconclusive",
+        )
+        hard_total = sum(
+            arm["max_total_tokens"] for arm in preregistration["arms"]
+        ) * len(preregistration["evaluation_tasks"])
+        self.assertEqual(
+            preregistration["estimated_usage"]["hard_total_tokens"],
+            hard_total,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

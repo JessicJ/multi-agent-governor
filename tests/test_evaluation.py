@@ -3,6 +3,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from magov import (
@@ -303,6 +304,57 @@ class MaterializationIsolationTests(unittest.TestCase):
             )
             self.assertEqual(result["status"], "clean")
 
+    def test_agent_review_diff_redacts_registered_source_hints(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            patch = (
+                "diff --git a/app.py b/app.py\n"
+                "--- a/app.py\n"
+                "+++ b/app.py\n"
+                "@@ -1,2 +1 @@\n"
+                "-# secret-fix-hint\n"
+                "-value = 1\n"
+                "+value = 2\n"
+            )
+            task = self._task(workspace, patch=patch)
+            (workspace / "fixture" / "app.py").write_text(
+                "# secret-fix-hint\nvalue = 1\n"
+            )
+            task = replace(
+                task,
+                patch_sha256=hashlib.sha256(
+                    (workspace / "task.diff").read_bytes()
+                ).hexdigest(),
+            )
+            destination = workspace / "trial"
+
+            result = materialize_task(
+                task,
+                workspace=workspace,
+                destination=destination,
+                review_diff_redactions=("secret-fix-hint",),
+            )
+
+            self.assertEqual(result["review_diff_redactions"], 1)
+            self.assertEqual(
+                (destination / "app.py").read_text(),
+                "value = 2\n",
+            )
+            agent_diff = (destination / ".magov-review.diff").read_text()
+            self.assertNotIn("secret-fix-hint", agent_diff)
+            self.assertIn("[redacted-for-blind-review]", agent_diff)
+            self.assertIn(
+                "secret-fix-hint",
+                (workspace / "task.diff").read_text(),
+            )
+            self.assertEqual(
+                scan_materialized_task(
+                    destination,
+                    forbidden_literals=("secret-fix-hint",),
+                )["status"],
+                "clean",
+            )
+
     def test_leak_scan_rejects_truth_and_sensitive_literals(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             destination = Path(directory)
@@ -570,6 +622,53 @@ class EvidenceSummaryTests(unittest.TestCase):
                 "mean_final_novel_finding_ratio"
             ],
             1.0,
+        )
+
+        ordinary_score = ScoreReport(
+            total_known_defects=1,
+            found_known_defects=0,
+            serious_defects=0,
+            found_serious_defects=0,
+            valid_other_findings=0,
+            false_positive_findings=0,
+            duplicate_findings=0,
+            pending_findings=(),
+            missed_red_line_defects=(),
+        )
+        missed_serious_score = ScoreReport(
+            total_known_defects=1,
+            found_known_defects=0,
+            serious_defects=1,
+            found_serious_defects=0,
+            valid_other_findings=0,
+            false_positive_findings=0,
+            duplicate_findings=0,
+            pending_findings=(),
+            missed_red_line_defects=(),
+        )
+        ordinary = replace(outcome, score=ordinary_score)
+        missed_serious = replace(
+            outcome,
+            trial=replace(
+                trial,
+                trial_id="python-pr-02__agents-1__repeat-1",
+                task_id="python-pr-02",
+            ),
+            score=missed_serious_score,
+        )
+        pooled = summarize_outcomes([ordinary, missed_serious])
+
+        self.assertEqual(
+            pooled["by_agent_count"]["1"]["mean_serious_recall"],
+            0.0,
+        )
+        self.assertEqual(
+            pooled["by_agent_count"]["1"]["total_recall"],
+            0.0,
+        )
+        self.assertEqual(
+            pooled["by_agent_count"]["1"]["recall_aggregation"],
+            "micro_over_registered_defects",
         )
 
 

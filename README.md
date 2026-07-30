@@ -117,10 +117,17 @@ magov report RUN.report.json
 7. 输出可回放事件日志和决策收据。
 
 `pilot-v1` 保留首次真实实验的原始行为。开发中的 `pilot-v2` 对未被外部
-verifier 证明、具有至少两个可分离单元且采用独立拓扑的审查，要求停止前
-至少完成一次独立复核；同时把 changed-file 独立复核纳入过程覆盖。完整
-冻结规则见 [`evals/pilot-v2.md`](evals/pilot-v2.md)。这仍是开发规则，
+verifier 证明、具有至少两个可分离审查单元且采用独立拓扑的审查，要求
+停止前至少完成一次独立复核；代码审查 bridge 把独立重复审查计为第二个
+审查单元，因此单文件变更也适用。changed-file 独立复核同时纳入过程覆盖。
+完整冻结规则见 [`evals/pilot-v2.md`](evals/pilot-v2.md)。这仍是开发规则，
 不是效果声明。
+
+下一批真实历史验证已在
+[`evals/pilot-v2-validation.md`](evals/pilot-v2-validation.md) 中冻结：
+使用除开发任务 `python-pr-07` 外的全部七个历史任务、一次重复和相同三臂
+顺序。当前只完成来源、触发测试、隔离、泄漏与 scripted 预检；尚未启动
+任何新的真实模型运行。
 
 Codex JSONL 和最终消息默认写入 Agent 工作目录之外的临时目录。适配器
 显式关闭单次 Codex 进程内部的原生多 Agent 工具，拒绝

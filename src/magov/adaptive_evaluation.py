@@ -137,24 +137,39 @@ def build_adaptive_trial_matrix(
     )
 
 
-def derive_pilot_review_signals(task: ReviewTask) -> TaskSignals:
-    """Derive the preregistered pilot-v1 signals from public task metadata.
+def derive_pilot_review_signals(
+    task: ReviewTask,
+    *,
+    policy_version: str = "pilot-v1",
+) -> TaskSignals:
+    """Derive policy-versioned review signals from public task metadata.
 
     These constants are an inspectable engineering baseline, not fitted
     effectiveness claims.  They use only changed-file count and the declared
     high-risk file list; hidden truth and trigger tests are unavailable.
+
+    ``pilot-v2`` treats independent replication as a second separable review
+    unit even when only one file changed.  This lets the policy require an
+    independent review without pretending that the file itself can be split.
     """
 
     changed_count = len(task.changed_files)
     has_high_risk = bool(task.high_risk_files)
+    independent_replication = policy_version == "pilot-v2"
+    parallelizable_units = max(
+        2 if independent_replication else 1,
+        min(4, changed_count),
+    )
     return TaskSignals(
-        parallelizable_units=max(1, min(4, changed_count)),
+        parallelizable_units=parallelizable_units,
         parallel_fraction=(
             round(min(0.85, 0.35 + 0.15 * changed_count), 2)
-            if changed_count > 1
+            if changed_count > 1 or independent_replication
             else 0.15
         ),
-        decomposition_confidence=0.85 if changed_count > 1 else 0.60,
+        decomposition_confidence=(
+            0.85 if changed_count > 1 or independent_replication else 0.60
+        ),
         context_coupling=0.35,
         shared_context_ratio=0.40,
         uncertainty=0.80 if has_high_risk else 0.55,
@@ -218,7 +233,10 @@ def build_adaptive_run_payload(
     )
     if configured_budget.max_agents != trial.max_agents:
         raise ValueError("budget.max_agents must equal trial.max_agents")
-    signals = derive_pilot_review_signals(task)
+    signals = derive_pilot_review_signals(
+        task,
+        policy_version=trial.policy_version,
+    )
     work_units = [
         {
             "work_unit_id": f"review-file-{index}",
@@ -328,6 +346,21 @@ def _usage_delta(
             raise ValueError(f"cumulative usage decreased at {name}")
         values[name] = value
     return UsageObservation(**values)
+
+
+def _pooled_defect_recall(
+    outcomes: Sequence[Any],
+    *,
+    serious: bool,
+) -> float:
+    total_name = "serious_defects" if serious else "total_known_defects"
+    found_name = (
+        "found_serious_defects" if serious else "found_known_defects"
+    )
+    total = sum(getattr(item.score, total_name) for item in outcomes)
+    if total == 0:
+        return 1.0
+    return sum(getattr(item.score, found_name) for item in outcomes) / total
 
 
 @dataclass(frozen=True)
@@ -737,10 +770,22 @@ def summarize_adaptive_outcomes(
             sorted(Counter(item.stop_reason for item in outcomes).items())
         ),
         "mean_serious_recall": (
-            round(fmean(item.score.serious_recall for item in complete), 6)
+            round(
+                _pooled_defect_recall(complete, serious=True),
+                6,
+            )
             if complete
             else None
         ),
+        "total_recall": (
+            round(
+                _pooled_defect_recall(complete, serious=False),
+                6,
+            )
+            if complete
+            else None
+        ),
+        "recall_aggregation": "micro_over_registered_defects",
         "mean_false_positive_share": (
             round(fmean(false_positive_values), 6)
             if false_positive_values
@@ -830,15 +875,18 @@ def compare_adaptive_to_fixed(
             "reason": "pending blind adjudications remain",
         }
     else:
-        fixed_recall = fmean(
-            item.score.serious_recall for item in reference
+        fixed_recall = _pooled_defect_recall(reference, serious=True)
+        adaptive_recall = _pooled_defect_recall(
+            adaptive_outcomes,
+            serious=True,
         )
-        adaptive_recall = fmean(
-            item.score.serious_recall for item in adaptive_outcomes
+        fixed_total_recall = _pooled_defect_recall(
+            reference,
+            serious=False,
         )
-        fixed_total_recall = fmean(item.score.recall for item in reference)
-        adaptive_total_recall = fmean(
-            item.score.recall for item in adaptive_outcomes
+        adaptive_total_recall = _pooled_defect_recall(
+            adaptive_outcomes,
+            serious=False,
         )
         fixed_fp = fmean(
             item.score.false_positive_share or 0.0 for item in reference
@@ -849,6 +897,7 @@ def compare_adaptive_to_fixed(
         )
         quality = {
             "complete": True,
+            "recall_aggregation": "micro_over_registered_defects",
             "fixed_mean_serious_recall": round(fixed_recall, 6),
             "adaptive_mean_serious_recall": round(adaptive_recall, 6),
             "serious_recall_difference": round(
@@ -918,11 +967,12 @@ def compare_adaptive_to_fixed(
                 fmean(item.actual_total_agents for item in items), 6
             ),
             "mean_serious_recall": round(
-                fmean(item.score.serious_recall for item in items), 6
+                _pooled_defect_recall(items, serious=True), 6
             ),
             "mean_total_recall": round(
-                fmean(item.score.recall for item in items), 6
+                _pooled_defect_recall(items, serious=False), 6
             ),
+            "recall_aggregation": "micro_over_registered_defects",
             "found_all_registered_defects_rate": round(
                 fmean(
                     item.score.found_known_defects

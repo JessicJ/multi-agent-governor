@@ -5,6 +5,7 @@ import io
 import json
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 
 from magov import (
@@ -22,6 +23,7 @@ from magov import (
     JsonFindingsAggregator,
     ReviewEvidenceVerifier,
     ReviewTask,
+    ScoreReport,
     TaskSource,
     TaskStatus,
     TrialOutcome,
@@ -219,6 +221,29 @@ class AdaptiveEvaluationTests(unittest.TestCase):
             derive_pilot_review_signals(high_risk).verification_value,
             derive_pilot_review_signals(ordinary).verification_value,
         )
+
+    def test_pilot_v2_single_file_review_declares_independent_replication(
+        self,
+    ) -> None:
+        task = ready_task(task_id="python-pr-01", high_risk=False)
+        task = replace(
+            task,
+            changed_files=("service/auth.py",),
+        )
+
+        pilot_v1 = derive_pilot_review_signals(
+            task,
+            policy_version="pilot-v1",
+        )
+        pilot_v2 = derive_pilot_review_signals(
+            task,
+            policy_version="pilot-v2",
+        )
+
+        self.assertEqual(pilot_v1.parallelizable_units, 1)
+        self.assertEqual(pilot_v1.parallel_fraction, 0.15)
+        self.assertEqual(pilot_v2.parallelizable_units, 2)
+        self.assertGreaterEqual(pilot_v2.parallel_fraction, 0.20)
 
     def test_truth_free_run_payload_omits_private_evaluation_fields(self) -> None:
         task = ready_task()
@@ -506,6 +531,71 @@ class AdaptiveEvaluationTests(unittest.TestCase):
         self.assertEqual(comparison["engineering_result"], "inconclusive")
         self.assertEqual(comparison["token_saving_rate"], 0.5)
 
+        ordinary_score = ScoreReport(
+            total_known_defects=1,
+            found_known_defects=0,
+            serious_defects=0,
+            found_serious_defects=0,
+            valid_other_findings=0,
+            false_positive_findings=0,
+            duplicate_findings=0,
+            pending_findings=(),
+            missed_red_line_defects=(),
+        )
+        missed_serious_score = ScoreReport(
+            total_known_defects=1,
+            found_known_defects=0,
+            serious_defects=1,
+            found_serious_defects=0,
+            valid_other_findings=0,
+            false_positive_findings=0,
+            duplicate_findings=0,
+            pending_findings=(),
+            missed_red_line_defects=(),
+        )
+        adaptive_ordinary = replace(adaptive, score=ordinary_score)
+        adaptive_serious = replace(
+            adaptive,
+            trial=replace(
+                trial,
+                trial_id="python-pr-10__adaptive-max-4__repeat-1",
+                task_id="python-pr-10",
+            ),
+            score=missed_serious_score,
+        )
+        fixed_ordinary = replace(fixed, score=ordinary_score)
+        fixed_serious = replace(
+            fixed,
+            trial=replace(
+                fixed.trial,
+                trial_id="python-pr-10__agents-4__repeat-1",
+                task_id="python-pr-10",
+            ),
+            score=missed_serious_score,
+        )
+        pooled_summary = summarize_adaptive_outcomes(
+            [adaptive_ordinary, adaptive_serious]
+        )
+        pooled_comparison = compare_adaptive_to_fixed(
+            [fixed_ordinary, fixed_serious],
+            [adaptive_ordinary, adaptive_serious],
+        )
+
+        self.assertEqual(pooled_summary["mean_serious_recall"], 0.0)
+        self.assertEqual(pooled_summary["total_recall"], 0.0)
+        self.assertEqual(
+            pooled_comparison["quality"][
+                "adaptive_mean_serious_recall"
+            ],
+            0.0,
+        )
+        self.assertEqual(
+            pooled_comparison["arms"]["adaptive-max-4"][
+                "mean_serious_recall"
+            ],
+            0.0,
+        )
+
     def test_eval_cli_plans_adaptive_arm(self) -> None:
         task = ready_task()
         with tempfile.TemporaryDirectory() as directory:
@@ -549,6 +639,141 @@ class AdaptiveEvaluationTests(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(result["arm"], "adaptive")
         self.assertEqual(result["trial_count"], 2)
+
+    def test_eval_cli_freezes_adaptive_hard_budgets(self) -> None:
+        task = ready_task()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.json"
+            prompt = root / "prompt.txt"
+            schema = root / "schema.json"
+            artifacts = root / "artifacts"
+            worktree = root / "worktree"
+            prompt.write_text("Review TASK_DIRECTORY for TRIAL_ID as ROLE.")
+            schema.write_text("{}")
+            worktree.mkdir()
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "tasks": [
+                            {
+                                **task.__dict__,
+                                "source": task.source.value,
+                                "split": task.split.value,
+                                "status": task.status.value,
+                                "changed_files": list(task.changed_files),
+                                "high_risk_files": list(
+                                    task.high_risk_files
+                                ),
+                            }
+                        ]
+                    }
+                )
+            )
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                status = eval_main(
+                    [
+                        "adaptive-config",
+                        str(manifest),
+                        task.task_id,
+                        str(worktree),
+                        "--model-id",
+                        "gpt-5.6-sol",
+                        "--prompt-version",
+                        "python-review-v2",
+                        "--policy-version",
+                        "pilot-v2",
+                        "--prompt-template",
+                        str(prompt),
+                        "--output-schema",
+                        str(schema),
+                        "--artifacts-directory",
+                        str(artifacts),
+                        "--max-total-tokens",
+                        "600000",
+                        "--max-wall-time-seconds",
+                        "3600",
+                        "--max-tool-calls",
+                        "200",
+                    ]
+                )
+        result = json.loads(stdout.getvalue())
+
+        self.assertEqual(status, 0)
+        self.assertEqual(result["run"]["policy"]["version"], "pilot-v2")
+        self.assertEqual(result["run"]["budget"]["max_total_tokens"], 600000)
+        self.assertEqual(
+            result["run"]["budget"]["max_wall_time_seconds"],
+            3600.0,
+        )
+        self.assertEqual(result["run"]["budget"]["max_tool_calls"], 200)
+        self.assertEqual(
+            result["run"]["task"]["signals"]["parallelizable_units"],
+            2,
+        )
+
+    def test_eval_cli_marks_scripted_config_as_non_real(self) -> None:
+        task = ready_task()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.json"
+            prompt = root / "prompt.txt"
+            schema = root / "schema.json"
+            worktree = root / "worktree"
+            prompt.write_text("Review TASK_DIRECTORY for TRIAL_ID as ROLE.")
+            schema.write_text("{}")
+            worktree.mkdir()
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "tasks": [
+                            {
+                                **task.__dict__,
+                                "source": task.source.value,
+                                "split": task.split.value,
+                                "status": task.status.value,
+                                "changed_files": list(task.changed_files),
+                                "high_risk_files": list(
+                                    task.high_risk_files
+                                ),
+                            }
+                        ]
+                    }
+                )
+            )
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                status = eval_main(
+                    [
+                        "adaptive-config",
+                        str(manifest),
+                        task.task_id,
+                        str(worktree),
+                        "--model-id",
+                        "gpt-5.6-sol",
+                        "--prompt-version",
+                        "python-review-v2",
+                        "--policy-version",
+                        "pilot-v2",
+                        "--prompt-template",
+                        str(prompt),
+                        "--output-schema",
+                        str(schema),
+                        "--artifacts-directory",
+                        str(root / "artifacts"),
+                        "--scripted-dry-run",
+                    ]
+                )
+        result = json.loads(stdout.getvalue())
+
+        self.assertEqual(status, 0)
+        self.assertEqual(
+            result["dry_run"],
+            {"scripted": True, "real_experiment": False},
+        )
+        self.assertEqual(result["run"]["runtime"]["kind"], "scripted")
+        self.assertEqual(len(result["run"]["runtime"]["results"]), 4)
 
 
 if __name__ == "__main__":

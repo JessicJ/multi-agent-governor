@@ -1,0 +1,83 @@
+{
+  "status": "ready_for_user_confirmation",
+  "date": "2026-07-30",
+  "preregistration": "evals/pilot-v2-validation.json",
+  "tasks": [
+    "python-pr-01",
+    "python-pr-02",
+    "python-pr-03",
+    "python-pr-04",
+    "python-pr-05",
+    "python-pr-06",
+    "python-pr-08"
+  ],
+  "real_model_usage": {
+    "model_calls": 0,
+    "tokens": 0
+  },
+  "source_verification": {
+    "fix_parent_matches_registered_buggy_revision": 7,
+    "byte_exact_reverse_production_patches": 7,
+    "manifest_patch_hashes_match": 7,
+    "licenses_verified": 7
+  },
+  "trigger_validation": {
+    "fixed_pass": 7,
+    "buggy_fail": 7,
+    "buggy_public_smoke_pass": 7
+  },
+  "isolation": {
+    "materialized_arm_directories": 21,
+    "initial_leak_scan_rejections": {
+      "python-pr-01": "Issue hint in Agent-visible review diff",
+      "python-pr-08": "Issue hint in Agent-visible review diff"
+    },
+    "agent_diff_redactions": {
+      "python-pr-01": 2,
+      "python-pr-08": 2
+    },
+    "final_clean_directories": 21,
+    "final_violations": 0
+  },
+  "configuration_validation": {
+    "real_configs": 21,
+    "model_id": "gpt-5.6-sol",
+    "prompt_version": "python-review-v2",
+    "adaptive_policy_version": "pilot-v2",
+    "sandbox": "read-only",
+    "allow_model_substitution": false,
+    "native_multi_agent": false
+  },
+  "scripted_dry_run": {
+    "reports": 21,
+    "paired_tasks": 7,
+    "fixed_1_agents": 7,
+    "adaptive_agents": 14,
+    "fixed_4_agents": 28,
+    "total_fixture_agents": 49,
+    "total_fixture_tokens": 59290,
+    "total_fixture_tool_calls": 196,
+    "adaptive_stop_reasons": {
+      "target_reached": 7
+    },
+    "evaluation_mode": "scripted_dry_run",
+    "real_experiment": false
+  },
+  "scoring_validation": {
+    "recall_aggregation": "micro_over_registered_defects",
+    "zero_finding_serious_recall": 0.0,
+    "zero_finding_total_recall": 0.0
+  },
+  "result_boundary": {
+    "status": "descriptive_only",
+    "claim_allowed": false,
+    "engineering_result": "inconclusive"
+  },
+  "raw_archive": {
+    "path": "evals/runs/pilot-v2-preflight-20260730",
+    "tracked": false,
+    "files": 138,
+    "size_kib": 796,
+    "sha256sums_sha256": "3b0db74349138cadeac403a8c0523006d4b1458f9507a782a71dc841c946e014"
+  }
+}

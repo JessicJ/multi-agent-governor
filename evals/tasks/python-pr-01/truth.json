@@ -9,7 +9,7 @@
       "root_cause_category": "eager-callable-default-resolution",
       "severity": "ordinary",
       "red_line": false,
-      "trigger_test": "tests/test_options.py::test_callable_flag_value_not_instantiated"
+      "trigger_test": "evals/tasks/python-pr-01/hidden_test.py::test_callable_flag_value_not_instantiated"
     }
   ]
 }

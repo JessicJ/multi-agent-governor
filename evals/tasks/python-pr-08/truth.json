@@ -9,7 +9,7 @@
       "root_cause_category": "mutable-hook-list-used-during-dispatch",
       "severity": "serious",
       "red_line": false,
-      "trigger_test": "testing/test_pluginmanager.py::test_register_while_calling"
+      "trigger_test": "evals/tasks/python-pr-08/hidden_test.py::test_register_while_calling"
     }
   ]
 }

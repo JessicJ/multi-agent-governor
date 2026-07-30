@@ -1,5 +1,5 @@
 {
-  "notice": "Each change.diff is a production-code-only reverse patch derived from the registered upstream fixing commit. Tasks normally materialize by applying that patch to the fixing commit. A task may instead declare materialization_revision to check out the exact registered original buggy revision, avoiding fix-only tests or changelog hints while preserving the same production-code defect state.",
+  "notice": "Each change.diff is a production-code-only reverse patch derived from the registered upstream fixing commit. Every historical task materializes the exact registered original buggy revision, avoiding fix-only tests, changelog entries, and commit metadata while preserving the same production-code defect state.",
   "tasks": [
     {
       "task_id": "python-pr-01",
@@ -8,7 +8,13 @@
       "fix_commit": "546f2851f414b07413777ebcae89b2c21a685252",
       "original_buggy_revision": "ae46cfd6bc997804893adc799589248eadcdbc29",
       "source": "https://github.com/pallets/click/commit/546f2851f414b07413777ebcae89b2c21a685252",
-      "issue": "https://github.com/pallets/click/issues/3121"
+      "issue": "https://github.com/pallets/click/issues/3121",
+      "fix_subject": "Fix callable ``flag_value`` being instantiated when used as a default",
+      "forbidden_agent_hints": [
+        "#3121",
+        "test_callable_flag_value_not_instantiated",
+        "Fix callable ``flag_value`` being instantiated when used as a default"
+      ]
     },
     {
       "task_id": "python-pr-02",
@@ -17,7 +23,13 @@
       "fix_commit": "1241abaed4e441582a21f4bf90c8482de02b92df",
       "original_buggy_revision": "f1f191ecd2c790b161187c78e7c88440e9524e5c",
       "source": "https://github.com/pallets/click/commit/1241abaed4e441582a21f4bf90c8482de02b92df",
-      "issue": "https://github.com/pallets/click/issues/2790"
+      "issue": "https://github.com/pallets/click/issues/2790",
+      "fix_subject": "Use non-shadowed help option name in error hint",
+      "forbidden_agent_hints": [
+        "#2790",
+        "test_formatting_usage_error_help_hint",
+        "Use non-shadowed help option name in error hint"
+      ]
     },
     {
       "task_id": "python-pr-03",
@@ -26,7 +38,13 @@
       "fix_commit": "d71c4ad9f828117e609269701f6df10419ae90c8",
       "original_buggy_revision": "c0ed9d187906d202b9276a0750b3c377584cb75f",
       "source": "https://github.com/more-itertools/more-itertools/commit/d71c4ad9f828117e609269701f6df10419ae90c8",
-      "issue": "https://github.com/more-itertools/more-itertools/issues/813"
+      "issue": "https://github.com/more-itertools/more-itertools/issues/813",
+      "fix_subject": "fix: prevent _marker from being passed to user predicates in replace() and locate()",
+      "forbidden_agent_hints": [
+        "#813",
+        "test_predicate_never_receives_internal_marker",
+        "prevent _marker from being passed to user predicates"
+      ]
     },
     {
       "task_id": "python-pr-04",
@@ -34,7 +52,12 @@
       "license_spdx": "MIT",
       "fix_commit": "edb3346f835ca917efbfda5e2d6664ab952da369",
       "original_buggy_revision": "247e15b3a489d5805375c95dfa79486c9bd0eb1b",
-      "source": "https://github.com/more-itertools/more-itertools/commit/edb3346f835ca917efbfda5e2d6664ab952da369"
+      "source": "https://github.com/more-itertools/more-itertools/commit/edb3346f835ca917efbfda5e2d6664ab952da369",
+      "fix_subject": "Fix empty ranges in numeric_range.__reversed__",
+      "forbidden_agent_hints": [
+        "test_empty_reversed",
+        "Fix empty ranges in numeric_range.__reversed__"
+      ]
     },
     {
       "task_id": "python-pr-05",
@@ -43,7 +66,13 @@
       "fix_commit": "af9c510912ce604a94896cc35c27368d5baf6ae6",
       "original_buggy_revision": "ab7f8b2f4c0f747d5b1575247ce35e5adaad182e",
       "source": "https://github.com/python-attrs/attrs/commit/af9c510912ce604a94896cc35c27368d5baf6ae6",
-      "pull_request": "https://github.com/python-attrs/attrs/pull/1513"
+      "pull_request": "https://github.com/python-attrs/attrs/pull/1513",
+      "fix_subject": "Fix validators.disabled() to save/restore state on nesting (#1513)",
+      "forbidden_agent_hints": [
+        "#1513",
+        "test_disabled_ctx_nested",
+        "save/restore state on nesting"
+      ]
     },
     {
       "task_id": "python-pr-06",
@@ -52,7 +81,13 @@
       "fix_commit": "09161fc9181bf94aa3bbc5509c663d736a9553dc",
       "original_buggy_revision": "689a0e64012d1e576ebd99e786a254bc537582c6",
       "source": "https://github.com/python-attrs/attrs/commit/09161fc9181bf94aa3bbc5509c663d736a9553dc",
-      "pull_request": "https://github.com/python-attrs/attrs/pull/1319"
+      "pull_request": "https://github.com/python-attrs/attrs/pull/1319",
+      "fix_subject": "Fix crash when __pre_init__, kw_only, and defaults come together (#1319)",
+      "forbidden_agent_hints": [
+        "#1319",
+        "test_pre_init_kw_only_work_with_defaults",
+        "Fix crash when __pre_init__, kw_only, and defaults come together"
+      ]
     },
     {
       "task_id": "python-pr-07",
@@ -77,7 +112,13 @@
       "fix_commit": "7aef3e608fddc57648daffaec23432e6893f26ff",
       "original_buggy_revision": "cc36605090dfa090777b3d69ca91132ad852c6f2",
       "source": "https://github.com/pytest-dev/pluggy/commit/7aef3e608fddc57648daffaec23432e6893f26ff",
-      "issue": "https://github.com/pytest-dev/pluggy/issues/438"
+      "issue": "https://github.com/pytest-dev/pluggy/issues/438",
+      "fix_subject": "hooks: fix plugins registering other plugins in a hook",
+      "forbidden_agent_hints": [
+        "#438",
+        "test_register_while_calling",
+        "fix plugins registering other plugins in a hook"
+      ]
     }
   ]
 }
