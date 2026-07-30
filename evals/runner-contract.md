@@ -1,6 +1,8 @@
 # 盲测运行交接约定
 
-本文件描述如何在 **干净的外部 Agent 运行环境** 中执行 `pilot_manifest.json` 的试验。它不是 Governor 的一部分，也不授权 Governor 启动或调度 Agent。
+本文件描述如何在 **干净的 Agent 运行环境** 中执行
+`pilot_manifest.json` 的固定数量试验。`FixedCountController` 只用于
+评测参考组：它严格运行预声明数量，不应用 Governor 的提前停止规则。
 
 工程试跑的真值与触发测试在本仓库中公开；这里的隔离仅保证参与单次试验的 Agent 在运行时无法访问它们。它们不是秘密保留集，也不能支持正式的未见任务效果声明。
 
@@ -12,10 +14,33 @@
 
 1. 在受限目录中物化一个任务；物化目录不应包含真值卡或运行时隔离测试。
 2. 使用 [agent-review-prompt.md](agent-review-prompt.md) 启动恰好 `exact_total_agents` 个同模型 Agent。
-3. 主 Agent 是其中之一；其余 Agent 独立审查同一代码快照。所有 Agent 均为只读。
+3. 第一个 Agent 是 primary reviewer；其余 Agent 独立审查同一代码快照。
+   所有 Agent 均为只读，最终由确定性 JSON 聚合器合并，不额外调用协调模型。
 4. 每个 Agent 返回结构化发现、已审查文件和冲突数。记录实际输入、输出、缓存 Token，模型调用、工具调用和耗时。
 5. 每个 Agent 返回后记录一个检查点；检查点只包含聚合统计，不保存完整回答。
 6. 仅在所有 Agent 结束后，在独立评分环境中把合并后的发现与运行时隔离真值卡匹配。未知发现进入盲审，不直接算误报。
+
+仓库提供可重复的固定组命令：
+
+```bash
+magov-eval fixed-config \
+  evals/pilot_manifest.json TASK_ID /tmp/TASK_DIRECTORY \
+  --exact-total-agents N \
+  --model-id FIXED_MODEL_ID \
+  --prompt-version python-review-v2 \
+  --prompt-template evals/adaptive-review-prompt.txt \
+  --output-schema examples/review_output.schema.json \
+  --artifacts-directory /tmp/ARTIFACTS > FIXED_ENVELOPE.json
+
+magov-eval fixed-run FIXED_ENVELOPE.json > FIXED_REPORT.json
+magov-eval fixed-outcome \
+  FIXED_ENVELOPE.json FIXED_REPORT.json TRUTH.json > FIXED_OUTCOME.json
+```
+
+`fixed-run` 即使过程覆盖提前达到目标也必须继续到 N；若任一 Agent
+运行失败，或 Token、耗时、工具调用安全上限被触发，整次试验标记为
+`incomplete`，不能生成正式 outcome。默认固定组安全上限为 2,000,000
+Token、3600 秒累计 Agent 耗时和 400 次工具调用。
 
 ## 不可变的实验条件
 

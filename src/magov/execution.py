@@ -620,7 +620,7 @@ class AdaptiveController:
     @staticmethod
     def _role(agent_index: int, mode: Mode) -> str:
         if agent_index == 1:
-            return "baseline and logical coordinator"
+            return "baseline reviewer"
         return (
             "independent verifier"
             if mode is Mode.INDEPENDENT

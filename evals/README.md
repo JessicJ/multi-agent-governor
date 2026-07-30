@@ -1,6 +1,6 @@
 # 本地评测工作区
 
-这里包含首轮 Python PR 审查实验的 12 个可复现任务：8 个公开上游历史缺陷的生产代码反向补丁，和 4 个明确标为 synthetic 的本地 MIT fixture 任务。它们用于评估 Governor 是否应从单 Agent 扩容到固定的 2–4 个同构 Agent，而不是用于编排 Agent。
+这里包含首轮 Python PR 审查实验的 12 个可复现任务：8 个公开上游历史缺陷的生产代码反向补丁，和 4 个明确标为 synthetic 的本地 MIT fixture 任务。固定数量组用于建立 1–4 个同构 Agent 的质量／消耗曲线；自适应组检验 Governor 是否能在不读取真值的情况下提前停止。
 
 这些工程试跑任务的 `truth.json` 和触发测试会随开源仓库公开，以便复现评分链路；“隐藏”仅表示它们在单次 Agent 运行时必须被隔离，**不表示它们是秘密保留集**。因此，这 12 个任务不能用于正式的未见任务效果声明。正式评测的保留任务及真值必须存放在独立的私有评测环境中。
 
@@ -25,6 +25,29 @@ PYTHONPATH=src python3 -m magov.eval_cli plan \
 ```
 
 12 个任务会生成 96 个固定数量试验。该命令只生成计划，不会启动 Agent。
+固定数量执行、隔离评分和失败处理命令见
+[runner-contract.md](runner-contract.md)。
+
+## 生成 Governor 自适应实验计划
+
+```bash
+PYTHONPATH=src python3 -m magov.eval_cli adaptive-plan \
+  evals/pilot_manifest.json \
+  --model-id FIXED_MODEL_VERSION \
+  --prompt-version python-review-v2 \
+  --policy-version pilot-v1 \
+  --max-agents 4 \
+  --repetitions 2
+```
+
+这会生成 24 个自适应试验。固定组与自适应组合计 120 次。自适应组的
+完整隔离、配置、评分与比较步骤见
+[adaptive-runner-contract.md](adaptive-runner-contract.md)。
+正式启动整批前，先按 [mini-pilot.md](mini-pilot.md) 运行
+`python-pr-09` 的 fixed-1、adaptive-max-4、fixed-4 三臂验收。
+
+已有的 `python-review-v1` 局部结果不能与 `python-review-v2` 自适应结果
+混用。正式配对比较必须用 v2 重新运行所选固定数量参考组。
 
 ## 物化与触发验证
 

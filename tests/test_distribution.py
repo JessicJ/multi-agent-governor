@@ -27,8 +27,8 @@ class DistributionMetadataTests(unittest.TestCase):
         )
 
         self.assertEqual(plugin["name"], "multi-agent-governor")
-        self.assertTrue(plugin["version"].startswith("0.2.0+codex."))
-        self.assertEqual(magov.__version__, "0.2.0")
+        self.assertTrue(plugin["version"].startswith("0.2.1+codex."))
+        self.assertEqual(magov.__version__, "0.2.1")
         self.assertEqual(
             plugin["repository"],
             "https://github.com/JessicJ/multi-agent-governor",

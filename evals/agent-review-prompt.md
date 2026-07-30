@@ -33,4 +33,6 @@
 不要输出模型置信度、真值猜测或修复补丁。
 ```
 
-`ROLE` 固定为：总 Agent 数为 1 时使用 `primary reviewer`；大于 1 时，一个使用 `primary reviewer and merger`，其余使用 `independent reviewer`。主 Agent 只能合并已收到的结构化发现，不得把其他 Agent 的原始回答重新作为待审代码。
+`ROLE` 固定为：第一个 Agent 使用 `primary reviewer`，其余使用
+`independent reviewer`。Agent 之间不读取彼此回答；运行器只对结构化
+发现做确定性合并。

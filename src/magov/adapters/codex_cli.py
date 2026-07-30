@@ -87,6 +87,8 @@ class CodexCliRuntime:
             self.config.executable,
             "exec",
             "--json",
+            "--disable",
+            "multi_agent",
             "--color",
             "never",
             "--sandbox",

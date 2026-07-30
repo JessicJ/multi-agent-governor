@@ -72,8 +72,9 @@ is installed and authenticated.
 - Prefer two Agents as the first real scale-out step; add later Agents one at
   a time.
 - Use `centralized` when shared constraints or failure impact require one
-  coherent result. The baseline Agent is the logical coordinator unless the
-  runtime explicitly pays for a separate coordinator.
+  coherent result. The executable review mode uses deterministic JSON
+  aggregation; another runtime must count and measure a model coordinator if
+  it launches one.
 - Use `independent` when work units and evidence can stay isolated until final
   aggregation.
 - Stop when verified coverage is complete, no unresolved conflict remains,
@@ -84,6 +85,8 @@ is installed and authenticated.
   surrounding runtime may ignore is advisory mode, not enforced control.
 - Never place Codex JSONL artifacts inside the Agent workspace; later Agents
   must not read earlier traces.
+- Keep native Codex multi-agent tools disabled inside every Governor-owned
+  `codex exec` process so `actual_total_agents` remains auditable.
 - Never pass `--dangerously-bypass-approvals-and-sandbox` or an equivalent
   unrestricted execution option through the runtime adapter.
 - Do not claim that the current default weights are universally optimal. Refer

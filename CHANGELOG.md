@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1
+
+- Add a separate adaptive evaluation arm with predeclared trial specs,
+  truth-free run configuration generation, isolated outcome scoring,
+  descriptive summaries, and paired fixed-arm comparison.
+- Add an exact-count reference controller and `fixed-config`, `fixed-run`, and
+  `fixed-outcome` commands that never apply adaptive early stopping.
+- Disable native Codex multi-Agent tools inside every Governor-owned process
+  so the reported Agent count remains auditable.
+
 ## 0.2.0
 
 - Add `AdaptiveController`, which owns baseline-first Agent admission and

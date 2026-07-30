@@ -55,6 +55,8 @@ Controller 在每个 Agent 返回后调用 `review_scaling()`。以下任一条�
 每个准入 Agent 对应一个新的 `codex exec --ephemeral --json` 进程。适配器：
 
 - 不使用 shell；
+- 显式传入 `--disable multi_agent`，避免单次 Codex 进程内部再生成未计数
+  的原生子 Agent；
 - 只允许 `read-only` 或 `workspace-write`；
 - 拒绝已知安全绕过参数；
 - 支持固定模型、输出 schema 和超时；
@@ -62,9 +64,8 @@ Controller 在每个 Agent 返回后调用 `review_scaling()`。以下任一条�
 - 记录 JSONL、stderr 和最终消息；
 - 强制运行产物目录位于 Agent 工作目录之外。
 
-Controller 不拦截 Codex 产品内部自行创建的子 Agent。因此同一运行中，
-上层调用者不得再使用原生子 Agent 控制；所有额外 Agent 必须由
-`magov run` 创建。
+Codex CLI 适配器会关闭进程内部的原生多 Agent 工具；上层调用者也不得
+在同一运行中另行启动子 Agent。所有额外 Agent 必须由 `magov run` 创建。
 
 ## 事件与回放
 

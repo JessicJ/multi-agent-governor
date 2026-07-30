@@ -18,6 +18,7 @@ class CodexCliRuntimeTests(unittest.TestCase):
                 f"#!{sys.executable}\n"
                 "import json, pathlib, sys\n"
                 "args = sys.argv[1:]\n"
+                "assert args[args.index('--disable') + 1] == 'multi_agent'\n"
                 "out = pathlib.Path(args[args.index('--output-last-message') + 1])\n"
                 "out.write_text(json.dumps({'findings': []}))\n"
                 "print(json.dumps({'type': 'item.completed', 'item': "

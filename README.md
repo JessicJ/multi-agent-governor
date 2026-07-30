@@ -108,7 +108,10 @@ magov report RUN.report.json
 6. 在质量目标、计划上限、Agent 上限、成本、Token、耗时、工具预算或边际收益平台期停止；
 7. 输出可回放事件日志和决策收据。
 
-Codex JSONL 和最终消息默认写入 Agent 工作目录之外的临时目录。适配器拒绝 `danger-full-access` 和已知的安全绕过参数。若显式指定 `artifacts_directory`，它也必须位于 Agent 工作目录之外。
+Codex JSONL 和最终消息默认写入 Agent 工作目录之外的临时目录。适配器
+显式关闭单次 Codex 进程内部的原生多 Agent 工具，拒绝
+`danger-full-access` 和运行参数覆盖。若显式指定
+`artifacts_directory`，它也必须位于 Agent 工作目录之外。
 
 ## 输入信号
 
@@ -218,7 +221,10 @@ report = controller.execute(
 
 `AgentRuntime`、`Aggregator` 和 `Verifier` 都是小型 Protocol。其他平台可以实现自己的适配器，而不必改动策略。
 
-`total_agents` 表示包括原始 baseline 在内的 Agent 执行总数。`centralized` 中的 coordinator 是一个逻辑角色，默认由 baseline Agent 承担；策略已将协调开销计入成本，但没有额外增加一个 coordinator 执行。如果你的 runtime 必须启用独立 coordinator，应把它的实际成本纳入 `RoundObservation.cost_multiplier`，并相应调高预算或重新校准成本权重。
+`total_agents` 表示包括原始 baseline 在内的 Agent 执行总数。纯建议模式的
+`centralized` 表示需要中心协调；当前可执行代码审查模式由确定性 JSON
+聚合器承担协调，不额外调用一个 coordinator Agent。其他 runtime 若必须
+启用独立 coordinator，应把它计入 Agent 数与真实用量。
 
 ## 当前策略的边界
 
@@ -241,6 +247,7 @@ report = controller.execute(
 - 12 个工程试跑任务槽位，70% 左右为历史缺陷、其余为植入缺陷；
 - 同模型、同工具、集中汇总；
 - 恰好使用 1、2、3、4 个 Agent，每组重复 2 次；
+- 最多 4 Agent、逐次准入的 Governor 自适应组，每个任务重复 2 次；
 - 仓库公开但在 Agent 运行时隔离的工程真值卡、结构化发现、自动匹配和模糊案例盲审；
 - 严重缺陷召回优先，误报为硬约束；
 - Token、调用、耗时以及 Governor 自身开销全部记录；

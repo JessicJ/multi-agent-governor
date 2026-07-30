@@ -114,7 +114,7 @@ def _scripted_runtime(payload: Mapping[str, Any]) -> ScriptedRuntime:
     return ScriptedRuntime(results)
 
 
-def _runtime_from_payload(
+def runtime_from_payload(
     payload: Mapping[str, Any], *, base_directory: Path
 ):
     kind = str(payload.get("kind", "codex-cli"))
@@ -153,6 +153,8 @@ def execute_payload(
     events_path: Path | None = None,
     include_agent_output: bool = False,
 ) -> dict[str, Any]:
+    if "task" not in payload and isinstance(payload.get("run"), Mapping):
+        payload = dict(payload["run"])
     task_payload = payload.get("task")
     if not isinstance(task_payload, Mapping):
         raise ValueError("run input requires a task object")
@@ -174,7 +176,7 @@ def execute_payload(
         raise ValueError(
             "review verifier requires task.metadata.changed_files"
         )
-    runtime = _runtime_from_payload(
+    runtime = runtime_from_payload(
         runtime_payload, base_directory=base_directory
     )
     event_sink = (

@@ -1,7 +1,20 @@
 """Public API for Multi-Agent Governor."""
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
+from .adaptive_evaluation import (
+    AdaptiveTrialOutcome,
+    AdaptiveTrialSpec,
+    adaptive_outcome_from_report,
+    build_adaptive_run_payload,
+    build_adaptive_trial_matrix,
+    build_fixed_run_payload,
+    compare_adaptive_to_fixed,
+    derive_pilot_review_signals,
+    fixed_outcome_from_report,
+    render_review_prompt,
+    summarize_adaptive_outcomes,
+)
 from .adapters import CodexCliRuntime, CodexCliRuntimeConfig, ScriptedRuntime
 from .evidence import (
     DecisionAction,
@@ -10,6 +23,7 @@ from .evidence import (
     EvidenceSource,
 )
 from .events import JsonlEventSink, MemoryEventSink, RunEvent, load_events
+from .fixed_execution import FixedCountController, FixedExecutionReport
 from .execution import (
     AdaptiveController,
     AgentRequest,
@@ -63,6 +77,8 @@ from .telemetry import add_usage, with_governance_tokens
 
 __all__ = [
     "__version__",
+    "AdaptiveTrialOutcome",
+    "AdaptiveTrialSpec",
     "AdjudicationVerdict",
     "AdaptiveController",
     "AgentRequest",
@@ -86,6 +102,8 @@ __all__ = [
     "ExecutionCheckpoint",
     "ExecutionReport",
     "ExecutionTask",
+    "FixedCountController",
+    "FixedExecutionReport",
     "GoldDefect",
     "Governor",
     "GovernorSession",
@@ -111,12 +129,21 @@ __all__ = [
     "WorkUnit",
     "RunEvent",
     "add_usage",
+    "adaptive_outcome_from_report",
+    "build_adaptive_run_payload",
+    "build_adaptive_trial_matrix",
+    "build_fixed_run_payload",
     "build_trial_matrix",
+    "compare_adaptive_to_fixed",
+    "derive_pilot_review_signals",
+    "fixed_outcome_from_report",
     "materialize_task",
     "load_events",
     "parse_codex_exec_jsonl",
+    "render_review_prompt",
     "score_findings",
     "summarize_outcomes",
+    "summarize_adaptive_outcomes",
     "validate_task_assets",
     "with_governance_tokens",
 ]
