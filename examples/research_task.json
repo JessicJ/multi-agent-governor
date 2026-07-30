@@ -1,0 +1,25 @@
+{
+  "signals": {
+    "parallelizable_units": 4,
+    "parallel_fraction": 0.8,
+    "decomposition_confidence": 0.9,
+    "context_coupling": 0.25,
+    "shared_context_ratio": 0.3,
+    "uncertainty": 0.8,
+    "verification_value": 0.85,
+    "failure_correlation": 0.2,
+    "aggregation_difficulty": 0.35,
+    "error_impact": 0.6
+  },
+  "baseline": {
+    "confidence": 0.58,
+    "verified": false,
+    "cost_units": 1.0,
+    "latency_seconds": 42
+  },
+  "budget": {
+    "max_agents": 5,
+    "max_cost_multiplier": 3.5,
+    "target_confidence": 0.88
+  }
+}

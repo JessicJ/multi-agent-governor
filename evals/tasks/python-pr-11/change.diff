@@ -1,0 +1,35 @@
+diff --git a/pilot_service/jobs.py b/pilot_service/jobs.py
+--- a/pilot_service/jobs.py
++++ b/pilot_service/jobs.py
+@@ -9,7 +9,7 @@ class JobQueue:
+         self._lock = Lock()
+ 
+     def claim(self) -> str | None:
++        if not self._items:
++            return None
+         with self._lock:
+-            if not self._items:
+-                return None
+             return self._items.pop(0)
+diff --git a/pilot_service/storage.py b/pilot_service/storage.py
+--- a/pilot_service/storage.py
++++ b/pilot_service/storage.py
+@@ -10,3 +10,7 @@ def merge_records(
+     result = dict(existing)
+     result.update(updates)
+     return result
++
++
++def count_records(records: dict[str, str]) -> int:
++    return len(records)
+diff --git a/pilot_service/formatting.py b/pilot_service/formatting.py
+--- a/pilot_service/formatting.py
++++ b/pilot_service/formatting.py
+@@ -3,3 +3,7 @@
+ 
+ def format_status(name: str, status: str) -> str:
+     return f"{name}: {status}"
++
++
++def format_queue_depth(depth: int) -> str:
++    return format_status("queue", str(depth))

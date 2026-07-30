@@ -1,0 +1,21 @@
+{
+  "findings": [
+    {
+      "finding_id": "F-001",
+      "file": "src/auth.py",
+      "symbol": "authorize",
+      "root_cause_category": "missing-permission-check",
+      "impact": "An unauthorized caller can enter the protected branch.",
+      "evidence": "The function returns success without checking the caller role.",
+      "claimed_severity": "serious"
+    },
+    {
+      "finding_id": "F-002",
+      "file": "src/cache.py",
+      "symbol": "load",
+      "root_cause_category": "stale-read",
+      "impact": "A cache entry may be stale.",
+      "evidence": "The reported cache key appears not to include a revision."
+    }
+  ]
+}

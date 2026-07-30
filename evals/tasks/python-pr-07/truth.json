@@ -1,0 +1,23 @@
+{
+  "task_id": "python-pr-07",
+  "defects": [
+    {
+      "defect_id": "D-PLUGGY-431-REMOVE",
+      "file": "src/pluggy/_hooks.py",
+      "symbol": "HookCaller._remove_plugin",
+      "root_cause_category": "partial-removal-during-list-iteration",
+      "severity": "serious",
+      "red_line": false,
+      "trigger_test": "evals/tasks/python-pr-07/hidden_test.py::test_removing_one_plugin_clears_all_of_its_implementations"
+    },
+    {
+      "defect_id": "D-PLUGGY-431-DUPLICATE",
+      "file": "src/pluggy/_manager.py",
+      "symbol": "PluginManager.get_hookcallers",
+      "root_cause_category": "duplicate-container-returned-per-implementation",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "evals/tasks/python-pr-07/hidden_test.py::test_get_hookcallers_deduplicates_multiple_implementations"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "task_id": "python-pr-05",
+  "defects": [
+    {
+      "defect_id": "D-ATTRS-1513",
+      "file": "src/attr/validators.py",
+      "symbol": "disabled",
+      "root_cause_category": "nested-context-state-not-restored",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "tests/test_validators.py::TestDisableValidators::test_disabled_ctx_nested"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class DistributionMetadataTests(unittest.TestCase):
+    def test_plugin_and_marketplace_point_to_public_project(self) -> None:
+        plugin = json.loads(
+            (
+                ROOT
+                / "plugins"
+                / "multi-agent-governor"
+                / ".codex-plugin"
+                / "plugin.json"
+            ).read_text()
+        )
+        marketplace = json.loads(
+            (ROOT / ".agents" / "plugins" / "marketplace.json").read_text()
+        )
+
+        self.assertEqual(plugin["name"], "multi-agent-governor")
+        self.assertEqual(plugin["version"], "0.1.0")
+        self.assertEqual(
+            plugin["repository"],
+            "https://github.com/JessicJ/multi-agent-governor",
+        )
+        self.assertEqual(plugin["skills"], "./skills/")
+        self.assertEqual(marketplace["name"], "multi-agent-governor")
+        self.assertEqual(
+            marketplace["plugins"][0]["source"]["path"],
+            "./plugins/multi-agent-governor",
+        )
+
+    def test_skill_has_invocable_frontmatter_and_wrapper(self) -> None:
+        skill_root = (
+            ROOT
+            / "plugins"
+            / "multi-agent-governor"
+            / "skills"
+            / "multi-agent-governor"
+        )
+        contents = (skill_root / "SKILL.md").read_text()
+
+        self.assertTrue(contents.startswith("---\n"))
+        frontmatter = contents.split("\n---\n", 1)[0]
+        self.assertIn("name: multi-agent-governor", frontmatter)
+        self.assertIn("description:", frontmatter)
+        self.assertTrue((skill_root / "agents" / "openai.yaml").is_file())
+        self.assertTrue((skill_root / "scripts" / "run_governor.py").is_file())
+
+    def test_upstream_license_files_match_fixed_revisions(self) -> None:
+        expected_hashes = {
+            "click-BSD-3-Clause.txt": (
+                "9a8ad106a394e853bfe21f42f4e72d592819a22805d991b5f3275029292b658d"
+            ),
+            "more-itertools-MIT.txt": (
+                "09f1c8c9e941af3e584d59641ea9b87d83c0cb0fd007eb5ef391a7e2643c1a46"
+            ),
+            "attrs-MIT.txt": (
+                "882115c95dfc2af1eeb6714f8ec6d5cbcabf667caff8729f42420da63f714e9f"
+            ),
+            "pluggy-MIT.txt": (
+                "d6b65e6c213a5d0b577911d34d6e5949b9f59d76c238c5071a2f3fc16cfb2606"
+            ),
+        }
+
+        for filename, expected in expected_hashes.items():
+            with self.subTest(filename=filename):
+                actual = hashlib.sha256(
+                    (ROOT / "LICENSES" / filename).read_bytes()
+                ).hexdigest()
+                self.assertEqual(actual, expected)
+
+    def test_public_pilot_declares_runtime_isolated_truth(self) -> None:
+        manifest = json.loads((ROOT / "evals" / "pilot_manifest.json").read_text())
+
+        self.assertEqual(
+            manifest["truth_visibility"],
+            "repository_public_runtime_isolated",
+        )
+        self.assertEqual(len(manifest["tasks"]), 12)
+        for task in manifest["tasks"]:
+            self.assertTrue((ROOT / task["truth_path"]).is_file())
+
+
+if __name__ == "__main__":
+    unittest.main()

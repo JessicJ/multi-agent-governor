@@ -1,0 +1,36 @@
+diff --git a/pilot_service/storage.py b/pilot_service/storage.py
+--- a/pilot_service/storage.py
++++ b/pilot_service/storage.py
+@@ -19,6 +19,6 @@
+     *,
+     preserve_existing: bool = True,
+ ) -> dict[str, str]:
+-    result = dict(existing) if preserve_existing else {}
++    result = dict(existing) if not preserve_existing else {}
+     result.update(updates)
+     return result
+diff --git a/pilot_service/auth.py b/pilot_service/auth.py
+--- a/pilot_service/auth.py
++++ b/pilot_service/auth.py
+@@ -8,6 +8,10 @@ ROLE_PERMISSIONS = {
+ }
+ 
+ 
++def permissions_for(role: str) -> tuple[str, ...]:
++    return tuple(sorted(ROLE_PERMISSIONS.get(role, frozenset())))
++
++
+ def can_access(role: str, permission: str) -> bool:
+     return permission in ROLE_PERMISSIONS.get(role, frozenset())
+ 
+diff --git a/pilot_service/formatting.py b/pilot_service/formatting.py
+--- a/pilot_service/formatting.py
++++ b/pilot_service/formatting.py
+@@ -3,3 +3,7 @@
+ 
+ def format_status(name: str, status: str) -> str:
+     return f"{name}: {status}"
++
++
++def format_count(label: str, count: int) -> str:
++    return f"{label}: {count:,}"

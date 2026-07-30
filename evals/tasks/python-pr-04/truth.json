@@ -1,0 +1,14 @@
+{
+  "task_id": "python-pr-04",
+  "defects": [
+    {
+      "defect_id": "D-MORE-EMPTY-REVERSED",
+      "file": "more_itertools/more.py",
+      "symbol": "numeric_range.__reversed__",
+      "root_cause_category": "empty-sequence-negative-index",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "tests/test_more.py::NumericRangeTests::test_empty_reversed"
+    }
+  ]
+}

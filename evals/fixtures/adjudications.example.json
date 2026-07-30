@@ -1,0 +1,9 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "F-002",
+      "verdict": "false_positive",
+      "note": "Blind review confirmed that the revision is included upstream."
+    }
+  ]
+}

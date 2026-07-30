@@ -1,0 +1,76 @@
+{
+  "notice": "Each task checks out the upstream fixing commit, then applies a production-code-only reverse patch to reintroduce the documented historical defect. Upstream tests and repository license remain at the fixing commit.",
+  "tasks": [
+    {
+      "task_id": "python-pr-01",
+      "project": "pallets/click",
+      "license_spdx": "BSD-3-Clause",
+      "fix_commit": "546f2851f414b07413777ebcae89b2c21a685252",
+      "original_buggy_revision": "ae46cfd6bc997804893adc799589248eadcdbc29",
+      "source": "https://github.com/pallets/click/commit/546f2851f414b07413777ebcae89b2c21a685252",
+      "issue": "https://github.com/pallets/click/issues/3121"
+    },
+    {
+      "task_id": "python-pr-02",
+      "project": "pallets/click",
+      "license_spdx": "BSD-3-Clause",
+      "fix_commit": "1241abaed4e441582a21f4bf90c8482de02b92df",
+      "original_buggy_revision": "f1f191ecd2c790b161187c78e7c88440e9524e5c",
+      "source": "https://github.com/pallets/click/commit/1241abaed4e441582a21f4bf90c8482de02b92df",
+      "issue": "https://github.com/pallets/click/issues/2790"
+    },
+    {
+      "task_id": "python-pr-03",
+      "project": "more-itertools/more-itertools",
+      "license_spdx": "MIT",
+      "fix_commit": "d71c4ad9f828117e609269701f6df10419ae90c8",
+      "original_buggy_revision": "c0ed9d187906d202b9276a0750b3c377584cb75f",
+      "source": "https://github.com/more-itertools/more-itertools/commit/d71c4ad9f828117e609269701f6df10419ae90c8",
+      "issue": "https://github.com/more-itertools/more-itertools/issues/813"
+    },
+    {
+      "task_id": "python-pr-04",
+      "project": "more-itertools/more-itertools",
+      "license_spdx": "MIT",
+      "fix_commit": "edb3346f835ca917efbfda5e2d6664ab952da369",
+      "original_buggy_revision": "247e15b3a489d5805375c95dfa79486c9bd0eb1b",
+      "source": "https://github.com/more-itertools/more-itertools/commit/edb3346f835ca917efbfda5e2d6664ab952da369"
+    },
+    {
+      "task_id": "python-pr-05",
+      "project": "python-attrs/attrs",
+      "license_spdx": "MIT",
+      "fix_commit": "af9c510912ce604a94896cc35c27368d5baf6ae6",
+      "original_buggy_revision": "ab7f8b2f4c0f747d5b1575247ce35e5adaad182e",
+      "source": "https://github.com/python-attrs/attrs/commit/af9c510912ce604a94896cc35c27368d5baf6ae6",
+      "pull_request": "https://github.com/python-attrs/attrs/pull/1513"
+    },
+    {
+      "task_id": "python-pr-06",
+      "project": "python-attrs/attrs",
+      "license_spdx": "MIT",
+      "fix_commit": "09161fc9181bf94aa3bbc5509c663d736a9553dc",
+      "original_buggy_revision": "689a0e64012d1e576ebd99e786a254bc537582c6",
+      "source": "https://github.com/python-attrs/attrs/commit/09161fc9181bf94aa3bbc5509c663d736a9553dc",
+      "pull_request": "https://github.com/python-attrs/attrs/pull/1319"
+    },
+    {
+      "task_id": "python-pr-07",
+      "project": "pytest-dev/pluggy",
+      "license_spdx": "MIT",
+      "fix_commit": "20d8143f127a4d7526dbbea441857b4b80ec8bdd",
+      "original_buggy_revision": "6e1d0f13a259776bbf137f90bd7ab8b4474f68e7",
+      "source": "https://github.com/pytest-dev/pluggy/commit/20d8143f127a4d7526dbbea441857b4b80ec8bdd",
+      "pull_request": "https://github.com/pytest-dev/pluggy/pull/646"
+    },
+    {
+      "task_id": "python-pr-08",
+      "project": "pytest-dev/pluggy",
+      "license_spdx": "MIT",
+      "fix_commit": "7aef3e608fddc57648daffaec23432e6893f26ff",
+      "original_buggy_revision": "cc36605090dfa090777b3d69ca91132ad852c6f2",
+      "source": "https://github.com/pytest-dev/pluggy/commit/7aef3e608fddc57648daffaec23432e6893f26ff",
+      "issue": "https://github.com/pytest-dev/pluggy/issues/438"
+    }
+  ]
+}

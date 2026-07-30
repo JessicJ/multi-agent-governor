@@ -1,0 +1,14 @@
+{
+  "task_id": "python-pr-06",
+  "defects": [
+    {
+      "defect_id": "D-ATTRS-1319",
+      "file": "src/attr/_make.py",
+      "symbol": "_attrs_to_init_script",
+      "root_cause_category": "keyword-default-embedded-in-argument-name",
+      "severity": "serious",
+      "red_line": false,
+      "trigger_test": "tests/test_make.py::TestAttributes::test_pre_init_kw_only_work_with_defaults"
+    }
+  ]
+}

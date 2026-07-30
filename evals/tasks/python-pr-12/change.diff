@@ -1,0 +1,38 @@
+diff --git a/pilot_service/cleanup.py b/pilot_service/cleanup.py
+--- a/pilot_service/cleanup.py
++++ b/pilot_service/cleanup.py
+@@ -6,10 +6,8 @@ from pathlib import Path
+ def resolve_within(root: Path, candidate: str) -> Path:
+     resolved_root = root.resolve()
+     target = (resolved_root / candidate).resolve()
+-    try:
+-        target.relative_to(resolved_root)
+-    except ValueError as exc:
+-        raise ValueError("cleanup target escapes configured root") from exc
++    if not str(target).startswith(str(resolved_root)):
++        raise ValueError("cleanup target escapes configured root")
+     return target
+ 
+ 
+diff --git a/pilot_service/jobs.py b/pilot_service/jobs.py
+--- a/pilot_service/jobs.py
++++ b/pilot_service/jobs.py
+@@ -13,3 +13,7 @@ class JobQueue:
+             if not self._items:
+                 return None
+             return self._items.pop(0)
++
++    def pending(self) -> int:
++        with self._lock:
++            return len(self._items)
+diff --git a/pilot_service/formatting.py b/pilot_service/formatting.py
+--- a/pilot_service/formatting.py
++++ b/pilot_service/formatting.py
+@@ -3,3 +3,7 @@
+ 
+ def format_status(name: str, status: str) -> str:
+     return f"{name}: {status}"
++
++
++def format_cleanup_target(path: str) -> str:
++    return format_status("cleanup", path)

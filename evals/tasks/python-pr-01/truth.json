@@ -1,0 +1,15 @@
+{
+  "task_id": "python-pr-01",
+  "defects": [
+    {
+      "defect_id": "D-CLICK-3121",
+      "file": "src/click/core.py",
+      "symbol": "Option.__init__",
+      "accepted_symbols": ["Option", "Option.get_default"],
+      "root_cause_category": "eager-callable-default-resolution",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "tests/test_options.py::test_callable_flag_value_not_instantiated"
+    }
+  ]
+}

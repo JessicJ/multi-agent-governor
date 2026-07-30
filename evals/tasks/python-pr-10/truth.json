@@ -1,0 +1,14 @@
+{
+  "task_id": "python-pr-10",
+  "defects": [
+    {
+      "defect_id": "D-INJECTED-BATCH-DATA-LOSS",
+      "file": "pilot_service/storage.py",
+      "symbol": "apply_batch",
+      "root_cause_category": "preserve-flag-discards-existing-records",
+      "severity": "serious",
+      "red_line": true,
+      "trigger_test": "evals/tasks/python-pr-10/hidden_test.py::InjectedStorageTest::test_default_batch_preserves_existing_records"
+    }
+  ]
+}

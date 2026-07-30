@@ -1,0 +1,15 @@
+{
+  "task_id": "python-pr-03",
+  "defects": [
+    {
+      "defect_id": "D-MORE-813",
+      "file": "more_itertools/more.py",
+      "symbol": "locate",
+      "accepted_symbols": ["replace"],
+      "root_cause_category": "internal-sentinel-leaked-to-callback",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "evals/tasks/python-pr-03/hidden_test.py::test_predicate_never_receives_internal_marker"
+    }
+  ]
+}

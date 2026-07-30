@@ -1,0 +1,14 @@
+{
+  "task_id": "python-pr-12",
+  "defects": [
+    {
+      "defect_id": "D-INJECTED-CLEANUP-PREFIX-ESCAPE",
+      "file": "pilot_service/cleanup.py",
+      "symbol": "resolve_within",
+      "root_cause_category": "filesystem-boundary-checked-with-string-prefix",
+      "severity": "serious",
+      "red_line": true,
+      "trigger_test": "evals/tasks/python-pr-12/hidden_test.py::InjectedCleanupTest::test_sibling_with_shared_prefix_is_rejected"
+    }
+  ]
+}

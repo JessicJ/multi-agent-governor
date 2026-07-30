@@ -1,0 +1,13 @@
+{
+  "defects": [
+    {
+      "defect_id": "D-001",
+      "file": "src/auth.py",
+      "symbol": "authorize",
+      "root_cause_category": "missing-permission-check",
+      "severity": "serious",
+      "red_line": true,
+      "trigger_test": "tests/test_auth.py::test_rejects_unauthorized_user"
+    }
+  ]
+}

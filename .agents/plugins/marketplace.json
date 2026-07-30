@@ -1,0 +1,20 @@
+{
+  "name": "multi-agent-governor",
+  "interface": {
+    "displayName": "Multi-Agent Governor"
+  },
+  "plugins": [
+    {
+      "name": "multi-agent-governor",
+      "source": {
+        "source": "local",
+        "path": "./plugins/multi-agent-governor"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

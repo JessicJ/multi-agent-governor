@@ -1,0 +1,14 @@
+{
+  "task_id": "python-pr-11",
+  "defects": [
+    {
+      "defect_id": "D-INJECTED-QUEUE-RACE",
+      "file": "pilot_service/jobs.py",
+      "symbol": "JobQueue.claim",
+      "root_cause_category": "check-then-pop-outside-lock",
+      "severity": "serious",
+      "red_line": false,
+      "trigger_test": "evals/tasks/python-pr-11/hidden_test.py::InjectedConcurrencyTest::test_two_claimers_do_not_pop_empty_queue"
+    }
+  ]
+}

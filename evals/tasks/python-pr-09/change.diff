@@ -1,0 +1,43 @@
+diff --git a/pilot_service/auth.py b/pilot_service/auth.py
+--- a/pilot_service/auth.py
++++ b/pilot_service/auth.py
+@@ -15,5 +15,6 @@
+ def authorize(
+     role: str, permission: str, *, internal_request: bool = False
+ ) -> None:
+-    if not can_access(role, permission):
++    effective_role = "admin" if internal_request else role
++    if not can_access(effective_role, permission):
+         raise PermissionError(f"{role!r} cannot use {permission!r}")
+diff --git a/pilot_service/storage.py b/pilot_service/storage.py
+--- a/pilot_service/storage.py
++++ b/pilot_service/storage.py
+@@ -1,13 +1,15 @@
+ """In-memory record transformation helpers."""
+ 
++RecordMap = dict[str, str]
++
+ 
+ def normalize_key(key: str) -> str:
+     return key.strip().casefold()
+ 
+ 
+ def merge_records(
+-    existing: dict[str, str], updates: dict[str, str]
+-) -> dict[str, str]:
++    existing: RecordMap, updates: RecordMap
++) -> RecordMap:
+     result = dict(existing)
+     result.update(updates)
+     return result
+diff --git a/pilot_service/formatting.py b/pilot_service/formatting.py
+--- a/pilot_service/formatting.py
++++ b/pilot_service/formatting.py
+@@ -3,3 +3,7 @@
+ 
+ def format_status(name: str, status: str) -> str:
+     return f"{name}: {status}"
++
++
++def format_actor(actor: str) -> str:
++    return actor.strip() or "anonymous"

@@ -1,0 +1,14 @@
+{
+  "task_id": "python-pr-02",
+  "defects": [
+    {
+      "defect_id": "D-CLICK-2790",
+      "file": "src/click/exceptions.py",
+      "symbol": "UsageError.format_message",
+      "root_cause_category": "shadowed-help-option-selected",
+      "severity": "minor",
+      "red_line": false,
+      "trigger_test": "tests/test_formatting.py::test_formatting_usage_error_help_hint"
+    }
+  ]
+}

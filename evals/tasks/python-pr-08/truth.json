@@ -1,0 +1,15 @@
+{
+  "task_id": "python-pr-08",
+  "defects": [
+    {
+      "defect_id": "D-PLUGGY-438",
+      "file": "src/pluggy/_hooks.py",
+      "symbol": "HookCaller.__call__",
+      "accepted_symbols": ["HookCaller.call_historic"],
+      "root_cause_category": "mutable-hook-list-used-during-dispatch",
+      "severity": "serious",
+      "red_line": false,
+      "trigger_test": "testing/test_pluginmanager.py::test_register_while_calling"
+    }
+  ]
+}

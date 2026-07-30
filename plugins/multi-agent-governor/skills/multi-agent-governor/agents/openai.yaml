@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Agent Governor"
+  short_description: "在质量、成本与协调开销之间判断是否值得增加 Agent"
+  default_prompt: "Use $multi-agent-governor to decide whether this task should use more agents and when to stop."
