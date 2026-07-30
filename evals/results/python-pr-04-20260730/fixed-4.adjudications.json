@@ -1,0 +1,22 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-04__agents-4__repeat-1-runtime-assigned-001",
+      "verdict": "matched",
+      "defect_id": "D-MORE-EMPTY-REVERSED",
+      "note": "Post-run isolated reproduction confirms the registered empty numeric_range reversal defect."
+    },
+    {
+      "finding_id": "python-pr-04__agents-4__repeat-1-runtime-assigned-reviewer-1",
+      "verdict": "matched",
+      "defect_id": "D-MORE-EMPTY-REVERSED",
+      "note": "Independent duplicate report of the same registered empty-sequence negative-index defect."
+    },
+    {
+      "finding_id": "python-pr-04__agents-4__repeat-1-runtime-assigned-reviewer-1__occurrence-2",
+      "verdict": "matched",
+      "defect_id": "D-MORE-EMPTY-REVERSED",
+      "note": "Independent duplicate report of the same registered empty-sequence negative-index defect."
+    }
+  ]
+}

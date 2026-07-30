@@ -1,0 +1,10 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-04__agents-1__repeat-1-1-001",
+      "verdict": "matched",
+      "defect_id": "D-MORE-EMPTY-REVERSED",
+      "note": "Post-run isolated reproduction confirms that the removed empty-sequence guard makes reversed(numeric_range(0)) raise IndexError."
+    }
+  ]
+}
