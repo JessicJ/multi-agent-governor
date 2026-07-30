@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
+from time import monotonic
 from typing import Any, Callable, Mapping, Protocol, Sequence
 from uuid import uuid4
 
@@ -512,6 +513,7 @@ class ExecutionReport:
     checkpoints: tuple[ExecutionCheckpoint, ...]
     receipts: tuple[DecisionReceipt, ...]
     event_count: int
+    wall_time_seconds: float
 
     def to_dict(self, *, include_agent_output: bool = False) -> dict[str, Any]:
         return {
@@ -533,6 +535,7 @@ class ExecutionReport:
             ],
             "receipts": [receipt.to_dict() for receipt in self.receipts],
             "event_count": self.event_count,
+            "wall_time_seconds": self.wall_time_seconds,
         }
 
 
@@ -620,9 +623,9 @@ class AdaptiveController:
     @staticmethod
     def _role(agent_index: int, mode: Mode) -> str:
         if agent_index == 1:
-            return "baseline reviewer"
+            return "primary reviewer"
         return (
-            "independent verifier"
+            "independent reviewer"
             if mode is Mode.INDEPENDENT
             else "bounded worker"
         )
@@ -720,6 +723,7 @@ class AdaptiveController:
         self, task: ExecutionTask, budget: Budget | None = None
     ) -> ExecutionReport:
         budget = budget or Budget()
+        self._run_started_at = monotonic()
         run_id = f"magov-{uuid4().hex[:12]}"
         self._event_sequence = 0
         results: list[AgentResult] = []
@@ -1184,4 +1188,5 @@ class AdaptiveController:
             checkpoints=tuple(checkpoints),
             receipts=tuple(receipts),
             event_count=self._event_sequence,
+            wall_time_seconds=monotonic() - self._run_started_at,
         )

@@ -85,6 +85,7 @@ class ReviewTask:
     source_reference: str = ""
     test_command: str = ""
     patch_sha256: str = ""
+    materialization_revision: str = ""
 
     def __post_init__(self) -> None:
         if not self.task_id.strip():
@@ -116,6 +117,10 @@ class ReviewTask:
                 "high_risk_files must be included in changed_files: "
                 + ", ".join(sorted(unknown_high_risk))
             )
+        if self.materialization_revision and self.repository.startswith("local://"):
+            raise ValueError(
+                "materialization_revision is only supported for upstream repositories"
+            )
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> "ReviewTask":
@@ -139,6 +144,9 @@ class ReviewTask:
             source_reference=str(payload.get("source_reference", "")),
             test_command=str(payload.get("test_command", "")),
             patch_sha256=str(payload.get("patch_sha256", "")),
+            materialization_revision=str(
+                payload.get("materialization_revision", "")
+            ),
         )
 
     def resolve_patch_path(self, workspace: Path) -> Path:
@@ -358,6 +366,7 @@ def materialize_task(
     *,
     workspace: Path,
     destination: Path,
+    review_instructions: Path | None = None,
 ) -> dict[str, Any]:
     """Create an isolated review worktree without copying truth or hidden tests."""
 
@@ -367,6 +376,16 @@ def materialize_task(
     if destination.exists():
         raise ValueError(f"destination already exists: {destination}")
     destination.parent.mkdir(parents=True, exist_ok=True)
+    patch_path = _inside_workspace(workspace, task.patch_path)
+    instructions_path = (
+        _inside_workspace(workspace, str(review_instructions))
+        if review_instructions is not None
+        else None
+    )
+    if instructions_path is not None and not instructions_path.is_file():
+        raise ValueError(
+            f"review instructions file does not exist: {instructions_path}"
+        )
 
     try:
         if task.repository.startswith("local://"):
@@ -388,15 +407,33 @@ def materialize_task(
                 cwd=workspace,
             )
             _run(
-                ["git", "checkout", "--detach", task.base_revision],
+                [
+                    "git",
+                    "checkout",
+                    "--detach",
+                    task.materialization_revision or task.base_revision,
+                ],
                 cwd=destination,
             )
 
-        patch_path = _inside_workspace(workspace, task.patch_path)
-        _run(["git", "apply", "--check", str(patch_path)], cwd=destination)
-        _run(["git", "apply", str(patch_path)], cwd=destination)
+        if task.materialization_revision:
+            # The checked-out tree is already the historical defect state.
+            # Reversing the registered reverse patch must still apply cleanly,
+            # proving that this state maps back to the fixed production code.
+            _run(
+                ["git", "apply", "--reverse", "--check", str(patch_path)],
+                cwd=destination,
+            )
+        else:
+            _run(["git", "apply", "--check", str(patch_path)], cwd=destination)
+            _run(["git", "apply", str(patch_path)], cwd=destination)
         shutil.copy2(patch_path, destination / ".magov-review.diff")
         _remove_git_metadata(destination)
+        if instructions_path is not None:
+            shutil.copy2(
+                instructions_path,
+                destination / "REVIEW_INSTRUCTIONS.md",
+            )
         public_metadata = {
             "task_id": task.task_id,
             "language": task.language,
@@ -422,6 +459,83 @@ def materialize_task(
         "task_id": task.task_id,
         "destination": str(destination),
         "truth_included": False,
+    }
+
+
+def scan_materialized_task(
+    destination: Path,
+    *,
+    forbidden_literals: Sequence[str] = (),
+) -> dict[str, Any]:
+    """Fail closed when a materialized Agent directory contains answer hints."""
+
+    destination = destination.resolve()
+    if not destination.is_dir():
+        raise ValueError(f"materialized directory does not exist: {destination}")
+    forbidden_names = {
+        ".git",
+        "truth.json",
+        "hidden_test.py",
+        "historical_provenance.json",
+        "pilot_manifest.json",
+    }
+    artifact_suffixes = (
+        ".events.jsonl",
+        ".stderr.log",
+        ".last-message.txt",
+        ".report.json",
+        ".outcome.json",
+    )
+    literals = tuple(
+        dict.fromkeys(
+            item
+            for item in (str(value).strip() for value in forbidden_literals)
+            if item
+        )
+    )
+    encoded_literals = tuple(
+        (literal, literal.encode("utf-8")) for literal in literals
+    )
+    violations: list[str] = []
+    files_scanned = 0
+    bytes_scanned = 0
+
+    for path in sorted(destination.rglob("*")):
+        relative = path.relative_to(destination)
+        if path.is_symlink():
+            violations.append(f"symbolic link: {relative}")
+            continue
+        lowered_parts = {part.lower() for part in relative.parts}
+        if lowered_parts & forbidden_names:
+            violations.append(f"forbidden path: {relative}")
+        lowered_name = path.name.lower()
+        if lowered_name.endswith(artifact_suffixes):
+            violations.append(f"runtime artifact: {relative}")
+        if not path.is_file():
+            continue
+        files_scanned += 1
+        payload = path.read_bytes()
+        bytes_scanned += len(payload)
+        for literal, encoded in encoded_literals:
+            if encoded in payload:
+                violations.append(
+                    f"forbidden literal in {relative}: sha256="
+                    + hashlib.sha256(literal.encode("utf-8")).hexdigest()
+                )
+
+    if violations:
+        raise ValueError(
+            "materialized task leak scan failed: " + "; ".join(violations)
+        )
+    return {
+        "status": "clean",
+        "destination": str(destination),
+        "files_scanned": files_scanned,
+        "bytes_scanned": bytes_scanned,
+        "forbidden_names_checked": len(forbidden_names),
+        "forbidden_literals_checked": len(literals),
+        "runtime_artifact_suffixes_checked": len(artifact_suffixes),
+        "violations": [],
     }
 
 
@@ -982,6 +1096,8 @@ class TrialOutcome:
     coverage_complete: bool
     unresolved_conflicts: int = 0
     checkpoints: tuple[CheckpointObservation, ...] = ()
+    wall_time_seconds: float = 0.0
+    scripted_dry_run: bool = False
 
     def __post_init__(self) -> None:
         if self.actual_total_agents != self.trial.exact_total_agents:
@@ -990,6 +1106,13 @@ class TrialOutcome:
             )
         if self.unresolved_conflicts < 0:
             raise ValueError("unresolved_conflicts cannot be negative")
+        if (
+            not isfinite(self.wall_time_seconds)
+            or self.wall_time_seconds < 0
+        ):
+            raise ValueError("wall_time_seconds cannot be negative")
+        if type(self.scripted_dry_run) is not bool:
+            raise ValueError("scripted_dry_run must be a boolean")
         checkpoint_counts = [item.total_agents for item in self.checkpoints]
         expected_counts = list(range(1, self.actual_total_agents + 1))
         if checkpoint_counts != expected_counts:
@@ -1045,6 +1168,8 @@ class TrialOutcome:
             "coverage_complete": self.coverage_complete,
             "unresolved_conflicts": self.unresolved_conflicts,
             "checkpoints": [item.to_dict() for item in self.checkpoints],
+            "wall_time_seconds": self.wall_time_seconds,
+            "scripted_dry_run": self.scripted_dry_run,
         }
 
     @classmethod
@@ -1061,6 +1186,11 @@ class TrialOutcome:
             checkpoints=tuple(
                 CheckpointObservation.from_dict(item)
                 for item in payload.get("checkpoints", ())
+            ),
+            wall_time_seconds=float(payload.get("wall_time_seconds", 0.0)),
+            scripted_dry_run=_require_bool(
+                payload.get("scripted_dry_run", False),
+                "scripted_dry_run",
             ),
         )
 
@@ -1083,6 +1213,7 @@ def summarize_outcomes(outcomes: Sequence[TrialOutcome]) -> dict[str, Any]:
             outcome.trial.prompt_version,
             outcome.trial.topology,
             outcome.trial.homogeneous_agents,
+            outcome.scripted_dry_run,
         )
         for outcome in outcomes
     }
@@ -1159,8 +1290,11 @@ def summarize_outcomes(outcomes: Sequence[TrialOutcome]) -> dict[str, Any]:
             "mean_tool_calls": round(
                 fmean(item.usage.tool_calls for item in group), 2
             ),
-            "mean_wall_time_seconds": round(
+            "mean_agent_cumulative_time_seconds": round(
                 fmean(item.usage.wall_time_seconds for item in group), 3
+            ),
+            "mean_wall_time_seconds": round(
+                fmean(item.wall_time_seconds for item in group), 3
             ),
             "coverage_complete_rate": round(
                 fmean(1.0 if item.coverage_complete else 0.0 for item in group),
@@ -1185,6 +1319,15 @@ def summarize_outcomes(outcomes: Sequence[TrialOutcome]) -> dict[str, Any]:
     return {
         "status": "descriptive_only",
         "claim_allowed": False,
+        "engineering_result": "inconclusive",
+        "evaluation_mode": (
+            "scripted_dry_run"
+            if all(item.scripted_dry_run for item in outcomes)
+            else "real"
+        ),
+        "real_experiment": not any(
+            item.scripted_dry_run for item in outcomes
+        ),
         "by_agent_count": by_agent_count,
     }
 

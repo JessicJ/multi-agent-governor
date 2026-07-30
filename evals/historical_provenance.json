@@ -1,5 +1,5 @@
 {
-  "notice": "Each task checks out the upstream fixing commit, then applies a production-code-only reverse patch to reintroduce the documented historical defect. Upstream tests and repository license remain at the fixing commit.",
+  "notice": "Each change.diff is a production-code-only reverse patch derived from the registered upstream fixing commit. Tasks normally materialize by applying that patch to the fixing commit. A task may instead declare materialization_revision to check out the exact registered original buggy revision, avoiding fix-only tests or changelog hints while preserving the same production-code defect state.",
   "tasks": [
     {
       "task_id": "python-pr-01",
@@ -61,7 +61,14 @@
       "fix_commit": "20d8143f127a4d7526dbbea441857b4b80ec8bdd",
       "original_buggy_revision": "6e1d0f13a259776bbf137f90bd7ab8b4474f68e7",
       "source": "https://github.com/pytest-dev/pluggy/commit/20d8143f127a4d7526dbbea441857b4b80ec8bdd",
-      "pull_request": "https://github.com/pytest-dev/pluggy/pull/646"
+      "pull_request": "https://github.com/pytest-dev/pluggy/pull/646",
+      "issue": "https://github.com/pytest-dev/pluggy/issues/431",
+      "fix_subject": "Fix _remove_plugin to remove all hookimpls and get_hookcallers to deduplicate (#646)",
+      "forbidden_agent_hints": [
+        "#431",
+        "test_unregister_plugin_with_multi_hookimpls",
+        "test_get_hookcallers_no_duplicates"
+      ]
     },
     {
       "task_id": "python-pr-08",

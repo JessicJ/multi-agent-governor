@@ -40,7 +40,9 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
 旧的 `magov INPUT.json` 仍兼容，等价于 `magov plan INPUT.json`。
-`runtime_review_scripted.json` 不调用模型，用固定结果演示 baseline、扩容、验证和提前停止的完整状态机。
+`runtime_review_scripted.json` 不调用模型，用固定结果演示 baseline、扩容、验证和提前停止的完整状态机。scripted 配置必须显式包含
+`dry_run: {"scripted": true, "real_experiment": false}`；运行报告、outcome
+和 compare 会保留该标记，防止 dry-run 被误当成真实实验。
 
 如果版本低于 3.10，请先安装较新的 Python，再继续下面的安装步骤。
 

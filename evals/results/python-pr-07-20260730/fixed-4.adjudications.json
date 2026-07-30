@@ -1,0 +1,28 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-07__agents-4__repeat-1-root-1",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-431-DUPLICATE",
+      "note": "Post-run isolated adjudication: the file, symbol, impact, and evidence describe the registered duplicate HookCaller result defect."
+    },
+    {
+      "finding_id": "python-pr-07__agents-4__repeat-1-runtime-assigned-001",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-431-DUPLICATE",
+      "note": "Post-run isolated adjudication: the file, symbol, impact, and evidence describe the registered duplicate HookCaller result defect."
+    },
+    {
+      "finding_id": "python-pr-07__agents-4__repeat-1-runtime-assigned-reviewer-1",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-431-DUPLICATE",
+      "note": "Post-run isolated adjudication: the file, symbol, impact, and evidence describe the registered duplicate HookCaller result defect."
+    },
+    {
+      "finding_id": "python-pr-07__agents-4__repeat-1-runtime-assigned-reviewer-1__occurrence-2",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-431-DUPLICATE",
+      "note": "Post-run isolated adjudication: the file, symbol, impact, and evidence describe the registered duplicate HookCaller result defect."
+    }
+  ]
+}

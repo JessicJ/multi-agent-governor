@@ -1,0 +1,10 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-07__adaptive-max-4__repeat-1-runtime-assigned-1",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-431-DUPLICATE",
+      "note": "Post-run isolated adjudication: the file, symbol, impact, and evidence describe the registered duplicate HookCaller result defect."
+    }
+  ]
+}

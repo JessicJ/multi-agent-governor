@@ -153,6 +153,7 @@ def execute_payload(
     events_path: Path | None = None,
     include_agent_output: bool = False,
 ) -> dict[str, Any]:
+    dry_run_marker = payload.get("dry_run")
     if "task" not in payload and isinstance(payload.get("run"), Mapping):
         payload = dict(payload["run"])
     task_payload = payload.get("task")
@@ -161,6 +162,29 @@ def execute_payload(
     runtime_payload = payload.get("runtime", {})
     if not isinstance(runtime_payload, Mapping):
         raise ValueError("runtime must be an object")
+    runtime_kind = str(runtime_payload.get("kind", "codex-cli"))
+    scripted_dry_run = False
+    if runtime_kind == "scripted":
+        if not isinstance(dry_run_marker, Mapping):
+            raise ValueError(
+                "scripted run configs must declare a dry_run object"
+            )
+        scripted = _require_bool(
+            dry_run_marker.get("scripted"), "dry_run.scripted"
+        )
+        real_experiment = _require_bool(
+            dry_run_marker.get("real_experiment"),
+            "dry_run.real_experiment",
+        )
+        if not scripted or real_experiment:
+            raise ValueError(
+                "scripted runs must be marked as non-real dry-runs"
+            )
+        scripted_dry_run = True
+    elif dry_run_marker is not None:
+        raise ValueError(
+            "dry_run marker is only valid for the scripted runtime"
+        )
     verifier_payload = payload.get("verifier", {})
     if not isinstance(verifier_payload, Mapping):
         raise ValueError("verifier must be an object")
@@ -193,7 +217,14 @@ def execute_payload(
     )
     budget = Budget(**dict(payload.get("budget", {})))
     report = controller.execute(task, budget)
-    return report.to_dict(include_agent_output=include_agent_output)
+    result = report.to_dict(include_agent_output=include_agent_output)
+    if scripted_dry_run:
+        result["evaluation_mode"] = "scripted_dry_run"
+        result["real_experiment"] = False
+    else:
+        result["evaluation_mode"] = "real"
+        result["real_experiment"] = True
+    return result
 
 
 def replay_events(path: Path) -> dict[str, Any]:
@@ -252,6 +283,13 @@ def summarize_reports(paths: Sequence[Path]) -> dict[str, Any]:
         int(dict(report.get("usage", {})).get("tool_calls", 0))
         for report in reports
     ]
+    agent_times = [
+        float(dict(report.get("usage", {})).get("wall_time_seconds", 0.0))
+        for report in reports
+    ]
+    wall_times = [
+        float(report.get("wall_time_seconds", 0.0)) for report in reports
+    ]
     return {
         "runs": len(reports),
         "completed": sum(
@@ -276,6 +314,25 @@ def summarize_reports(paths: Sequence[Path]) -> dict[str, Any]:
         ),
         "total_model_calls": sum(model_calls),
         "total_tool_calls": sum(tool_calls),
+        "total_agent_cumulative_time_seconds": round(sum(agent_times), 6),
+        "average_agent_cumulative_time_seconds": round(
+            sum(agent_times) / len(agent_times), 6
+        ),
+        "total_wall_time_seconds": round(sum(wall_times), 6),
+        "average_wall_time_seconds": round(
+            sum(wall_times) / len(wall_times), 6
+        ),
+        "evaluation_modes": dict(
+            sorted(
+                Counter(
+                    str(report.get("evaluation_mode", "unspecified"))
+                    for report in reports
+                ).items()
+            )
+        ),
+        "real_experiments": sum(
+            report.get("real_experiment") is True for report in reports
+        ),
         "stop_reasons": dict(
             sorted(
                 Counter(

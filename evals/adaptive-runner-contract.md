@@ -16,6 +16,10 @@
 - Codex 原生多 Agent 工具：关闭；
 - 真值、触发测试、其他 Agent 的 trace 与项目根目录：运行时不可见。
 
+首次真实 mini-pilot 固定为 `python-pr-07`、`repeat-1`、模型
+`gpt-5.6-sol`，并使用三个独立物化目录；准确命令和输出位置见
+[mini-pilot.md](mini-pilot.md)。
+
 `pilot-v1` 信号只能由 manifest 中公开的 `changed_files` 和
 `high_risk_files` 派生。具体常量定义在
 `derive_pilot_review_signals()`；不得根据 `truth.json`、触发测试结果或

@@ -44,7 +44,9 @@ PYTHONPATH=src python3 -m magov.eval_cli adaptive-plan \
 完整隔离、配置、评分与比较步骤见
 [adaptive-runner-contract.md](adaptive-runner-contract.md)。
 正式启动整批前，先按 [mini-pilot.md](mini-pilot.md) 运行
-`python-pr-09` 的 fixed-1、adaptive-max-4、fixed-4 三臂验收。
+真实历史任务 `python-pr-07` 的 fixed-1、adaptive-max-4、fixed-4
+三臂验收。`python-pr-09` 至 `python-pr-12` 继续保留为工程测试夹具，
+但不作为首次真实 mini-pilot。
 
 已有的 `python-review-v1` 局部结果不能与 `python-review-v2` 自适应结果
 混用。正式配对比较必须用 v2 重新运行所选固定数量参考组。
@@ -55,10 +57,24 @@ PYTHONPATH=src python3 -m magov.eval_cli adaptive-plan \
 
 ```bash
 PYTHONPATH=src python3 -m magov.eval_cli materialize \
-  evals/pilot_manifest.json python-pr-01 /tmp/magov-task-01 --workspace .
+  evals/pilot_manifest.json python-pr-07 /tmp/magov-task-07 \
+  --workspace . \
+  --review-instructions evals/adaptive-review-prompt.txt
 ```
 
 在物化目录中执行 manifest 的 `test_command`。其中 `{hidden_test}` 由评测执行器替换为 Agent 运行时不可见的测试路径；带 `PYTHONPATH` 的命令是为了确保导入当前物化目录的源码，而不是机器上已安装的同名包。任务有效性的最低要求是：缺陷版本的触发测试失败，原始安全基线的同一测试通过。
+
+`python-pr-07` 直接物化已登记的原始缺陷 revision，避免把修复提交新增的
+回归测试、changelog、提交说明或 Git 历史带入 Agent 目录；其
+`.magov-review.diff` 仍是从真实修复提交到该缺陷 revision 的生产代码
+反向补丁。物化后运行：
+
+```bash
+PYTHONPATH=src python3 -m magov.eval_cli leak-scan \
+  evals/pilot_manifest.json python-pr-07 /tmp/magov-task-07 \
+  --workspace . \
+  --provenance evals/historical_provenance.json
+```
 
 真实 Agent 审查必须在未接触真值卡的外部干净环境中运行。固定审查提示词与运行交接约定见 [agent-review-prompt.md](agent-review-prompt.md) 和 [runner-contract.md](runner-contract.md)。
 

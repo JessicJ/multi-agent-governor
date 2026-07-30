@@ -36,6 +36,10 @@ class CliValidationTests(unittest.TestCase):
             config.write_text(
                 json.dumps(
                     {
+                        "dry_run": {
+                            "scripted": True,
+                            "real_experiment": False,
+                        },
                         "task": {
                             "task_id": "cli-review",
                             "prompt": "Review and return JSON.",

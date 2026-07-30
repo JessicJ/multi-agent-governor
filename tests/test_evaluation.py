@@ -1,5 +1,6 @@
 import hashlib
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -23,6 +24,7 @@ from magov import (
     build_trial_matrix,
     materialize_task,
     parse_codex_exec_jsonl,
+    scan_materialized_task,
     score_findings,
     summarize_outcomes,
 )
@@ -194,6 +196,126 @@ class MaterializationIsolationTests(unittest.TestCase):
             self.assertFalse((destination / ".git").exists())
             self.assertNotIn("exact_base_revision", metadata)
             self.assertEqual((destination / "app.py").read_text(), "value = 2\n")
+
+    def test_historical_materialization_uses_original_bug_revision(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            workspace = Path(directory)
+            repository = workspace / "upstream"
+            repository.mkdir()
+
+            def git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", *args],
+                    cwd=repository,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.strip()
+
+            git("init")
+            git("config", "user.name", "Evaluation Test")
+            git("config", "user.email", "eval@example.test")
+            (repository / "app.py").write_text("value = 2\n")
+            git("add", "app.py")
+            git("commit", "-m", "original buggy state")
+            buggy_revision = git("rev-parse", "HEAD")
+
+            (repository / "app.py").write_text("value = 1\n")
+            (repository / "fix_regression_test.py").write_text(
+                "FIX_ANSWER_HINT = True\n"
+            )
+            git("add", "app.py", "fix_regression_test.py")
+            git("commit", "-m", "fix exact bug")
+            fix_revision = git("rev-parse", "HEAD")
+
+            patch_path = workspace / "task.diff"
+            patch_path.write_text(
+                subprocess.run(
+                    [
+                        "git",
+                        "diff",
+                        fix_revision,
+                        buggy_revision,
+                        "--",
+                        "app.py",
+                    ],
+                    cwd=repository,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout
+            )
+            truth_path = workspace / "truth.json"
+            truth_path.write_text(
+                json.dumps(
+                    {
+                        "task_id": "historical-task",
+                        "defects": [
+                            {
+                                "defect_id": "D-1",
+                                "file": "app.py",
+                                "symbol": "module",
+                                "root_cause_category": "wrong-value",
+                                "severity": "ordinary",
+                            }
+                        ],
+                    }
+                )
+            )
+            instructions = workspace / "instructions.md"
+            instructions.write_text("Review the change.\n")
+            task = ReviewTask(
+                task_id="historical-task",
+                repository=str(repository),
+                base_revision=fix_revision,
+                materialization_revision=buggy_revision,
+                patch_path="task.diff",
+                truth_path="truth.json",
+                source=TaskSource.HISTORICAL,
+                split=DatasetSplit.PILOT,
+                status=TaskStatus.READY,
+                changed_files=("app.py",),
+                license_spdx="MIT",
+                source_reference="https://example.test/fix",
+                test_command="python -m unittest",
+                patch_sha256=hashlib.sha256(patch_path.read_bytes()).hexdigest(),
+            )
+            destination = workspace / "trial"
+
+            materialize_task(
+                task,
+                workspace=workspace,
+                destination=destination,
+                review_instructions=instructions,
+            )
+
+            self.assertEqual((destination / "app.py").read_text(), "value = 2\n")
+            self.assertFalse((destination / "fix_regression_test.py").exists())
+            self.assertFalse((destination / ".git").exists())
+            self.assertTrue((destination / ".magov-review.diff").is_file())
+            self.assertEqual(
+                (destination / "REVIEW_INSTRUCTIONS.md").read_text(),
+                "Review the change.\n",
+            )
+            result = scan_materialized_task(
+                destination,
+                forbidden_literals=(fix_revision, buggy_revision, "FIX_ANSWER_HINT"),
+            )
+            self.assertEqual(result["status"], "clean")
+
+    def test_leak_scan_rejects_truth_and_sensitive_literals(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory)
+            (destination / "app.py").write_text("secret-fix-commit\n")
+            with self.assertRaisesRegex(ValueError, "forbidden literal"):
+                scan_materialized_task(
+                    destination,
+                    forbidden_literals=("secret-fix-commit",),
+                )
+            (destination / "app.py").write_text("safe\n")
+            (destination / "truth.json").write_text("{}\n")
+            with self.assertRaisesRegex(ValueError, "forbidden path"):
+                scan_materialized_task(destination)
 
     def test_local_fixture_symlinks_are_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

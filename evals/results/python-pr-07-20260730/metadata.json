@@ -1,0 +1,54 @@
+{
+  "experiment_id": "python-pr-07-20260730",
+  "executed_at": "2026-07-30",
+  "task_id": "python-pr-07",
+  "task_role_after_run": "development_calibration",
+  "upstream_repository": "https://github.com/pytest-dev/pluggy.git",
+  "upstream_fix_commit": "20d8143f127a4d7526dbbea441857b4b80ec8bdd",
+  "original_buggy_revision": "6e1d0f13a259776bbf137f90bd7ab8b4474f68e7",
+  "governor_base_commit": "3471820163e47dba27d14761937430e4a6faee40",
+  "model_id": "gpt-5.6-sol",
+  "prompt_version": "python-review-v2",
+  "policy_version": "pilot-v1",
+  "sandbox": "read-only",
+  "user_config": false,
+  "codex_native_multi_agent": false,
+  "codex_cli_version": "0.144.6",
+  "controller_python_version": "3.14.6",
+  "run_order": [
+    "fixed-1",
+    "adaptive-max-4",
+    "fixed-4"
+  ],
+  "valid_run_ids": {
+    "fixed-1": "magov-fixed-de5a67a87ae9",
+    "adaptive-max-4": "magov-6157feb91e99",
+    "fixed-4": "magov-fixed-ffeb3fbae2c8"
+  },
+  "excluded_startup_failure": {
+    "run_id": "magov-fixed-d2dc22c0f9fd",
+    "status": "incomplete",
+    "stop_reason": "runtime_failure",
+    "total_tokens": 0,
+    "reason": "outer execution sandbox denied Codex state database writes"
+  },
+  "aggregate_usage": {
+    "actual_agents": 6,
+    "input_tokens": 528008,
+    "cached_input_tokens": 341504,
+    "output_tokens": 9250,
+    "reasoning_tokens": 3587,
+    "total_tokens": 537258,
+    "tool_calls": 41,
+    "agent_cumulative_time_seconds": 524.688041,
+    "wall_time_seconds": 524.711839
+  },
+  "result_boundary": {
+    "status": "descriptive_only",
+    "claim_allowed": false,
+    "engineering_result": "inconclusive"
+  },
+  "raw_archive": "evals/runs/python-pr-07-20260730",
+  "raw_archive_tracked_by_git": false,
+  "raw_archive_file_count": 47
+}

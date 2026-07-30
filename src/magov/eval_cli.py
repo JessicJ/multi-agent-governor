@@ -31,6 +31,7 @@ from .evaluation import (
     build_trial_matrix,
     materialize_task,
     parse_codex_exec_jsonl,
+    scan_materialized_task,
     score_findings,
     summarize_outcomes,
     validate_task_assets,
@@ -41,6 +42,7 @@ from .execution import (
     ReviewEvidenceVerifier,
 )
 from .fixed_execution import FixedCountController
+from .models import Budget
 
 
 def _reject_json_constant(value: str) -> None:
@@ -104,6 +106,71 @@ def _materialize(args: argparse.Namespace) -> dict[str, Any]:
         matching[0],
         workspace=Path(args.workspace),
         destination=Path(args.destination),
+        review_instructions=(
+            Path(args.review_instructions)
+            if args.review_instructions
+            else None
+        ),
+    )
+
+
+def _leak_scan(args: argparse.Namespace) -> dict[str, Any]:
+    tasks = _load_tasks(args.manifest)
+    matching = [task for task in tasks if task.task_id == args.task_id]
+    if len(matching) != 1:
+        raise ValueError(f"task_id must match exactly one task: {args.task_id}")
+    task = matching[0]
+    workspace = Path(args.workspace).resolve()
+    truth = _load_json(str(workspace / task.truth_path))
+    provenance_path = Path(args.provenance)
+    if not provenance_path.is_absolute():
+        provenance_path = workspace / provenance_path
+    provenance = _load_json(str(provenance_path))
+    provenance_tasks = _items(provenance, "tasks")
+    matching_provenance = [
+        item for item in provenance_tasks if item.get("task_id") == task.task_id
+    ]
+    if len(matching_provenance) != 1:
+        raise ValueError(
+            f"provenance must match exactly one task: {task.task_id}"
+        )
+
+    literals = [
+        task.base_revision,
+        task.materialization_revision,
+        task.source_reference,
+        task.patch_sha256,
+        task.truth_path,
+        task.test_command,
+    ]
+    for defect in _items(truth, "defects"):
+        for key in ("defect_id", "root_cause_category", "trigger_test"):
+            value = defect.get(key)
+            if isinstance(value, str):
+                literals.append(value)
+                if "::" in value:
+                    literals.append(value.rsplit("::", 1)[-1])
+    provenance_item = matching_provenance[0]
+    for key in (
+        "fix_commit",
+        "original_buggy_revision",
+        "source",
+        "pull_request",
+        "issue",
+        "fix_subject",
+    ):
+        value = provenance_item.get(key)
+        if isinstance(value, str):
+            literals.append(value)
+    hints = provenance_item.get("forbidden_agent_hints", ())
+    if isinstance(hints, (str, bytes)) or not isinstance(hints, list):
+        raise ValueError("forbidden_agent_hints must be an array of strings")
+    if any(not isinstance(item, str) for item in hints):
+        raise ValueError("forbidden_agent_hints must be an array of strings")
+    literals.extend(hints)
+    return scan_materialized_task(
+        Path(args.destination),
+        forbidden_literals=literals,
     )
 
 
@@ -254,6 +321,25 @@ def _fixed_config(args: argparse.Namespace) -> dict[str, Any]:
             artifacts_directory=str(
                 Path(args.artifacts_directory).resolve()
             ),
+            budget=Budget(
+                max_agents=args.exact_total_agents,
+                max_cost_multiplier=max(
+                    1.0, float(args.exact_total_agents + 1)
+                ),
+                target_confidence=1.0,
+                min_expected_gain=0.0,
+                max_total_tokens=(
+                    args.max_total_tokens
+                    if args.max_total_tokens is not None
+                    else (
+                        500_000
+                        if args.exact_total_agents == 1
+                        else 2_000_000
+                    )
+                ),
+                max_wall_time_seconds=args.max_wall_time_seconds,
+                max_tool_calls=args.max_tool_calls,
+            ),
         ),
     }
 
@@ -312,11 +398,43 @@ def _run_payload(payload: Any) -> Mapping[str, Any]:
     raise ValueError("run configuration must be a JSON object")
 
 
+def _scripted_dry_run_marker(payload: Any) -> bool:
+    if not isinstance(payload, Mapping):
+        return False
+    marker = payload.get("dry_run")
+    run = _run_payload(payload)
+    runtime = run.get("runtime", {})
+    runtime_kind = (
+        str(runtime.get("kind", "codex-cli"))
+        if isinstance(runtime, Mapping)
+        else ""
+    )
+    if marker is None:
+        if runtime_kind == "scripted":
+            raise ValueError(
+                "scripted evaluation configs must declare "
+                "dry_run.scripted=true and real_experiment=false"
+            )
+        return False
+    if not isinstance(marker, Mapping):
+        raise ValueError("dry_run must be an object")
+    scripted = marker.get("scripted")
+    real_experiment = marker.get("real_experiment")
+    if type(scripted) is not bool or type(real_experiment) is not bool:
+        raise ValueError("dry_run marker values must be booleans")
+    if not scripted or real_experiment or runtime_kind != "scripted":
+        raise ValueError(
+            "dry_run must mark a scripted runtime as non-real"
+        )
+    return True
+
+
 def _fixed_run(args: argparse.Namespace) -> dict[str, Any]:
     path = Path(args.config).resolve()
     envelope = _load_json(str(path))
     trial = _select_fixed_trial(envelope, args.trial_id)
     payload = _run_payload(envelope)
+    scripted = _scripted_dry_run_marker(envelope)
     task_payload = payload.get("task")
     runtime_payload = payload.get("runtime")
     if not isinstance(task_payload, Mapping):
@@ -362,14 +480,20 @@ def _fixed_run(args: argparse.Namespace) -> dict[str, Any]:
             else None
         ),
     )
-    return report.to_dict(
+    result = report.to_dict(
         include_agent_output=args.include_agent_output
     )
+    result["evaluation_mode"] = (
+        "scripted_dry_run" if scripted else "real"
+    )
+    result["real_experiment"] = not scripted
+    return result
 
 
 def _adaptive_outcome(args: argparse.Namespace) -> dict[str, Any]:
+    spec_payload = _load_json(args.spec)
     trial = _select_adaptive_trial(
-        _load_json(args.spec), args.trial_id
+        spec_payload, args.trial_id
     )
     truth = [
         GoldDefect.from_dict(item)
@@ -388,11 +512,13 @@ def _adaptive_outcome(args: argparse.Namespace) -> dict[str, Any]:
         _load_json(args.report),
         truth,
         adjudications,
+        scripted_dry_run=_scripted_dry_run_marker(spec_payload),
     ).to_dict()
 
 
 def _fixed_outcome(args: argparse.Namespace) -> dict[str, Any]:
-    trial = _select_fixed_trial(_load_json(args.spec), args.trial_id)
+    spec_payload = _load_json(args.spec)
+    trial = _select_fixed_trial(spec_payload, args.trial_id)
     truth = [
         GoldDefect.from_dict(item)
         for item in _items(_load_json(args.truth), "defects")
@@ -410,6 +536,7 @@ def _fixed_outcome(args: argparse.Namespace) -> dict[str, Any]:
         _load_json(args.report),
         truth,
         adjudications,
+        scripted_dry_run=_scripted_dry_run_marker(spec_payload),
     ).to_dict()
 
 
@@ -498,6 +625,11 @@ def build_parser() -> argparse.ArgumentParser:
     fixed_config.add_argument("--prompt-template", required=True)
     fixed_config.add_argument("--output-schema", required=True)
     fixed_config.add_argument("--artifacts-directory", required=True)
+    fixed_config.add_argument("--max-total-tokens", type=int)
+    fixed_config.add_argument(
+        "--max-wall-time-seconds", type=float, default=3600
+    )
+    fixed_config.add_argument("--max-tool-calls", type=int, default=400)
     fixed_config.add_argument("--repetition", type=int, default=1)
     fixed_config.set_defaults(handler=_fixed_config)
 
@@ -525,7 +657,25 @@ def build_parser() -> argparse.ArgumentParser:
     materialize.add_argument("task_id")
     materialize.add_argument("destination")
     materialize.add_argument("--workspace", default=".")
+    materialize.add_argument(
+        "--review-instructions",
+        help="copy this workspace-local file as REVIEW_INSTRUCTIONS.md",
+    )
     materialize.set_defaults(handler=_materialize)
+
+    leak_scan = subparsers.add_parser(
+        "leak-scan",
+        help="verify that a materialized task contains no truth or source hints",
+    )
+    leak_scan.add_argument("manifest")
+    leak_scan.add_argument("task_id")
+    leak_scan.add_argument("destination")
+    leak_scan.add_argument("--workspace", default=".")
+    leak_scan.add_argument(
+        "--provenance",
+        default="evals/historical_provenance.json",
+    )
+    leak_scan.set_defaults(handler=_leak_scan)
 
     codex_usage = subparsers.add_parser(
         "codex-usage",

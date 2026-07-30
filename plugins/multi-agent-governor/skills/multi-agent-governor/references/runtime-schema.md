@@ -7,6 +7,18 @@ runtime kinds:
   Agent.
 - `scripted`: deterministic local results for tests and demonstrations.
 
+Every `scripted` input must also carry this top-level marker so its report and
+downstream evaluation cannot be mistaken for a real model run:
+
+```json
+{
+  "dry_run": {
+    "scripted": true,
+    "real_experiment": false
+  }
+}
+```
+
 Relative paths are resolved from the directory containing the run JSON file.
 
 ```json

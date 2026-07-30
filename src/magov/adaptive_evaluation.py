@@ -9,8 +9,8 @@ reusing the same hidden-truth scorer, usage accounting, and checkpoint shape.
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import asdict, dataclass
-from math import isclose
+from dataclasses import asdict, dataclass, replace
+from math import isclose, isfinite
 from statistics import fmean
 from typing import Any, Mapping, Sequence
 
@@ -270,6 +270,7 @@ def build_fixed_run_payload(
     prompt: str,
     output_schema: str,
     artifacts_directory: str,
+    budget: Budget | None = None,
 ) -> dict[str, Any]:
     """Build the same truth-free runtime input for an exact-count arm."""
 
@@ -289,12 +290,15 @@ def build_fixed_run_payload(
         prompt=prompt,
         output_schema=output_schema,
         artifacts_directory=artifacts_directory,
-        budget=Budget(
+        budget=budget
+        or Budget(
             max_agents=trial.exact_total_agents,
             max_cost_multiplier=max(1.0, float(trial.exact_total_agents + 1)),
             target_confidence=1.0,
             min_expected_gain=0.0,
-            max_total_tokens=2_000_000,
+            max_total_tokens=(
+                500_000 if trial.exact_total_agents == 1 else 2_000_000
+            ),
             max_wall_time_seconds=3600,
             max_tool_calls=400,
         ),
@@ -337,6 +341,8 @@ class AdaptiveTrialOutcome:
     coverage_complete: bool
     unresolved_conflicts: int
     checkpoints: tuple[CheckpointObservation, ...]
+    wall_time_seconds: float = 0.0
+    scripted_dry_run: bool = False
 
     def __post_init__(self) -> None:
         if not 1 <= self.actual_total_agents <= self.trial.max_agents:
@@ -353,6 +359,13 @@ class AdaptiveTrialOutcome:
             raise ValueError("stop_reason cannot be empty")
         if self.unresolved_conflicts < 0:
             raise ValueError("unresolved_conflicts cannot be negative")
+        if (
+            not isfinite(self.wall_time_seconds)
+            or self.wall_time_seconds < 0
+        ):
+            raise ValueError("wall_time_seconds cannot be negative")
+        if type(self.scripted_dry_run) is not bool:
+            raise ValueError("scripted_dry_run must be a boolean")
         expected_counts = list(range(1, self.actual_total_agents + 1))
         if not self.checkpoints:
             raise ValueError("adaptive outcome must contain checkpoints")
@@ -431,6 +444,8 @@ class AdaptiveTrialOutcome:
             "coverage_complete": self.coverage_complete,
             "unresolved_conflicts": self.unresolved_conflicts,
             "checkpoints": [item.to_dict() for item in self.checkpoints],
+            "wall_time_seconds": self.wall_time_seconds,
+            "scripted_dry_run": self.scripted_dry_run,
         }
 
     @classmethod
@@ -451,6 +466,11 @@ class AdaptiveTrialOutcome:
             checkpoints=tuple(
                 CheckpointObservation.from_dict(item)
                 for item in payload.get("checkpoints", ())
+            ),
+            wall_time_seconds=float(payload.get("wall_time_seconds", 0.0)),
+            scripted_dry_run=_json_bool(
+                payload.get("scripted_dry_run", False),
+                "scripted_dry_run",
             ),
         )
 
@@ -474,7 +494,28 @@ def _report_findings(
     ]
     if len(findings) != len(raw_findings):
         raise ValueError("every runtime finding must be an object")
-    return tuple(findings)
+
+    # Agent-generated identifiers are labels, not semantic evidence. Independent
+    # Agents can legitimately choose the same label, so namespace later
+    # occurrences deterministically instead of rejecting an otherwise valid
+    # completed run. Finding content and ordering remain unchanged.
+    seen_ids: set[str] = set()
+    occurrences: Counter[str] = Counter()
+    normalized: list[ReviewFinding] = []
+    for finding in findings:
+        base_id = finding.finding_id
+        occurrences[base_id] += 1
+        finding_id = base_id
+        if finding_id in seen_ids:
+            suffix = occurrences[base_id]
+            finding_id = f"{base_id}__occurrence-{suffix}"
+            while finding_id in seen_ids:
+                suffix += 1
+                finding_id = f"{base_id}__occurrence-{suffix}"
+            occurrences[base_id] = suffix
+        seen_ids.add(finding_id)
+        normalized.append(replace(finding, finding_id=finding_id))
+    return tuple(normalized)
 
 
 def _report_checkpoints(
@@ -547,6 +588,8 @@ def adaptive_outcome_from_report(
     report: Mapping[str, Any],
     truth: Sequence[GoldDefect],
     adjudications: Sequence[BlindAdjudication] = (),
+    *,
+    scripted_dry_run: bool = False,
 ) -> AdaptiveTrialOutcome:
     """Join a completed truth-free runtime report with isolated scoring."""
 
@@ -575,6 +618,8 @@ def adaptive_outcome_from_report(
             final_verification.get("unresolved_conflicts", 0)
         ),
         checkpoints=checkpoints,
+        wall_time_seconds=float(report.get("wall_time_seconds", 0.0)),
+        scripted_dry_run=scripted_dry_run,
     )
 
 
@@ -583,6 +628,8 @@ def fixed_outcome_from_report(
     report: Mapping[str, Any],
     truth: Sequence[GoldDefect],
     adjudications: Sequence[BlindAdjudication] = (),
+    *,
+    scripted_dry_run: bool = False,
 ) -> TrialOutcome:
     """Score one exact-count report after its truth-free execution finishes."""
 
@@ -614,6 +661,8 @@ def fixed_outcome_from_report(
             final_verification.get("unresolved_conflicts", 0)
         ),
         checkpoints=checkpoints,
+        wall_time_seconds=float(report.get("wall_time_seconds", 0.0)),
+        scripted_dry_run=scripted_dry_run,
     )
 
 
@@ -633,6 +682,7 @@ def summarize_adaptive_outcomes(
             item.trial.prompt_version,
             item.trial.policy_version,
             item.trial.max_agents,
+            item.scripted_dry_run,
         )
         for item in outcomes
     }
@@ -649,6 +699,15 @@ def summarize_adaptive_outcomes(
     return {
         "status": "descriptive_only",
         "claim_allowed": False,
+        "engineering_result": "inconclusive",
+        "evaluation_mode": (
+            "scripted_dry_run"
+            if all(item.scripted_dry_run for item in outcomes)
+            else "real"
+        ),
+        "real_experiment": not any(
+            item.scripted_dry_run for item in outcomes
+        ),
         "trials": len(outcomes),
         "complete_scores": len(complete),
         "mean_actual_agents": round(
@@ -676,6 +735,12 @@ def summarize_adaptive_outcomes(
         ),
         "mean_total_tokens": round(
             fmean(item.usage.total_tokens for item in outcomes), 2
+        ),
+        "mean_agent_cumulative_time_seconds": round(
+            fmean(item.usage.wall_time_seconds for item in outcomes), 3
+        ),
+        "mean_wall_time_seconds": round(
+            fmean(item.wall_time_seconds for item in outcomes), 3
         ),
         "coverage_complete_rate": round(
             fmean(1.0 if item.coverage_complete else 0.0 for item in outcomes),
@@ -705,6 +770,19 @@ def compare_adaptive_to_fixed(
     ]
     if not reference or not adaptive_outcomes:
         raise ValueError("both reference and adaptive outcomes are required")
+    modes = {
+        item.scripted_dry_run
+        for item in (*fixed_outcomes, *adaptive_outcomes)
+    }
+    if len(modes) != 1:
+        raise ValueError("cannot compare real and scripted dry-run outcomes")
+    scripted_dry_run = next(iter(modes))
+    conditions = {
+        (item.trial.model_id, item.trial.prompt_version)
+        for item in (*fixed_outcomes, *adaptive_outcomes)
+    }
+    if len(conditions) != 1:
+        raise ValueError("all compared arms must use the same model and prompt")
     reference_by_pair = {
         (item.trial.task_id, item.trial.repetition): item
         for item in reference
@@ -745,6 +823,10 @@ def compare_adaptive_to_fixed(
         adaptive_recall = fmean(
             item.score.serious_recall for item in adaptive_outcomes
         )
+        fixed_total_recall = fmean(item.score.recall for item in reference)
+        adaptive_total_recall = fmean(
+            item.score.recall for item in adaptive_outcomes
+        )
         fixed_fp = fmean(
             item.score.false_positive_share or 0.0 for item in reference
         )
@@ -758,6 +840,27 @@ def compare_adaptive_to_fixed(
             "adaptive_mean_serious_recall": round(adaptive_recall, 6),
             "serious_recall_difference": round(
                 adaptive_recall - fixed_recall, 6
+            ),
+            "fixed_mean_total_recall": round(fixed_total_recall, 6),
+            "adaptive_mean_total_recall": round(adaptive_total_recall, 6),
+            "total_recall_difference": round(
+                adaptive_total_recall - fixed_total_recall, 6
+            ),
+            "fixed_found_all_registered_defects_rate": round(
+                fmean(
+                    item.score.found_known_defects
+                    == item.score.total_known_defects
+                    for item in reference
+                ),
+                6,
+            ),
+            "adaptive_found_all_registered_defects_rate": round(
+                fmean(
+                    item.score.found_known_defects
+                    == item.score.total_known_defects
+                    for item in adaptive_outcomes
+                ),
+                6,
             ),
             "fixed_mean_false_positive_share": round(fixed_fp, 6),
             "adaptive_mean_false_positive_share": round(adaptive_fp, 6),
@@ -777,6 +880,11 @@ def compare_adaptive_to_fixed(
                 )
             ),
         }
+        if scripted_dry_run:
+            quality["quality_guardrails_observed"] = None
+            quality["note"] = (
+                "Scripted findings are infrastructure fixtures, not quality evidence."
+            )
 
     fixed_tokens = fmean(item.usage.total_tokens for item in reference)
     adaptive_tokens = fmean(
@@ -784,15 +892,85 @@ def compare_adaptive_to_fixed(
     )
     if fixed_tokens <= 0:
         raise ValueError("fixed reference token usage must be positive")
+
+    def arm_metrics(items: Sequence[Any]) -> dict[str, Any]:
+        false_positive_values = [
+            item.score.false_positive_share
+            for item in items
+            if item.score.false_positive_share is not None
+        ]
+        return {
+            "trials": len(items),
+            "mean_actual_agents": round(
+                fmean(item.actual_total_agents for item in items), 6
+            ),
+            "mean_serious_recall": round(
+                fmean(item.score.serious_recall for item in items), 6
+            ),
+            "mean_total_recall": round(
+                fmean(item.score.recall for item in items), 6
+            ),
+            "found_all_registered_defects_rate": round(
+                fmean(
+                    item.score.found_known_defects
+                    == item.score.total_known_defects
+                    for item in items
+                ),
+                6,
+            ),
+            "mean_false_positive_share": (
+                round(fmean(false_positive_values), 6)
+                if false_positive_values
+                else None
+            ),
+            "mean_input_tokens": round(
+                fmean(item.usage.agent_input_tokens for item in items), 2
+            ),
+            "mean_cached_input_tokens": round(
+                fmean(item.usage.cached_input_tokens for item in items), 2
+            ),
+            "mean_output_tokens": round(
+                fmean(item.usage.agent_output_tokens for item in items), 2
+            ),
+            "mean_reasoning_tokens": round(
+                fmean(item.usage.reasoning_output_tokens for item in items), 2
+            ),
+            "mean_total_tokens": round(
+                fmean(item.usage.total_tokens for item in items), 2
+            ),
+            "mean_tool_calls": round(
+                fmean(item.usage.tool_calls for item in items), 2
+            ),
+            "mean_agent_cumulative_time_seconds": round(
+                fmean(item.usage.wall_time_seconds for item in items), 3
+            ),
+            "mean_wall_time_seconds": round(
+                fmean(item.wall_time_seconds for item in items), 3
+            ),
+        }
+
+    fixed_by_count: dict[int, list[TrialOutcome]] = {}
+    for item in fixed_outcomes:
+        fixed_by_count.setdefault(item.actual_total_agents, []).append(item)
+    arms = {
+        f"fixed-{count}": arm_metrics(items)
+        for count, items in sorted(fixed_by_count.items())
+    }
+    arms["adaptive-max-4"] = arm_metrics(adaptive_outcomes)
     return {
         "status": "descriptive_only",
         "claim_allowed": False,
         "engineering_result": "inconclusive",
+        "evaluation_mode": (
+            "scripted_dry_run" if scripted_dry_run else "real"
+        ),
+        "real_experiment": not scripted_dry_run,
         "reference_agents": reference_agents,
         "paired_trials": len(reference),
         "quality": quality,
         "fixed_mean_total_tokens": round(fixed_tokens, 2),
         "adaptive_mean_total_tokens": round(adaptive_tokens, 2),
+        "arms": arms,
         "token_saving_rate": round(
             (fixed_tokens - adaptive_tokens) / fixed_tokens, 6
         ),

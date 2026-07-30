@@ -1,4 +1,8 @@
 {
+  "dry_run": {
+    "scripted": true,
+    "real_experiment": false
+  },
   "task": {
     "task_id": "scripted-review-demo",
     "prompt": "Review the changed files and return the required structured JSON.",

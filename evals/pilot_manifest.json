@@ -113,6 +113,7 @@
       "language": "python",
       "repository": "https://github.com/pytest-dev/pluggy.git",
       "base_revision": "20d8143f127a4d7526dbbea441857b4b80ec8bdd",
+      "materialization_revision": "6e1d0f13a259776bbf137f90bd7ab8b4474f68e7",
       "patch_path": "evals/tasks/python-pr-07/change.diff",
       "truth_path": "evals/tasks/python-pr-07/truth.json",
       "changed_files": ["src/pluggy/_hooks.py", "src/pluggy/_manager.py"],

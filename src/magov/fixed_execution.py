@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import monotonic
 from typing import Any, Mapping, Sequence
 from uuid import uuid4
 
@@ -32,6 +33,7 @@ class FixedExecutionReport:
     aggregate: AggregatedResult
     verification: VerificationResult
     usage: UsageObservation
+    wall_time_seconds: float
     agent_results: tuple[AgentResult, ...]
     checkpoints: tuple[ExecutionCheckpoint, ...]
 
@@ -70,6 +72,7 @@ class FixedExecutionReport:
             "aggregate": self.aggregate.to_dict(),
             "verification": self.verification.to_dict(),
             "usage": self.usage.to_dict(),
+            "wall_time_seconds": self.wall_time_seconds,
             "agent_results": [
                 result.to_dict(include_output=include_agent_output)
                 for result in self.agent_results
@@ -114,18 +117,13 @@ class FixedCountController:
         agent_index: int,
         exact_total_agents: int,
     ) -> str:
-        role = FixedCountController._role(
-            agent_index, exact_total_agents
-        )
+        del exact_total_agents
+        if agent_index == 1:
+            return task.prompt
         return (
             task.prompt
-            + f"\n\n本次固定数量对照组角色：{role}。"
-            + (
-                "\n请独立审查同一代码快照，不要假设其他 Agent 的结论正确。"
-                if agent_index > 1
-                else ""
-            )
-            + "\n只返回任务要求的结构化 JSON。"
+            + "\n\n你是独立复核 Agent。请独立完成任务，不要假设其他 "
+            "Agent 的结论正确，并只返回任务要求的结构化结果。"
         )
 
     @staticmethod
@@ -182,6 +180,7 @@ class FixedCountController:
             if value is not None and value <= 0:
                 raise ValueError(f"{name} must be positive")
         run_id = f"magov-fixed-{uuid4().hex[:12]}"
+        started_at = monotonic()
         results: list[AgentResult] = []
         checkpoints: list[ExecutionCheckpoint] = []
         previous_score = 0.0
@@ -310,6 +309,7 @@ class FixedCountController:
             aggregate=aggregate,
             verification=verification,
             usage=add_usage(item.usage for item in results),
+            wall_time_seconds=monotonic() - started_at,
             agent_results=tuple(results),
             checkpoints=tuple(checkpoints),
         )

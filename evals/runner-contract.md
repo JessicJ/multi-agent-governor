@@ -39,8 +39,10 @@ magov-eval fixed-outcome \
 
 `fixed-run` 即使过程覆盖提前达到目标也必须继续到 N；若任一 Agent
 运行失败，或 Token、耗时、工具调用安全上限被触发，整次试验标记为
-`incomplete`，不能生成正式 outcome。默认固定组安全上限为 2,000,000
-Token、3600 秒累计 Agent 耗时和 400 次工具调用。
+`incomplete`，不能生成正式 outcome。首次 `python-pr-07` mini-pilot 的
+fixed-1 上限为 500,000 Token，fixed-4 上限为 2,000,000 Token；两组均为
+3600 秒累计 Agent 耗时和 400 次工具调用。报告同时记录累计 Agent 时间与
+控制器墙钟时间。
 
 ## 不可变的实验条件
 

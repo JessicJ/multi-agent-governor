@@ -37,7 +37,34 @@ from magov import (
     summarize_adaptive_outcomes,
 )
 from magov.adapters import ScriptedRuntime
+from magov.adaptive_evaluation import _report_findings
 from magov.eval_cli import main as eval_main
+
+
+class CapturingRuntime:
+    def __init__(self) -> None:
+        self.requests = []
+
+    def run_agent(self, request):
+        self.requests.append(request)
+        return AgentResult(
+            run_id=request.run_id,
+            agent_index=request.agent_index,
+            role=request.role,
+            success=True,
+            output=json.dumps(
+                {
+                    "findings": [],
+                    "reviewed_files": (
+                        ["service/auth.py"]
+                        if request.agent_index == 1
+                        else ["service/storage.py"]
+                    ),
+                    "unresolved_conflicts": 0,
+                }
+            ),
+            usage=usage(),
+        )
 
 
 def ready_task(
@@ -110,6 +137,70 @@ def agent_result(
 
 
 class AdaptiveEvaluationTests(unittest.TestCase):
+    def test_report_findings_namespaces_duplicate_agent_ids(self) -> None:
+        finding = {
+            "finding_id": "runtime-assigned-reviewer-1",
+            "file": "service/auth.py",
+            "symbol": "authorize",
+            "root_cause_category": "missing-permission-check",
+            "impact": "Unauthorized access",
+            "evidence": "The caller role is not checked.",
+            "claimed_severity": "serious",
+        }
+        findings = _report_findings(
+            {
+                "aggregate": {
+                    "metadata": {
+                        "findings": [finding, dict(finding)],
+                    }
+                }
+            }
+        )
+
+        self.assertEqual(
+            [item.finding_id for item in findings],
+            [
+                "runtime-assigned-reviewer-1",
+                "runtime-assigned-reviewer-1__occurrence-2",
+            ],
+        )
+
+    def test_fixed_and_adaptive_arms_use_the_same_agent_prompts(self) -> None:
+        task = ready_task(high_risk=False)
+        with tempfile.TemporaryDirectory() as directory:
+            execution_task = ExecutionTask(
+                task_id=task.task_id,
+                prompt="Identical preregistered review prompt.",
+                working_directory=Path(directory),
+                signals=derive_pilot_review_signals(task),
+                metadata={
+                    "changed_files": list(task.changed_files),
+                    "high_risk_files": list(task.high_risk_files),
+                },
+            )
+            fixed_runtime = CapturingRuntime()
+            adaptive_runtime = CapturingRuntime()
+            FixedCountController(
+                runtime=fixed_runtime,
+                aggregator=JsonFindingsAggregator(),
+                verifier=ReviewEvidenceVerifier(),
+            ).execute(execution_task, exact_total_agents=4)
+            AdaptiveController(
+                runtime=adaptive_runtime,
+                aggregator=JsonFindingsAggregator(),
+                verifier=ReviewEvidenceVerifier(),
+            ).execute(execution_task, Budget(max_agents=4))
+
+        self.assertGreaterEqual(len(adaptive_runtime.requests), 2)
+        self.assertEqual(
+            [item.prompt for item in fixed_runtime.requests[:2]],
+            [item.prompt for item in adaptive_runtime.requests[:2]],
+        )
+        self.assertEqual(
+            [item.role for item in fixed_runtime.requests[:2]],
+            [item.role for item in adaptive_runtime.requests[:2]],
+        )
+
     def test_matrix_and_signals_use_only_public_task_metadata(self) -> None:
         high_risk = ready_task()
         ordinary = ready_task(task_id="python-pr-01", high_risk=False)
