@@ -61,6 +61,8 @@ class DecisionReceipt:
     def __post_init__(self) -> None:
         if not self.decision_id.strip() or not self.task_id.strip():
             raise ValueError("decision_id and task_id cannot be empty")
+        if not self.policy_version.strip():
+            raise ValueError("policy_version cannot be empty")
         if self.current_agents < 1:
             raise ValueError("current_agents must be at least 1")
         if self.max_agents < 1:

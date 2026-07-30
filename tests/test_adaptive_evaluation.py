@@ -10,6 +10,7 @@ from pathlib import Path
 from magov import (
     AdaptiveController,
     AdaptiveTrialOutcome,
+    AdaptiveTrialSpec,
     AgentResult,
     Budget,
     CheckpointObservation,
@@ -250,6 +251,7 @@ class AdaptiveEvaluationTests(unittest.TestCase):
         self.assertEqual(
             payload["runtime"]["extra_args"], ["--ignore-user-config"]
         )
+        self.assertEqual(payload["policy"], {"version": "pilot-v1"})
 
     def test_runtime_report_converts_to_scored_adaptive_outcome(self) -> None:
         task = ready_task()
@@ -306,6 +308,24 @@ class AdaptiveEvaluationTests(unittest.TestCase):
         self.assertEqual(
             [item.total_agents for item in outcome.checkpoints], [1, 2]
         )
+
+    def test_pilot_v2_outcome_requires_reported_policy_version(self) -> None:
+        trial = AdaptiveTrialSpec(
+            trial_id="python-pr-09__adaptive-max-4__repeat-1",
+            task_id="python-pr-09",
+            max_agents=4,
+            repetition=1,
+            model_id="fixed-model",
+            prompt_version="python-review-v2",
+            policy_version="pilot-v2",
+        )
+        report = {
+            "task_id": "python-pr-09",
+            "actual_total_agents": 1,
+        }
+
+        with self.assertRaisesRegex(ValueError, "must declare policy_version"):
+            adaptive_outcome_from_report(trial, report, ())
 
     def test_fixed_controller_reaches_exact_count_despite_early_target(self) -> None:
         task = ready_task()

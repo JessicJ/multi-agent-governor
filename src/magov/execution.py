@@ -207,6 +207,7 @@ class VerificationResult:
     coverage_complete: bool = False
     evidence_keys: tuple[str, ...] = ()
     reviewed_files: tuple[str, ...] = ()
+    independently_reviewed_files: tuple[str, ...] = ()
     independently_reviewed_high_risk_files: tuple[str, ...] = ()
     unresolved_conflicts: int = 0
     remaining_risks: tuple[str, ...] = ()
@@ -371,9 +372,16 @@ class ReviewEvidenceVerifier:
     """Process verifier for structured code review.
 
     It deliberately does not claim correctness.  It scores observable changed
-    file coverage, independent high-risk coverage, and unresolved conflicts.
-    Hidden truth remains reserved for offline evaluation.
+    file coverage, policy-versioned independent review coverage, and unresolved
+    conflicts. Hidden truth remains reserved for offline evaluation.
     """
+
+    def __init__(self, policy_version: str = "pilot-v1") -> None:
+        if policy_version not in Governor.SUPPORTED_POLICY_VERSIONS:
+            raise ValueError(
+                f"unsupported review verifier policy version: {policy_version}"
+            )
+        self.policy_version = policy_version
 
     def verify(
         self,
@@ -411,17 +419,36 @@ class ReviewEvidenceVerifier:
             if high_risk_files
             else 1.0
         )
+        independent_changed_coverage = (
+            len(changed_files & independently_reviewed) / len(changed_files)
+            if changed_files
+            else 0.0
+        )
         conflict_score = 1.0 if aggregate.unresolved_conflicts == 0 else 0.0
-        score = (
-            0.65 * file_coverage
-            + 0.25 * high_risk_coverage
-            + 0.10 * conflict_score
-        )
-        coverage_complete = (
-            changed_files.issubset(reviewed)
-            and high_risk_files.issubset(independently_reviewed)
-            and aggregate.unresolved_conflicts == 0
-        )
+        if self.policy_version == "pilot-v2":
+            score = (
+                0.45 * file_coverage
+                + 0.30 * independent_changed_coverage
+                + 0.15 * high_risk_coverage
+                + 0.10 * conflict_score
+            )
+            coverage_complete = (
+                changed_files.issubset(reviewed)
+                and changed_files.issubset(independently_reviewed)
+                and high_risk_files.issubset(independently_reviewed)
+                and aggregate.unresolved_conflicts == 0
+            )
+        else:
+            score = (
+                0.65 * file_coverage
+                + 0.25 * high_risk_coverage
+                + 0.10 * conflict_score
+            )
+            coverage_complete = (
+                changed_files.issubset(reviewed)
+                and high_risk_files.issubset(independently_reviewed)
+                and aggregate.unresolved_conflicts == 0
+            )
         remaining: list[str] = []
         if not changed_files:
             remaining.append(
@@ -430,6 +457,11 @@ class ReviewEvidenceVerifier:
             coverage_complete = False
         for filename in sorted(changed_files - reviewed):
             remaining.append(f"Changed file not reviewed: {filename}")
+        if self.policy_version == "pilot-v2":
+            for filename in sorted(changed_files - independently_reviewed):
+                remaining.append(
+                    f"Changed file lacks independent review: {filename}"
+                )
         for filename in sorted(high_risk_files - independently_reviewed):
             remaining.append(
                 f"High-risk file lacks independent review: {filename}"
@@ -453,6 +485,9 @@ class ReviewEvidenceVerifier:
             coverage_complete=coverage_complete,
             evidence_keys=aggregate.evidence_keys,
             reviewed_files=aggregate.reviewed_files,
+            independently_reviewed_files=tuple(
+                sorted(changed_files & independently_reviewed)
+            ),
             independently_reviewed_high_risk_files=tuple(
                 sorted(high_risk_files & independently_reviewed)
             ),
@@ -460,8 +495,13 @@ class ReviewEvidenceVerifier:
             remaining_risks=tuple(remaining),
             explanation=(
                 "Score is based on observable review coverage, independent "
-                "high-risk review, and unresolved conflicts; it is not model "
-                "self-confidence or hidden-truth correctness."
+                + (
+                    "changed-file review, independent high-risk review, "
+                    if self.policy_version == "pilot-v2"
+                    else "high-risk review, "
+                )
+                + "and unresolved conflicts; it is not model self-confidence "
+                "or hidden-truth correctness."
             ),
         )
 
@@ -514,6 +554,11 @@ class ExecutionReport:
     receipts: tuple[DecisionReceipt, ...]
     event_count: int
     wall_time_seconds: float
+    policy_version: str
+
+    def __post_init__(self) -> None:
+        if not self.policy_version.strip():
+            raise ValueError("policy_version cannot be empty")
 
     def to_dict(self, *, include_agent_output: bool = False) -> dict[str, Any]:
         return {
@@ -536,6 +581,7 @@ class ExecutionReport:
             "receipts": [receipt.to_dict() for receipt in self.receipts],
             "event_count": self.event_count,
             "wall_time_seconds": self.wall_time_seconds,
+            "policy_version": self.policy_version,
         }
 
 
@@ -665,8 +711,8 @@ class AdaptiveController:
             wall_time_seconds=usage.wall_time_seconds,
         )
 
-    @staticmethod
     def _receipt(
+        self,
         *,
         run_id: str,
         task_id: str,
@@ -696,6 +742,7 @@ class AdaptiveController:
             remaining_risks=remaining_risks,
             governance_tokens=usage.governance_tokens,
             total_task_tokens=usage.total_tokens,
+            policy_version=self.governor.policy_version,
         )
 
     @staticmethod
@@ -733,7 +780,10 @@ class AdaptiveController:
             run_id=run_id,
             task_id=task.task_id,
             event_type="run_started",
-            data={"max_agents": budget.max_agents},
+            data={
+                "max_agents": budget.max_agents,
+                "policy_version": self.governor.policy_version,
+            },
         )
 
         baseline_request = AgentRequest(
@@ -1170,6 +1220,7 @@ class AdaptiveController:
                 "status": status,
                 "actual_total_agents": len(results),
                 "stop_reason": stop_reason.value,
+                "policy_version": self.governor.policy_version,
                 "usage": usage.to_dict(),
                 "verification": verification.to_dict(),
             },
@@ -1189,4 +1240,5 @@ class AdaptiveController:
             receipts=tuple(receipts),
             event_count=self._event_sequence,
             wall_time_seconds=monotonic() - self._run_started_at,
+            policy_version=self.governor.policy_version,
         )

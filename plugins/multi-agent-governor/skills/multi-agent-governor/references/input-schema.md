@@ -4,6 +4,9 @@ All ratio signals use `0..1`. Start from one measured Agent baseline.
 
 ```json
 {
+  "policy": {
+    "version": "pilot-v1"
+  },
   "signals": {
     "parallelizable_units": 4,
     "parallel_fraction": 0.8,
@@ -33,6 +36,10 @@ All ratio signals use `0..1`. Start from one measured Agent baseline.
   }
 }
 ```
+
+Use an explicit supported version (`pilot-v1` or `pilot-v2`) for reproducible
+plans. Advisory inputs that omit `policy` retain the backward-compatible
+`pilot-v1` default; executable run inputs must declare the version.
 
 ## Evidence rules
 

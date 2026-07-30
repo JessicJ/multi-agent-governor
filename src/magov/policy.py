@@ -29,6 +29,16 @@ class Governor:
 
     MIN_PARALLEL_FRACTION = 0.20
     HIGH_COUPLING = 0.78
+    SUPPORTED_POLICY_VERSIONS = ("pilot-v1", "pilot-v2")
+
+    def __init__(self, policy_version: str = "pilot-v1") -> None:
+        if policy_version not in self.SUPPORTED_POLICY_VERSIONS:
+            raise ValueError(
+                "unsupported policy version: "
+                f"{policy_version}; expected one of "
+                + ", ".join(self.SUPPORTED_POLICY_VERSIONS)
+            )
+        self.policy_version = policy_version
 
     def decide(
         self,
@@ -98,6 +108,21 @@ class Governor:
             )
 
         mode = self._select_mode(signals)
+        minimum_total_agents = 1
+        if (
+            self.policy_version == "pilot-v2"
+            and mode is Mode.INDEPENDENT
+            and not baseline.verified
+            and signals.parallelizable_units >= 2
+            and budget.max_agents >= 2
+        ):
+            minimum_total_agents = 2
+            trace.add(
+                "independent_review_floor",
+                1.0,
+                "pilot-v2 requires one independent review before an "
+                "unverified, separable task may stop.",
+            )
         candidates: list[Candidate] = []
         confidence = baseline.confidence
         cost_multiplier = 1.0
@@ -120,7 +145,10 @@ class Governor:
             if candidate.expected_cost_multiplier > budget.max_cost_multiplier:
                 stop_reason = StopReason.COST_BUDGET_REACHED
                 break
-            if candidate.net_marginal_utility < budget.min_expected_gain:
+            if (
+                total_agents > minimum_total_agents
+                and candidate.net_marginal_utility < budget.min_expected_gain
+            ):
                 stop_reason = StopReason.MARGINAL_GAIN_TOO_LOW
                 break
 
@@ -380,7 +408,11 @@ class Governor:
         return Candidate(
             total_agents=total_agents,
             expected_confidence=round(
-                min(0.995, current_confidence + marginal_quality), 4
+                max(
+                    current_confidence,
+                    min(0.995, current_confidence + marginal_quality),
+                ),
+                4,
             ),
             expected_cost_multiplier=round(expected_cost, 4),
             marginal_quality_gain=round(marginal_quality, 4),

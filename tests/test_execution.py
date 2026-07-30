@@ -11,6 +11,7 @@ from magov import (
     AgentResult,
     Budget,
     ExecutionTask,
+    Governor,
     JsonFindingsAggregator,
     MemoryEventSink,
     ReviewEvidenceVerifier,
@@ -146,6 +147,49 @@ class AdaptiveControllerTests(unittest.TestCase):
         self.assertEqual(
             [event.sequence for event in sink.events],
             list(range(1, len(sink.events) + 1)),
+        )
+
+    def test_pilot_v2_requires_independent_changed_file_review(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime(
+                [
+                    review_result(1, reviewed_files=["auth.py"]),
+                    review_result(2, reviewed_files=["auth.py"]),
+                ]
+            )
+            sink = MemoryEventSink()
+            report = AdaptiveController(
+                runtime=runtime,
+                aggregator=JsonFindingsAggregator(),
+                verifier=ReviewEvidenceVerifier("pilot-v2"),
+                governor=Governor("pilot-v2"),
+                event_sink=sink,
+            ).execute(
+                self._task(Path(directory)),
+                Budget(
+                    max_agents=4,
+                    max_cost_multiplier=6,
+                    target_confidence=0.95,
+                    min_expected_gain=0.005,
+                ),
+            )
+
+        self.assertEqual(report.policy_version, "pilot-v2")
+        self.assertEqual(report.actual_total_agents, 2)
+        self.assertFalse(report.checkpoints[0].verification.coverage_complete)
+        self.assertTrue(report.verification.coverage_complete)
+        self.assertEqual(
+            report.verification.independently_reviewed_files,
+            ("auth.py",),
+        )
+        self.assertTrue(
+            all(
+                receipt.policy_version == "pilot-v2"
+                for receipt in report.receipts
+            )
+        )
+        self.assertEqual(
+            sink.events[0].data["policy_version"], "pilot-v2"
         )
 
     def test_observed_plateau_stops_before_planned_cap(self) -> None:

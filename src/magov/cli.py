@@ -69,7 +69,11 @@ def evaluate(payload: dict[str, Any]) -> dict[str, Any]:
     signals = TaskSignals(**payload["signals"])
     baseline = BaselineObservation(**payload["baseline"])
     budget = Budget(**payload.get("budget", {}))
-    return Governor().decide(signals, baseline, budget).to_dict()
+    policy_payload = payload.get("policy", {})
+    if not isinstance(policy_payload, Mapping):
+        raise ValueError("policy must be an object")
+    policy_version = str(policy_payload.get("version", "pilot-v1"))
+    return Governor(policy_version).decide(signals, baseline, budget).to_dict()
 
 
 def _path_from_config(
@@ -193,12 +197,26 @@ def execute_payload(
         raise ValueError(
             "the first executable release supports verifier kind 'review' only"
         )
+    policy_payload = payload.get("policy")
+    if not isinstance(policy_payload, Mapping):
+        raise ValueError("run input requires a policy object")
+    if not policy_payload.get("version"):
+        raise ValueError("run policy requires an explicit version")
+    policy_version = str(policy_payload["version"])
     task = ExecutionTask.from_dict(
         task_payload, base_directory=base_directory
     )
     if not task.metadata.get("changed_files"):
         raise ValueError(
             "review verifier requires task.metadata.changed_files"
+        )
+    declared_policy_version = task.metadata.get("policy_version")
+    if (
+        declared_policy_version is not None
+        and str(declared_policy_version) != policy_version
+    ):
+        raise ValueError(
+            "task metadata policy_version must match policy.version"
         )
     runtime = runtime_from_payload(
         runtime_payload, base_directory=base_directory
@@ -211,7 +229,8 @@ def execute_payload(
     controller = AdaptiveController(
         runtime=runtime,
         aggregator=JsonFindingsAggregator(),
-        verifier=ReviewEvidenceVerifier(),
+        verifier=ReviewEvidenceVerifier(policy_version),
+        governor=Governor(policy_version),
         event_sink=event_sink,
         governance_tokens=int(payload.get("governance_tokens", 0)),
     )

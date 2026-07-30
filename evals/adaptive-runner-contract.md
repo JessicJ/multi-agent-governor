@@ -3,6 +3,9 @@
 本文件只描述 `magov run` 自适应对照组。固定 1、2、3、4 Agent 组继续
 遵循 [runner-contract.md](runner-contract.md)。
 
+本约定中的 `pilot-v1` 已由首次真实运行冻结。`pilot-v2` 的开发规则和
+数据角色见 [pilot-v2.md](pilot-v2.md)；两个版本不得在同一比较中混用。
+
 ## 预先固定的条件
 
 - 模型：所有组使用同一个精确模型版本；

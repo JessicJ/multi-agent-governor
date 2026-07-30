@@ -257,6 +257,7 @@ def build_adaptive_run_payload(
             "extra_args": ["--ignore-user-config"],
         },
         "verifier": {"kind": "review"},
+        "policy": {"version": trial.policy_version},
         "budget": asdict(configured_budget),
         "governance_tokens": 0,
     }
@@ -595,6 +596,18 @@ def adaptive_outcome_from_report(
 
     if str(report.get("task_id", "")) != trial.task_id:
         raise ValueError("runtime report task_id does not match the trial")
+    reported_policy = report.get("policy_version")
+    if reported_policy is None and trial.policy_version != "pilot-v1":
+        raise ValueError(
+            "runtime report must declare policy_version for this trial"
+        )
+    if (
+        reported_policy is not None
+        and str(reported_policy) != trial.policy_version
+    ):
+        raise ValueError(
+            "runtime report policy_version does not match the adaptive trial"
+        )
     findings = _report_findings(report)
     checkpoints = _report_checkpoints(report)
 

@@ -48,6 +48,12 @@ PYTHONPATH=src python3 -m magov.eval_cli adaptive-plan \
 三臂验收。`python-pr-09` 至 `python-pr-12` 继续保留为工程测试夹具，
 但不作为首次真实 mini-pilot。
 
+首次真实结果已归档在
+[`results/python-pr-07-20260730/`](results/python-pr-07-20260730/)。
+该任务现已转为策略开发和校准数据。下一版
+[`pilot-v2`](pilot-v2.md) 只完成了规则与 scripted 验证；在另行冻结新的
+真实任务前，不得把 `python-pr-07` 重跑结果当作 v2 的未见验证证据。
+
 已有的 `python-review-v1` 局部结果不能与 `python-review-v2` 自适应结果
 混用。正式配对比较必须用 v2 重新运行所选固定数量参考组。
 

@@ -45,8 +45,9 @@ the review, the task can be isolated in one working directory, and `codex exec`
 is installed and authenticated.
 
 1. Read [references/runtime-schema.md](references/runtime-schema.md).
-2. Put the review instructions, structural signals, changed files, high-risk
-   files, budgets, and Codex runtime configuration in one run JSON file.
+2. Put the exact supported `policy.version`, review instructions, structural
+   signals, changed files, high-risk files, budgets, and Codex runtime
+   configuration in one run JSON file.
 3. Keep truth cards, hidden tests, previous Agent output, and the event log
    outside the Agent working directory.
 4. Ensure every extra Agent is launched by `magov run`; do not also use the
@@ -67,6 +68,9 @@ is installed and authenticated.
 ## Guardrails
 
 - Preserve a forced single-Agent baseline.
+- Reject unknown or mismatched policy versions; never silently fall back.
+- Under `pilot-v2`, require one independent review before an unverified,
+  separable independent review task may stop, unless a budget blocks admission.
 - Treat `total_agents` as including the baseline Agent.
 - Respect the user's cap even when the policy proposes more Agents.
 - Prefer two Agents as the first real scale-out step; add later Agents one at

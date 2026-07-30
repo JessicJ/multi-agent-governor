@@ -62,6 +62,7 @@ Relative paths are resolved from the directory containing the run JSON file.
     "artifacts_directory": "/absolute/path/outside/agent/workspace"
   },
   "verifier": {"kind": "review"},
+  "policy": {"version": "pilot-v2"},
   "budget": {
     "max_agents": 4,
     "max_cost_multiplier": 5,
@@ -81,6 +82,16 @@ The review verifier uses only observable process evidence:
 - independent review of declared high-risk files;
 - unresolved conflicts;
 - unique structured findings.
+
+Supported policy versions are `pilot-v1` and `pilot-v2`. The version is
+recorded in the runtime report and every decision receipt. Unknown or
+mismatched versions are rejected.
+
+`pilot-v1` preserves the original high-risk-file independent-review contract.
+For an unverified separable task using independent topology, `pilot-v2`
+requires one independent review before stopping when budgets allow it.
+`pilot-v2` also requires independent review of every changed file before
+`coverage_complete` can be true.
 
 It does not read hidden truth and never treats a model's self-reported
 confidence as evidence. `coverage_complete: true` means the declared review

@@ -36,6 +36,9 @@ PYTHONPATH=src python3 -m magov.cli plan examples/research_task.json
 PYTHONPATH=src python3 -m magov.cli run \
   examples/runtime_review_scripted.json \
   --events /tmp/magov-demo.events.jsonl
+PYTHONPATH=src python3 -m magov.cli run \
+  examples/runtime_review_scripted_v2.json \
+  --events /tmp/magov-v2-demo.events.jsonl
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
@@ -43,6 +46,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 `runtime_review_scripted.json` 不调用模型，用固定结果演示 baseline、扩容、验证和提前停止的完整状态机。scripted 配置必须显式包含
 `dry_run: {"scripted": true, "real_experiment": false}`；运行报告、outcome
 和 compare 会保留该标记，防止 dry-run 被误当成真实实验。
+`runtime_review_scripted_v2.json` 额外验证 v2 在单 Agent 已覆盖文件后仍要求
+一次独立复核，并把精确策略版本写入报告和 receipt。
 
 如果版本低于 3.10，请先安装较新的 Python，再继续下面的安装步骤。
 
@@ -86,6 +91,7 @@ Use $multi-agent-governor to decide whether this task should use more agents and
 
 第一种可执行场景限定为只读代码审查。运行 JSON 必须声明：
 
+- 精确的 `policy.version`，当前支持 `pilot-v1` 和开发中的 `pilot-v2`；
 - 隔离的 Agent 工作目录；
 - 固定审查提示词与结构化输出 schema；
 - 变更文件与至少需要双重检查的高风险文件；
@@ -109,6 +115,12 @@ magov report RUN.report.json
 5. 每轮重新聚合、验证、记录真实 Token/耗时/工具调用；
 6. 在质量目标、计划上限、Agent 上限、成本、Token、耗时、工具预算或边际收益平台期停止；
 7. 输出可回放事件日志和决策收据。
+
+`pilot-v1` 保留首次真实实验的原始行为。开发中的 `pilot-v2` 对未被外部
+verifier 证明、具有至少两个可分离单元且采用独立拓扑的审查，要求停止前
+至少完成一次独立复核；同时把 changed-file 独立复核纳入过程覆盖。完整
+冻结规则见 [`evals/pilot-v2.md`](evals/pilot-v2.md)。这仍是开发规则，
+不是效果声明。
 
 Codex JSONL 和最终消息默认写入 Agent 工作目录之外的临时目录。适配器
 显式关闭单次 Codex 进程内部的原生多 Agent 工具，拒绝

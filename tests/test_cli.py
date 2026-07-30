@@ -5,11 +5,73 @@ import unittest
 import json
 from pathlib import Path
 
-from magov.cli import main, replay_events, summarize_reports
+from magov.cli import execute_payload, main, replay_events, summarize_reports
 from magov.events import JsonlEventSink
 
 
 class CliValidationTests(unittest.TestCase):
+    @staticmethod
+    def _minimal_scripted_run(directory: str) -> dict:
+        return {
+            "dry_run": {
+                "scripted": True,
+                "real_experiment": False,
+            },
+            "task": {
+                "task_id": "policy-validation",
+                "prompt": "Review and return JSON.",
+                "working_directory": directory,
+                "signals": {},
+                "metadata": {"changed_files": ["auth.py"]},
+            },
+            "runtime": {
+                "kind": "scripted",
+                "results": [
+                    {
+                        "output": {
+                            "findings": [],
+                            "reviewed_files": ["auth.py"],
+                            "unresolved_conflicts": 0,
+                        }
+                    }
+                ],
+            },
+        }
+
+    def test_run_requires_explicit_policy_version(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(
+                ValueError, "requires a policy object"
+            ):
+                execute_payload(
+                    self._minimal_scripted_run(directory),
+                    base_directory=Path(directory),
+                )
+
+    def test_run_rejects_mismatched_policy_versions(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            payload = self._minimal_scripted_run(directory)
+            payload["policy"] = {"version": "pilot-v1"}
+            payload["task"]["metadata"]["policy_version"] = "pilot-v2"
+            with self.assertRaisesRegex(ValueError, "must match"):
+                execute_payload(payload, base_directory=Path(directory))
+
+    def test_unknown_policy_version_is_rejected(self) -> None:
+        payload = {
+            "policy": {"version": "pilot-v999"},
+            "signals": {},
+            "baseline": {"confidence": 0.5},
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "input.json"
+            path.write_text(json.dumps(payload))
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                status = main([str(path)])
+
+        self.assertEqual(status, 2)
+        self.assertIn("unsupported policy version", stderr.getvalue())
+
     def test_non_finite_json_numbers_are_rejected(self) -> None:
         payload = """
         {
@@ -60,6 +122,7 @@ class CliValidationTests(unittest.TestCase):
                                 "high_risk_files": ["auth.py"],
                             },
                         },
+                        "policy": {"version": "pilot-v1"},
                         "runtime": {
                             "kind": "scripted",
                             "results": [

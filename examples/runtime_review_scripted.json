@@ -74,6 +74,7 @@
     ]
   },
   "verifier": {"kind": "review"},
+  "policy": {"version": "pilot-v1"},
   "budget": {
     "max_agents": 4,
     "max_cost_multiplier": 6,

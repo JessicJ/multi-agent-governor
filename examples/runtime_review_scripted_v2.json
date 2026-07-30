@@ -1,0 +1,102 @@
+{
+  "dry_run": {
+    "scripted": true,
+    "real_experiment": false
+  },
+  "task": {
+    "task_id": "scripted-review-pilot-v2",
+    "prompt": "Review the changed files and return the required structured JSON.",
+    "working_directory": "..",
+    "signals": {
+      "parallelizable_units": 2,
+      "parallel_fraction": 0.65,
+      "decomposition_confidence": 0.85,
+      "context_coupling": 0.35,
+      "shared_context_ratio": 0.4,
+      "uncertainty": 0.55,
+      "verification_value": 0.55,
+      "failure_correlation": 0.25,
+      "aggregation_difficulty": 0.3,
+      "error_impact": 0.55
+    },
+    "metadata": {
+      "changed_files": [
+        "src/magov/policy.py",
+        "src/magov/execution.py"
+      ],
+      "high_risk_files": [],
+      "policy_version": "pilot-v2"
+    },
+    "work_units": [
+      {
+        "work_unit_id": "policy",
+        "instruction": "Review deterministic admission behavior.",
+        "scope": ["src/magov/policy.py"],
+        "high_risk": false
+      },
+      {
+        "work_unit_id": "execution",
+        "instruction": "Review runtime enforcement behavior.",
+        "scope": ["src/magov/execution.py"],
+        "high_risk": false
+      }
+    ]
+  },
+  "runtime": {
+    "kind": "scripted",
+    "results": [
+      {
+        "agent_index": 1,
+        "output": {
+          "findings": [],
+          "reviewed_files": [
+            "src/magov/policy.py",
+            "src/magov/execution.py"
+          ],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 1000,
+          "cached_input_tokens": 200,
+          "agent_output_tokens": 100,
+          "reasoning_output_tokens": 40,
+          "model_calls": 1,
+          "tool_calls": 3,
+          "wall_time_seconds": 1.5
+        }
+      },
+      {
+        "agent_index": 2,
+        "output": {
+          "findings": [],
+          "reviewed_files": [
+            "src/magov/policy.py",
+            "src/magov/execution.py"
+          ],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 1100,
+          "cached_input_tokens": 250,
+          "agent_output_tokens": 110,
+          "reasoning_output_tokens": 45,
+          "model_calls": 1,
+          "tool_calls": 4,
+          "wall_time_seconds": 1.7
+        }
+      }
+    ]
+  },
+  "verifier": {"kind": "review"},
+  "policy": {"version": "pilot-v2"},
+  "budget": {
+    "max_agents": 4,
+    "max_cost_multiplier": 5,
+    "target_confidence": 0.95,
+    "min_expected_gain": 0.005,
+    "max_total_tokens": 500000,
+    "max_wall_time_seconds": 3600,
+    "max_tool_calls": 200
+  },
+  "governance_tokens": 0
+}

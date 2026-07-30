@@ -134,6 +134,68 @@ class GovernorDecisionTests(unittest.TestCase):
 
         self.assertLessEqual(tight.total_agents, loose.total_agents)
 
+    def test_pilot_v2_requires_one_independent_review_before_stopping(self) -> None:
+        signals = TaskSignals(
+            parallelizable_units=2,
+            parallel_fraction=0.65,
+            decomposition_confidence=0.85,
+            context_coupling=0.35,
+            shared_context_ratio=0.4,
+            uncertainty=0.55,
+            verification_value=0.55,
+            failure_correlation=0.25,
+            aggregation_difficulty=0.3,
+            error_impact=0.55,
+        )
+        baseline = BaselineObservation(confidence=1.0, verified=False)
+        budget = Budget(
+            max_agents=4,
+            max_cost_multiplier=5,
+            target_confidence=0.95,
+            min_expected_gain=0.005,
+        )
+
+        pilot_v1 = Governor("pilot-v1").decide(
+            signals, baseline, budget
+        )
+        pilot_v2 = Governor("pilot-v2").decide(
+            signals, baseline, budget
+        )
+
+        self.assertEqual(pilot_v1.mode, Mode.SINGLE)
+        self.assertEqual(pilot_v2.mode, Mode.INDEPENDENT)
+        self.assertEqual(pilot_v2.total_agents, 2)
+        self.assertIn(
+            "independent_review_floor",
+            {score.code for score in pilot_v2.scores},
+        )
+
+    def test_pilot_v2_review_floor_does_not_override_cost_budget(self) -> None:
+        decision = Governor("pilot-v2").decide(
+            TaskSignals(
+                parallelizable_units=2,
+                parallel_fraction=0.65,
+                decomposition_confidence=0.85,
+                context_coupling=0.35,
+                shared_context_ratio=0.4,
+                uncertainty=0.55,
+                verification_value=0.55,
+                failure_correlation=0.25,
+                aggregation_difficulty=0.3,
+            ),
+            BaselineObservation(confidence=1.0, verified=False),
+            Budget(max_agents=4, max_cost_multiplier=1.0),
+        )
+
+        self.assertEqual(decision.mode, Mode.SINGLE)
+        self.assertEqual(
+            decision.stop_reason, StopReason.COST_BUDGET_REACHED
+        )
+
+    def test_unknown_policy_version_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "unsupported policy version"):
+            Governor("pilot-v999")
+
     def test_hard_failure_requires_zero_unverified_confidence(self) -> None:
         with self.assertRaisesRegex(ValueError, "zero confidence"):
             BaselineObservation(confidence=0.8, hard_failure=True)
