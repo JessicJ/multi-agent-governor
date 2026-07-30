@@ -226,6 +226,7 @@ class CliValidationTests(unittest.TestCase):
         self.assertEqual(replay["event_count"], 2)
         self.assertEqual(summary["average_actual_agents"], 2)
         self.assertEqual(summary["total_tokens"], 200)
+        self.assertEqual(summary["cap_censored_runs"], 0)
 
     def test_nonempty_event_log_cannot_be_reused(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

@@ -94,6 +94,14 @@ review using independent topology therefore requires one independent review
 before stopping when budgets allow it. `pilot-v2` also requires independent
 review of every changed file before `coverage_complete` can be true.
 
+For `pilot-v2`, `plan.total_agents` is an initial forecast rather than a hard
+runtime limit. Positive live evidence may admit another Agent up to
+`budget.max_agents`. If that user safety cap is reached before the observable
+target or a marginal-value plateau, the report must use
+`stop_reason: "cap_reached_incomplete"` and `status: "incomplete"`. Budget
+exhaustion and runtime failure are also incomplete. This distinguishes a
+deliberate evidence-based stop from a right-censored run.
+
 It does not read hidden truth and never treats a model's self-reported
 confidence as evidence. `coverage_complete: true` means the declared review
 coverage contract is complete, not that the code is proven defect-free.

@@ -243,17 +243,17 @@ class Governor:
                 StopReason.TOOL_BUDGET_REACHED,
                 "Observed tool calls reached the configured budget.",
             )
-        if latest.total_agents >= budget.max_agents:
-            return self._stop(
-                StopReason.AGENT_CAP_REACHED,
-                "The global agent cap was reached.",
-            )
-        if latest.total_agents >= plan.total_agents:
-            return self._stop(
-                StopReason.PLANNED_CAP_REACHED,
-                "The governor's planned agent cap was reached.",
-            )
-
+        if self.policy_version == "pilot-v1":
+            if latest.total_agents >= budget.max_agents:
+                return self._stop(
+                    StopReason.AGENT_CAP_REACHED,
+                    "The global agent cap was reached.",
+                )
+            if latest.total_agents >= plan.total_agents:
+                return self._stop(
+                    StopReason.PLANNED_CAP_REACHED,
+                    "The governor's planned agent cap was reached.",
+                )
         window = history[-budget.plateau_rounds :]
         if len(window) == budget.plateau_rounds and all(
             item.marginal_quality_gain < budget.min_observed_gain
@@ -263,6 +263,12 @@ class Governor:
             return self._stop(
                 StopReason.OBSERVED_PLATEAU,
                 "Recent agents produced too little quality gain or new evidence.",
+            )
+        if latest.total_agents >= budget.max_agents:
+            return self._stop(
+                StopReason.CAP_REACHED_INCOMPLETE,
+                "The user safety cap was reached before the observable "
+                "verification target or marginal-value stop condition.",
             )
 
         return ScalingReview(

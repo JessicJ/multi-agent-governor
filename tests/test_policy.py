@@ -308,6 +308,73 @@ class GovernorScalingReviewTests(unittest.TestCase):
         self.assertFalse(review.should_continue)
         self.assertEqual(review.stop_reason, StopReason.TARGET_REACHED)
 
+    def test_unresolved_work_at_user_cap_is_explicitly_censored(self) -> None:
+        budget = Budget(
+            max_agents=4,
+            max_cost_multiplier=8,
+            target_confidence=0.98,
+            plateau_rounds=2,
+        )
+        review = Governor("pilot-v2").review_scaling(
+            self.plan,
+            [
+                RoundObservation(
+                    4,
+                    0.80,
+                    4.0,
+                    0.10,
+                    1.0,
+                    coverage_complete=False,
+                )
+            ],
+            budget,
+        )
+
+        self.assertFalse(review.should_continue)
+        self.assertEqual(
+            review.stop_reason, StopReason.CAP_REACHED_INCOMPLETE
+        )
+
+    def test_observed_plateau_takes_precedence_over_user_cap(self) -> None:
+        budget = Budget(
+            max_agents=4,
+            max_cost_multiplier=8,
+            target_confidence=0.98,
+            min_observed_gain=0.02,
+            plateau_rounds=2,
+        )
+        review = Governor("pilot-v2").review_scaling(
+            self.plan,
+            [
+                RoundObservation(3, 0.70, 3.0, 0.01, 0.05),
+                RoundObservation(4, 0.705, 4.0, 0.005, 0.04),
+            ],
+            budget,
+        )
+
+        self.assertFalse(review.should_continue)
+        self.assertEqual(review.stop_reason, StopReason.OBSERVED_PLATEAU)
+
+    def test_pilot_v1_preserves_cap_before_plateau_order(self) -> None:
+        budget = Budget(
+            max_agents=4,
+            max_cost_multiplier=8,
+            target_confidence=0.98,
+            min_observed_gain=0.02,
+            plateau_rounds=2,
+        )
+        review = self.governor.review_scaling(
+            self.plan,
+            [
+                RoundObservation(3, 0.70, 3.0, 0.01, 0.05),
+                RoundObservation(4, 0.705, 4.0, 0.005, 0.04),
+            ],
+            budget,
+        )
+
+        self.assertFalse(review.should_continue)
+        self.assertEqual(review.stop_reason, StopReason.AGENT_CAP_REACHED)
+
 
 if __name__ == "__main__":
     unittest.main()

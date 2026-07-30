@@ -1,6 +1,7 @@
 {
-  "protocol_version": "pilot-v2-validation-v1",
+  "protocol_version": "pilot-v2-validation-v2",
   "status": "preregistered_not_run",
+  "supersedes": "pilot-v2-validation-v1_before_any_real_run",
   "development_task": "python-pr-07",
   "evaluation_tasks": [
     "python-pr-01",
@@ -87,6 +88,16 @@
     "later_budgets_may_change_after_results": false,
     "later_signals_may_change_after_results": false,
     "later_agent_counts_may_change_after_results": false
+  },
+  "agent_cap_semantics": {
+    "scope": "calibration_within_1_to_4_agents",
+    "universal_sufficiency_claim": false,
+    "initial_plan_is_runtime_hard_cap": false,
+    "live_evidence_may_exceed_initial_plan": true,
+    "user_safety_cap": 4,
+    "incomplete_stop_reason": "cap_reached_incomplete",
+    "cap_censored_counts_as_guardrail_pass": false,
+    "future_stress_range_requires_new_held_out_tasks": true
   },
   "result_boundary": {
     "status": "descriptive_only",

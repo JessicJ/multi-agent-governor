@@ -32,6 +32,7 @@ class StopReason(str, Enum):
     TIME_BUDGET_REACHED = "time_budget_reached"
     TOOL_BUDGET_REACHED = "tool_budget_reached"
     AGENT_CAP_REACHED = "agent_cap_reached"
+    CAP_REACHED_INCOMPLETE = "cap_reached_incomplete"
     PLANNED_CAP_REACHED = "planned_cap_reached"
     RUNTIME_FAILURE = "runtime_failure"
 

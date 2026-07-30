@@ -1,6 +1,14 @@
 # Multi-Agent Governor
 
-一个轻量、可解释的自适应控制层：先跑单 Agent 基线，只有可观察证据表明边际收益值得时才增加同构 Agent，并在收益平台期或预算耗尽时强制停止。
+一个轻量、可解释的 Agent 预算控制器：先跑单 Agent 基线，只有可观察
+证据表明下一个同构 Agent 的边际收益值得时才逐个扩容，并在达到验证
+目标、收益平台期或安全边界时停止。
+
+它不负责猜测一个项目存在某个普遍正确的 Agent 数量。用户给出的
+`max_agents` 是安全上限；若到达上限时仍未满足公开验证目标或平台期
+条件，运行必须返回 `cap_reached_incomplete`，不能暗示该数量已经足够。
+完整产品目标、非目标和可证伪成功指标见
+[`docs/product-goal.md`](docs/product-goal.md)。
 
 它不是新的通用 Agent 框架。它提供两层能力：
 
@@ -39,6 +47,9 @@ PYTHONPATH=src python3 -m magov.cli run \
 PYTHONPATH=src python3 -m magov.cli run \
   examples/runtime_review_scripted_v2.json \
   --events /tmp/magov-v2-demo.events.jsonl
+PYTHONPATH=src python3 -m magov.cli run \
+  examples/runtime_review_scripted_cap_censored_v2.json \
+  --events /tmp/magov-v2-cap-demo.events.jsonl
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
@@ -48,6 +59,8 @@ PYTHONPATH=src python3 -m unittest discover -s tests -v
 和 compare 会保留该标记，防止 dry-run 被误当成真实实验。
 `runtime_review_scripted_v2.json` 额外验证 v2 在单 Agent 已覆盖文件后仍要求
 一次独立复核，并把精确策略版本写入报告和 receipt。
+`runtime_review_scripted_cap_censored_v2.json` 使用确定性 fixture 演示达到
+用户上限但过程验证仍不完整时返回 `cap_reached_incomplete`。
 
 如果版本低于 3.10，请先安装较新的 Python，再继续下面的安装步骤。
 
@@ -110,16 +123,24 @@ magov report RUN.report.json
 
 1. 启动一个全新 baseline Agent；
 2. 使用外部过程证据评估变更文件覆盖、高风险文件独立复核、冲突和结构化发现；
-3. 计算初始扩容上限；
+3. 计算初始扩容预测；
 4. 每次只启动一个额外 Agent；
 5. 每轮重新聚合、验证、记录真实 Token/耗时/工具调用；
-6. 在质量目标、计划上限、Agent 上限、成本、Token、耗时、工具预算或边际收益平台期停止；
+6. `pilot-v2` 把初始计划数量视为预测，并依据实时证据继续逐个扩容，
+   直到质量目标、边际收益平台期、用户 Agent 安全上限、成本、Token、
+   耗时或工具预算触发停止；
 7. 输出可回放事件日志和决策收据。
+
+预算或 runtime 故障返回 `incomplete`。到达用户 Agent 上限但公开 verifier
+仍不完整时返回 `cap_reached_incomplete`；这是上限截断，不是“已找到
+足够 Agent”的结论。
 
 `pilot-v1` 保留首次真实实验的原始行为。开发中的 `pilot-v2` 对未被外部
 verifier 证明、具有至少两个可分离审查单元且采用独立拓扑的审查，要求
 停止前至少完成一次独立复核；代码审查 bridge 把独立重复审查计为第二个
 审查单元，因此单文件变更也适用。changed-file 独立复核同时纳入过程覆盖。
+如果实时边际证据仍为正，`pilot-v2` 可以超过初始预测继续扩容，但绝不
+突破用户安全上限。
 完整冻结规则见 [`evals/pilot-v2.md`](evals/pilot-v2.md)。这仍是开发规则，
 不是效果声明。
 

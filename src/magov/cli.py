@@ -360,6 +360,10 @@ def summarize_reports(paths: Sequence[Path]) -> dict[str, Any]:
                 ).items()
             )
         ),
+        "cap_censored_runs": sum(
+            str(report.get("stop_reason")) == "cap_reached_incomplete"
+            for report in reports
+        ),
     }
 
 

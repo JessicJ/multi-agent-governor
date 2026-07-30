@@ -1,6 +1,6 @@
 {
   "name": "multi-agent-governor",
-  "version": "0.2.1+codex.20260730082049",
+  "version": "0.2.1+codex.20260730085745",
   "description": "Evidence-based adaptive admission and stopping control for homogeneous Agent runtimes",
   "author": {
     "name": "Multi-Agent Governor contributors"
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Multi-Agent Governor",
     "shortDescription": "Decide when more agents are worth using.",
-    "longDescription": "Start from one measured baseline, then decide whether another homogeneous Agent is justified, which collaboration topology fits, and when to stop. Advisory mode returns an auditable plan; executable code-review mode owns Codex CLI Agent admission and emits replayable checkpoints.",
+    "longDescription": "A budget controller for verifiable code review. Start from one measured baseline, admit homogeneous Agents one at a time while non-truth marginal evidence remains valuable, respect user cost and safety caps, and report target, plateau, budget, cap-censored, and runtime-failure stops without pretending a fixed Agent count is universally sufficient.",
     "developerName": "Multi-Agent Governor contributors",
     "category": "Productivity",
     "capabilities": [],

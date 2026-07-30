@@ -383,9 +383,9 @@ class AdaptiveTrialOutcome:
             raise ValueError(
                 "actual_total_agents must be between 1 and trial.max_agents"
             )
-        if not self.actual_total_agents <= self.planned_total_agents <= self.trial.max_agents:
+        if not 1 <= self.planned_total_agents <= self.trial.max_agents:
             raise ValueError(
-                "planned_total_agents must be between actual and max Agents"
+                "planned_total_agents must be between 1 and max Agents"
             )
         if self.execution_status not in {"completed", "incomplete"}:
             raise ValueError("execution_status must be completed or incomplete")
@@ -810,6 +810,9 @@ def summarize_adaptive_outcomes(
         "incomplete_runtime_trials": sum(
             item.execution_status != "completed" for item in outcomes
         ),
+        "cap_censored_trials": sum(
+            item.stop_reason == "cap_reached_incomplete" for item in outcomes
+        ),
     }
 
 
@@ -895,6 +898,10 @@ def compare_adaptive_to_fixed(
             item.score.false_positive_share or 0.0
             for item in adaptive_outcomes
         )
+        adaptive_runtime_complete = all(
+            item.execution_status == "completed"
+            for item in adaptive_outcomes
+        )
         quality = {
             "complete": True,
             "recall_aggregation": "micro_over_registered_defects",
@@ -930,7 +937,8 @@ def compare_adaptive_to_fixed(
                 adaptive_fp - fixed_fp, 6
             ),
             "quality_guardrails_observed": (
-                adaptive_recall >= fixed_recall - 0.02
+                adaptive_runtime_complete
+                and adaptive_recall >= fixed_recall - 0.02
                 and adaptive_fp <= fixed_fp + 0.03
                 and sum(
                     bool(item.score.missed_red_line_defects)
@@ -942,6 +950,12 @@ def compare_adaptive_to_fixed(
                 )
             ),
         }
+        if not adaptive_runtime_complete:
+            quality["quality_guardrails_observed"] = None
+            quality["note"] = (
+                "At least one adaptive run ended at a budget, safety cap, "
+                "or runtime boundary; quality guardrails are censored."
+            )
         if scripted_dry_run:
             quality["quality_guardrails_observed"] = None
             quality["note"] = (
@@ -954,6 +968,19 @@ def compare_adaptive_to_fixed(
     )
     if fixed_tokens <= 0:
         raise ValueError("fixed reference token usage must be positive")
+    token_saving_rate = (fixed_tokens - adaptive_tokens) / fixed_tokens
+    product_target_observed: bool | None
+    if (
+        scripted_dry_run
+        or not quality.get("complete")
+        or quality.get("quality_guardrails_observed") is None
+    ):
+        product_target_observed = None
+    else:
+        product_target_observed = bool(
+            quality["quality_guardrails_observed"]
+            and token_saving_rate >= 0.20
+        )
 
     def arm_metrics(items: Sequence[Any]) -> dict[str, Any]:
         false_positive_values = [
@@ -1030,13 +1057,28 @@ def compare_adaptive_to_fixed(
         "real_experiment": not scripted_dry_run,
         "reference_agents": reference_agents,
         "paired_trials": len(reference),
+        "adaptive_incomplete_runtime_trials": sum(
+            item.execution_status != "completed"
+            for item in adaptive_outcomes
+        ),
+        "adaptive_cap_censored_trials": sum(
+            item.stop_reason == "cap_reached_incomplete"
+            for item in adaptive_outcomes
+        ),
         "quality": quality,
         "fixed_mean_total_tokens": round(fixed_tokens, 2),
         "adaptive_mean_total_tokens": round(adaptive_tokens, 2),
         "arms": arms,
-        "token_saving_rate": round(
-            (fixed_tokens - adaptive_tokens) / fixed_tokens, 6
-        ),
+        "token_saving_rate": round(token_saving_rate, 6),
+        "product_target": {
+            "serious_recall_noninferiority_margin": -0.02,
+            "false_positive_share_margin": 0.03,
+            "minimum_token_saving_rate": 0.20,
+            "cap_censored_allowed": False,
+            "record_consistency_required": 1.0,
+            "thresholds_observed_descriptively": product_target_observed,
+            "claim_allowed": False,
+        },
         "note": (
             "Pilot tasks are public and runtime-isolated only; this snapshot "
             "cannot establish holdout effectiveness."

@@ -260,12 +260,123 @@ class AdaptiveControllerTests(unittest.TestCase):
             )
 
         self.assertEqual(report.actual_total_agents, 2)
+        self.assertEqual(report.status, "incomplete")
         self.assertEqual(report.stop_reason, StopReason.TOKEN_BUDGET_REACHED)
+        self.assertEqual(report.receipts[-1].action.value, "incomplete_stop")
         self.assertEqual(report.usage.total_tokens, 200)
         self.assertEqual(
             [checkpoint.total_agents for checkpoint in report.checkpoints],
             [1, 2],
         )
+
+    def test_pilot_v2_can_exceed_forecast_using_live_evidence(self) -> None:
+        signals = TaskSignals(
+            parallelizable_units=2,
+            parallel_fraction=0.65,
+            decomposition_confidence=0.85,
+            context_coupling=0.35,
+            shared_context_ratio=0.4,
+            uncertainty=0.55,
+            verification_value=0.55,
+            failure_correlation=0.25,
+            aggregation_difficulty=0.3,
+            error_impact=0.55,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime(
+                [review_result(index) for index in range(1, 4)]
+            )
+            verifier = SequenceVerifier(
+                [
+                    VerificationResult(
+                        score=0.90,
+                        verified=False,
+                        evidence_keys=("baseline",),
+                    ),
+                    VerificationResult(
+                        score=0.91,
+                        verified=False,
+                        evidence_keys=("baseline", "second"),
+                    ),
+                    VerificationResult(
+                        score=0.99,
+                        verified=False,
+                        coverage_complete=True,
+                        evidence_keys=("baseline", "second", "third"),
+                    ),
+                ]
+            )
+            report = AdaptiveController(
+                runtime=runtime,
+                verifier=verifier,
+                governor=Governor("pilot-v2"),
+                signal_provider=lambda task, baseline, verification: signals,
+            ).execute(
+                self._task(Path(directory)),
+                Budget(
+                    max_agents=4,
+                    max_cost_multiplier=5,
+                    target_confidence=0.95,
+                    min_expected_gain=0.005,
+                ),
+            )
+
+        self.assertEqual(report.plan.total_agents, 2)
+        self.assertEqual(report.actual_total_agents, 3)
+        self.assertEqual(report.status, "completed")
+        self.assertEqual(report.stop_reason, StopReason.TARGET_REACHED)
+
+    def test_user_cap_before_completion_is_an_incomplete_stop(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime(
+                [review_result(index) for index in range(1, 5)]
+            )
+            verifier = SequenceVerifier(
+                [
+                    VerificationResult(
+                        score=0.30,
+                        verified=False,
+                        evidence_keys=("a",),
+                    ),
+                    VerificationResult(
+                        score=0.50,
+                        verified=False,
+                        evidence_keys=("a", "b"),
+                    ),
+                    VerificationResult(
+                        score=0.70,
+                        verified=False,
+                        evidence_keys=("a", "b", "c"),
+                    ),
+                    VerificationResult(
+                        score=0.80,
+                        verified=False,
+                        coverage_complete=False,
+                        evidence_keys=("a", "b", "c", "d"),
+                    ),
+                ]
+            )
+            report = AdaptiveController(
+                runtime=runtime,
+                verifier=verifier,
+                governor=Governor("pilot-v2"),
+            ).execute(
+                self._task(Path(directory)),
+                Budget(
+                    max_agents=4,
+                    max_cost_multiplier=8,
+                    target_confidence=0.98,
+                    min_expected_gain=0.005,
+                ),
+            )
+
+        self.assertEqual(report.actual_total_agents, 4)
+        self.assertEqual(report.status, "incomplete")
+        self.assertEqual(
+            report.stop_reason, StopReason.CAP_REACHED_INCOMPLETE
+        )
+        self.assertEqual(report.receipts[-1].action.value, "incomplete_stop")
+        self.assertFalse(report.verification.coverage_complete)
 
     def test_baseline_that_exhausts_budget_admits_no_extra_agent(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

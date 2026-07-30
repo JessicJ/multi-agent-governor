@@ -530,6 +530,46 @@ class AdaptiveEvaluationTests(unittest.TestCase):
         self.assertFalse(comparison["claim_allowed"])
         self.assertEqual(comparison["engineering_result"], "inconclusive")
         self.assertEqual(comparison["token_saving_rate"], 0.5)
+        self.assertTrue(
+            comparison["product_target"][
+                "thresholds_observed_descriptively"
+            ]
+        )
+        forecast_exceeded = replace(adaptive, planned_total_agents=1)
+        self.assertGreater(
+            forecast_exceeded.actual_total_agents,
+            forecast_exceeded.planned_total_agents,
+        )
+
+        cap_censored = replace(
+            adaptive,
+            execution_status="incomplete",
+            stop_reason="cap_reached_incomplete",
+            coverage_complete=False,
+            checkpoints=(
+                adaptive.checkpoints[0],
+                replace(
+                    adaptive.checkpoints[1],
+                    coverage_complete=False,
+                ),
+            ),
+        )
+        censored_summary = summarize_adaptive_outcomes([cap_censored])
+        censored_comparison = compare_adaptive_to_fixed(
+            [fixed], [cap_censored]
+        )
+        self.assertEqual(censored_summary["cap_censored_trials"], 1)
+        self.assertEqual(
+            censored_comparison["adaptive_cap_censored_trials"], 1
+        )
+        self.assertIsNone(
+            censored_comparison["quality"]["quality_guardrails_observed"]
+        )
+        self.assertIsNone(
+            censored_comparison["product_target"][
+                "thresholds_observed_descriptively"
+            ]
+        )
 
         ordinary_score = ScoreReport(
             total_known_defects=1,

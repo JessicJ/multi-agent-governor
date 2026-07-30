@@ -557,8 +557,22 @@ class ExecutionReport:
     policy_version: str
 
     def __post_init__(self) -> None:
+        if self.status not in {"completed", "incomplete"}:
+            raise ValueError("status must be completed or incomplete")
         if not self.policy_version.strip():
             raise ValueError("policy_version cannot be empty")
+        incomplete_reasons = {
+            StopReason.COST_BUDGET_REACHED,
+            StopReason.TOKEN_BUDGET_REACHED,
+            StopReason.TIME_BUDGET_REACHED,
+            StopReason.TOOL_BUDGET_REACHED,
+            StopReason.CAP_REACHED_INCOMPLETE,
+            StopReason.RUNTIME_FAILURE,
+        }
+        if self.stop_reason in incomplete_reasons and self.status != "incomplete":
+            raise ValueError(
+                "budget-, cap-, and failure-limited reports must be incomplete"
+            )
 
     def to_dict(self, *, include_agent_output: bool = False) -> dict[str, Any]:
         return {
@@ -766,6 +780,32 @@ class AdaptiveController:
             return StopReason.TOOL_BUDGET_REACHED
         return None
 
+    @staticmethod
+    def _is_incomplete_stop(reason: StopReason) -> bool:
+        return reason in {
+            StopReason.COST_BUDGET_REACHED,
+            StopReason.TOKEN_BUDGET_REACHED,
+            StopReason.TIME_BUDGET_REACHED,
+            StopReason.TOOL_BUDGET_REACHED,
+            StopReason.CAP_REACHED_INCOMPLETE,
+            StopReason.RUNTIME_FAILURE,
+        }
+
+    @staticmethod
+    def _runtime_stop_reason(
+        reason: StopReason,
+        verification: VerificationResult,
+        budget: Budget,
+    ) -> StopReason:
+        if reason is not StopReason.AGENT_CAP_REACHED:
+            return reason
+        if (
+            verification.coverage_complete
+            and verification.score >= budget.target_confidence
+        ):
+            return StopReason.TARGET_REACHED
+        return StopReason.CAP_REACHED_INCOMPLETE
+
     def execute(
         self, task: ExecutionTask, budget: Budget | None = None
     ) -> ExecutionReport:
@@ -841,6 +881,9 @@ class AdaptiveController:
             )
         )
         plan = self.governor.decide(signals, baseline, budget)
+        initial_stop_reason = self._runtime_stop_reason(
+            plan.stop_reason, verification, budget
+        )
         usage = self._usage_with_governance(
             results, self.governance_tokens
         )
@@ -849,6 +892,15 @@ class AdaptiveController:
             initial_statement = (
                 "The mandatory baseline Agent failed, so no additional Agent "
                 "was admitted."
+            )
+        elif (
+            plan.mode is Mode.SINGLE
+            and self._is_incomplete_stop(initial_stop_reason)
+        ):
+            initial_action = DecisionAction.INCOMPLETE_STOP
+            initial_statement = (
+                "The run stopped at a configured safety boundary before the "
+                "observable verification target was satisfied."
             )
         else:
             initial_action = (
@@ -898,7 +950,7 @@ class AdaptiveController:
                     StopReason.RUNTIME_FAILURE
                     if not baseline_result.success
                     else (
-                        plan.stop_reason
+                        initial_stop_reason
                         if plan.mode is Mode.SINGLE
                         else None
                     )
@@ -926,12 +978,12 @@ class AdaptiveController:
                 run_id=run_id,
                 task=task,
                 status=(
-                    "completed"
-                    if baseline_result.success
-                    else "incomplete"
+                    "incomplete"
+                    if self._is_incomplete_stop(initial_stop_reason)
+                    else "completed"
                 ),
                 plan=plan,
-                stop_reason=plan.stop_reason,
+                stop_reason=initial_stop_reason,
                 results=results,
                 aggregate=aggregate,
                 verification=verification,
@@ -994,8 +1046,13 @@ class AdaptiveController:
         history: list[RoundObservation] = []
         stop_reason = plan.stop_reason
         status = "completed"
+        execution_cap = (
+            budget.max_agents
+            if self.governor.policy_version == "pilot-v2"
+            else plan.total_agents
+        )
 
-        for agent_index in range(2, plan.total_agents + 1):
+        for agent_index in range(2, execution_cap + 1):
             budget_reason = self._hard_budget_reason(usage, budget)
             if budget_reason is not None:
                 stop_reason = budget_reason
@@ -1132,6 +1189,11 @@ class AdaptiveController:
             history.append(observation)
             review = self.governor.review_scaling(plan, history, budget)
             stop_reason = review.stop_reason or plan.stop_reason
+            if (
+                not review.should_continue
+                and self._is_incomplete_stop(stop_reason)
+            ):
+                status = "incomplete"
             checkpoint = ExecutionCheckpoint(
                 total_agents=len(results),
                 verification=verification,
@@ -1146,7 +1208,11 @@ class AdaptiveController:
             action = (
                 DecisionAction.ADD_AGENT
                 if review.should_continue
-                else DecisionAction.STOP
+                else (
+                    DecisionAction.INCOMPLETE_STOP
+                    if self._is_incomplete_stop(stop_reason)
+                    else DecisionAction.STOP
+                )
             )
             receipts.append(
                 self._receipt(

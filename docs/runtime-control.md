@@ -37,14 +37,28 @@ baseline Agent 尝试完整任务。额外 Agent 在 `independent` 模式下独�
 
 ## 停止
 
-Controller 在每个 Agent 返回后调用 `review_scaling()`。以下任一条件可停止：
+Controller 在每个 Agent 返回后调用 `review_scaling()`。`pilot-v2` 的
+初始计划数量是预测，不是硬上限；实时证据仍有价值时，可以超过预测继续
+逐个扩容，但不能超过用户安全上限。以下任一条件可停止：
 
 - 观察分达到目标；
-- 达到计划 Agent 上限或用户上限；
 - 标准化成本达到上限；
 - Token、耗时或工具调用达到硬预算；
 - 最近若干 Agent 的边际质量或新证据过低；
+- 达到用户 Agent 安全上限；
 - Runtime 失败。
+
+停止结果必须区分：
+
+- 达到目标或观察到边际平台期：运行 `completed`；
+- 成本、Token、时间或工具预算耗尽：运行 `incomplete`；
+- 达到用户上限但目标和平台期均未满足：
+  `cap_reached_incomplete`，运行 `incomplete`；
+- Runtime 失败：`runtime_failure`，运行 `incomplete`。
+
+`cap_reached_incomplete` 表示结果被安全上限右截断。它不能证明还需要
+多少 Agent，也不能证明当前数量已经足够。`pilot-v1` 为历史兼容仍保留
+计划上限停止行为。
 
 硬预算是在一次 Agent 返回后根据实际累计用量检查的，因此单次 Agent
 可能让累计值越过预算。Controller 保证越过后不再准入下一个 Agent，

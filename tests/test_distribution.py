@@ -140,6 +140,10 @@ class DistributionMetadataTests(unittest.TestCase):
         }
 
         self.assertEqual(preregistration["status"], "preregistered_not_run")
+        self.assertEqual(
+            preregistration["protocol_version"],
+            "pilot-v2-validation-v2",
+        )
         self.assertEqual(preregistration["development_task"], "python-pr-07")
         self.assertEqual(
             set(preregistration["evaluation_tasks"]),
@@ -166,6 +170,17 @@ class DistributionMetadataTests(unittest.TestCase):
         self.assertEqual(
             preregistration["result_boundary"]["engineering_result"],
             "inconclusive",
+        )
+        cap_semantics = preregistration["agent_cap_semantics"]
+        self.assertFalse(cap_semantics["universal_sufficiency_claim"])
+        self.assertFalse(cap_semantics["initial_plan_is_runtime_hard_cap"])
+        self.assertTrue(cap_semantics["live_evidence_may_exceed_initial_plan"])
+        self.assertEqual(
+            cap_semantics["incomplete_stop_reason"],
+            "cap_reached_incomplete",
+        )
+        self.assertFalse(
+            cap_semantics["cap_censored_counts_as_guardrail_pass"]
         )
         hard_total = sum(
             arm["max_total_tokens"] for arm in preregistration["arms"]

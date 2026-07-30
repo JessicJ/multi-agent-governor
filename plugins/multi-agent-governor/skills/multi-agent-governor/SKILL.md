@@ -6,6 +6,9 @@ description: Plan or execute evidence-based homogeneous Agent scaling. Start wit
 # Multi-Agent Governor
 
 Treat multi-agent use as an evidence-based admission decision, not a default.
+The product is a budget controller for verifiable code review, not an oracle
+for a universally correct Agent count. Treat the user's Agent cap as a safety
+boundary, not evidence that the cap is sufficient.
 The deterministic core has two modes:
 
 - `plan`: return an advisory decision from a measured external baseline.
@@ -74,6 +77,9 @@ is installed and authenticated.
   including single-file reviews, unless a budget blocks admission.
 - Treat `total_agents` as including the baseline Agent.
 - Respect the user's cap even when the policy proposes more Agents.
+- Under `pilot-v2`, treat the initial planned Agent count as a forecast. Admit
+  beyond it one Agent at a time when live non-truth evidence remains valuable,
+  but never exceed the user or resource cap.
 - Prefer two Agents as the first real scale-out step; add later Agents one at
   a time.
 - Use `centralized` when shared constraints or failure impact require one
@@ -84,8 +90,12 @@ is installed and authenticated.
   aggregation.
 - Stop when verified coverage is complete, no unresolved conflict remains,
   and the newest Agent contributes little novel evidence.
-- Also stop at the quality target, planned cap, user cap, cost cap, or an
-  observed marginal-value plateau.
+- Also stop at the quality target, user cap, cost cap, or an observed
+  marginal-value plateau. Preserve the planned-cap stop only for historical
+  `pilot-v1` compatibility.
+- If the user cap is reached before the observable target or plateau condition,
+  return `cap_reached_incomplete` with an incomplete run. Never describe that
+  outcome as enough Agents or completed verification.
 - The executable runtime must own admission. A prose recommendation that the
   surrounding runtime may ignore is advisory mode, not enforced control.
 - Never place Codex JSONL artifacts inside the Agent workspace; later Agents

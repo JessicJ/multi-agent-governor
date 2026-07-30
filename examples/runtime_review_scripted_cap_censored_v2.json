@@ -1,0 +1,147 @@
+{
+  "dry_run": {
+    "scripted": true,
+    "real_experiment": false
+  },
+  "task": {
+    "task_id": "scripted-cap-censored-pilot-v2",
+    "prompt": "Review the changed files and return the required structured JSON.",
+    "working_directory": "..",
+    "signals": {
+      "parallelizable_units": 4,
+      "parallel_fraction": 0.9,
+      "decomposition_confidence": 0.9,
+      "context_coupling": 0.15,
+      "shared_context_ratio": 0.2,
+      "uncertainty": 0.9,
+      "verification_value": 0.9,
+      "failure_correlation": 0.1,
+      "aggregation_difficulty": 0.2,
+      "error_impact": 0.6
+    },
+    "metadata": {
+      "changed_files": [
+        "src/magov/models.py",
+        "src/magov/policy.py",
+        "src/magov/execution.py",
+        "src/magov/cli.py"
+      ],
+      "high_risk_files": [],
+      "policy_version": "pilot-v2"
+    }
+  },
+  "runtime": {
+    "kind": "scripted",
+    "results": [
+      {
+        "agent_index": 1,
+        "output": {
+          "findings": [
+            {
+              "finding_id": "fixture-1",
+              "file": "src/magov/models.py",
+              "symbol": "StopReason",
+              "root_cause_category": "fixture-one",
+              "impact": "Scripted evidence only.",
+              "evidence": "Unique fixture evidence from Agent 1."
+            }
+          ],
+          "reviewed_files": ["src/magov/models.py"],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 1000,
+          "agent_output_tokens": 100,
+          "model_calls": 1,
+          "tool_calls": 3,
+          "wall_time_seconds": 1.0
+        }
+      },
+      {
+        "agent_index": 2,
+        "output": {
+          "findings": [
+            {
+              "finding_id": "fixture-2",
+              "file": "src/magov/policy.py",
+              "symbol": "Governor",
+              "root_cause_category": "fixture-two",
+              "impact": "Scripted evidence only.",
+              "evidence": "Unique fixture evidence from Agent 2."
+            }
+          ],
+          "reviewed_files": ["src/magov/policy.py"],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 1000,
+          "agent_output_tokens": 100,
+          "model_calls": 1,
+          "tool_calls": 3,
+          "wall_time_seconds": 1.0
+        }
+      },
+      {
+        "agent_index": 3,
+        "output": {
+          "findings": [
+            {
+              "finding_id": "fixture-3",
+              "file": "src/magov/execution.py",
+              "symbol": "AdaptiveController",
+              "root_cause_category": "fixture-three",
+              "impact": "Scripted evidence only.",
+              "evidence": "Unique fixture evidence from Agent 3."
+            }
+          ],
+          "reviewed_files": ["src/magov/execution.py"],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 1000,
+          "agent_output_tokens": 100,
+          "model_calls": 1,
+          "tool_calls": 3,
+          "wall_time_seconds": 1.0
+        }
+      },
+      {
+        "agent_index": 4,
+        "output": {
+          "findings": [
+            {
+              "finding_id": "fixture-4",
+              "file": "src/magov/cli.py",
+              "symbol": "summarize_reports",
+              "root_cause_category": "fixture-four",
+              "impact": "Scripted evidence only.",
+              "evidence": "Unique fixture evidence from Agent 4."
+            }
+          ],
+          "reviewed_files": ["src/magov/cli.py"],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 1000,
+          "agent_output_tokens": 100,
+          "model_calls": 1,
+          "tool_calls": 3,
+          "wall_time_seconds": 1.0
+        }
+      }
+    ]
+  },
+  "verifier": {"kind": "review"},
+  "policy": {"version": "pilot-v2"},
+  "budget": {
+    "max_agents": 4,
+    "max_cost_multiplier": 6,
+    "target_confidence": 0.95,
+    "min_expected_gain": 0.005,
+    "plateau_rounds": 2,
+    "max_total_tokens": 500000,
+    "max_wall_time_seconds": 3600,
+    "max_tool_calls": 200
+  },
+  "governance_tokens": 0
+}

@@ -72,6 +72,13 @@ Token 截断，控制器只能在 Agent 返回后的 checkpoint 强制累计上�
 冲突、非真值证据新颖性、成本和硬预算规则。每次扩容或停止理由必须写入
 checkpoint、event log 和 decision receipt。
 
+这里的 `max-4` 是首个 1–4 Agent 校准区间和用户安全上限，不是对“4 个
+Agent 普遍足够”的假设。`pilot-v2` 的初始 `plan.total_agents` 只是预测；
+实时非真值证据仍有价值时允许超过预测继续扩容，最多到 4。若第 4 个
+Agent 后公开验证目标仍未满足，且没有达到观察平台期，必须输出
+`status: incomplete / stop_reason: cap_reached_incomplete`。该 arm 视为
+上限截断，暂停真实批次，不计入质量护栏通过。
+
 ## 物化与无模型预检
 
 预检根目录固定为：
@@ -228,3 +235,7 @@ status: descriptive_only
 claim_allowed: false
 engineering_result: inconclusive
 ```
+
+本批次只回答 Governor 在 1–4 Agent 区间内的行为和成本，不能回答任意
+规模代码审查的充分 Agent 数。更高上限必须在新的未见大变更上另行
+预注册 `max-8` 压力实验，不能看到本批次真值后临时扩容。

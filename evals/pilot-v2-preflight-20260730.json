@@ -1,5 +1,5 @@
 {
-  "status": "ready_for_user_confirmation",
+  "status": "mechanism_ready_real_calibration_not_authorized",
   "date": "2026-07-30",
   "preregistration": "evals/pilot-v2-validation.json",
   "tasks": [
@@ -49,6 +49,8 @@
     "native_multi_agent": false
   },
   "scripted_dry_run": {
+    "revalidated_after_product_target_revision": true,
+    "revalidation_path": "/tmp/magov-pilot-v2-product-target-preflight-20260730-final",
     "reports": 21,
     "paired_tasks": 7,
     "fixed_1_agents": 7,
@@ -60,7 +62,18 @@
     "adaptive_stop_reasons": {
       "target_reached": 7
     },
+    "incomplete_runs": 0,
+    "cap_censored_runs": 0,
     "evaluation_mode": "scripted_dry_run",
+    "real_experiment": false
+  },
+  "cap_censoring_fixture": {
+    "config": "examples/runtime_review_scripted_cap_censored_v2.json",
+    "actual_total_agents": 4,
+    "status": "incomplete",
+    "stop_reason": "cap_reached_incomplete",
+    "coverage_complete": false,
+    "final_receipt_action": "incomplete_stop",
     "real_experiment": false
   },
   "scoring_validation": {
@@ -71,7 +84,9 @@
   "result_boundary": {
     "status": "descriptive_only",
     "claim_allowed": false,
-    "engineering_result": "inconclusive"
+    "engineering_result": "inconclusive",
+    "agent_range": "calibration_only_1_to_4",
+    "universal_agent_count_claim": false
   },
   "raw_archive": {
     "path": "evals/runs/pilot-v2-preflight-20260730",

@@ -60,9 +60,25 @@ changed-file 列表，不读取真值、隐藏测试或缺陷严重度。
 审查、所有 high-risk files 满足独立复核，并且没有未解决冲突。
 该字段仍然只是过程覆盖，不代表缺陷已经全部找到。
 
-第二个 Agent 返回后，Governor 继续使用预先存在的目标、计划上限、成本、
-硬预算和观察平台期规则决定停止或逐个扩容。聚合仍是确定性 JSON 聚合，
-不得调用模型充当协调或评分 Agent。
+第二个 Agent 返回后，Governor 继续使用预先存在的目标、成本、硬预算和
+观察平台期规则决定停止或逐个扩容。聚合仍是确定性 JSON 聚合，不得调用
+模型充当协调或评分 Agent。
+
+在 2026-07-30 的产品目标澄清后，`pilot-v2` 将初始
+`plan.total_agents` 改为扩容预测，而不是运行时硬上限。第二个及后续
+Agent 的公开实时证据仍有边际价值时，控制器可以超过预测逐个扩容，但
+不得超过 `budget.max_agents` 或资源预算。`pilot-v1` 的历史行为不变。
+
+如果达到 `budget.max_agents` 时仍未满足公开 verifier 目标，且未形成
+预注册的边际平台期，必须输出：
+
+```text
+status: incomplete
+stop_reason: cap_reached_incomplete
+```
+
+该结果是安全上限造成的右截断，不能解释为当前 Agent 数足够。成本、
+Token、时间、工具预算耗尽和 runtime 故障同样是 `incomplete`。
 
 ## 当前验证范围
 
