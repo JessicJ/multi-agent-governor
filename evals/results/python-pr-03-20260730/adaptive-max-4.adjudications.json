@@ -1,0 +1,22 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-03__adaptive-max-4__repeat-1-runtime-assigned-reviewer-1",
+      "verdict": "matched",
+      "defect_id": "D-MORE-813",
+      "note": "Post-run isolated semantic adjudication: the empty-input behavior is caused by passing the internal marker window to the user predicate."
+    },
+    {
+      "finding_id": "python-pr-03__adaptive-max-4__repeat-1-runtime-assigned-reviewer-1__occurrence-2",
+      "verdict": "matched",
+      "defect_id": "D-MORE-813",
+      "note": "Post-run isolated semantic adjudication: locate passes the internal marker to the user predicate, matching the registered defect."
+    },
+    {
+      "finding_id": "python-pr-03__adaptive-max-4__repeat-1-runtime-assigned-reviewer-2",
+      "verdict": "matched",
+      "defect_id": "D-MORE-813",
+      "note": "Post-run isolated semantic adjudication: replace passes the internal marker to the user predicate, matching the registered defect."
+    }
+  ]
+}

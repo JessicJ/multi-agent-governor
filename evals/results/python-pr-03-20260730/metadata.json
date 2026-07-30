@@ -1,0 +1,52 @@
+{
+  "task_id": "python-pr-03",
+  "project": "more-itertools/more-itertools",
+  "repository": "https://github.com/more-itertools/more-itertools.git",
+  "license_spdx": "MIT",
+  "fix_commit": "d71c4ad9f828117e609269701f6df10419ae90c8",
+  "original_buggy_revision": "c0ed9d187906d202b9276a0750b3c377584cb75f",
+  "policy_version": "pilot-v2",
+  "model_id": "gpt-5.6-sol",
+  "prompt_version": "python-review-v2",
+  "evaluation_mode": "real",
+  "real_experiment": true,
+  "run_order": [
+    "fixed-1",
+    "adaptive-max-4",
+    "fixed-4"
+  ],
+  "hard_token_cap": 2100000,
+  "arm_token_caps": {
+    "fixed-1": 300000,
+    "adaptive-max-4": 600000,
+    "fixed-4": 1200000
+  },
+  "combined_usage": {
+    "actual_total_agents": 7,
+    "agent_input_tokens": 706963,
+    "cached_input_tokens": 507392,
+    "agent_output_tokens": 14010,
+    "reasoning_output_tokens": 5802,
+    "total_tokens": 720973,
+    "model_calls": 7,
+    "tool_calls": 61,
+    "agent_cumulative_time_seconds": 491.12263758294284,
+    "summed_wall_time_seconds": 491.1481764591299
+  },
+  "isolation": {
+    "workspaces": 3,
+    "files_scanned_per_workspace": 42,
+    "bytes_scanned_per_workspace": 633829,
+    "all_clean": true
+  },
+  "adjudication": {
+    "method": "post-run isolated fixed-versus-defective hidden-trigger reproduction and semantic classification",
+    "model_judge_used": false,
+    "independent_blinded_human": false,
+    "pending_findings_remaining": 0
+  },
+  "status": "descriptive_only",
+  "claim_allowed": false,
+  "engineering_result": "inconclusive",
+  "raw_archive": "evals/runs/pilot-v2-real-python-pr-03-20260730"
+}
