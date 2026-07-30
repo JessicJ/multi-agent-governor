@@ -1,0 +1,52 @@
+{
+  "task_id": "python-pr-02",
+  "project": "pallets/click",
+  "repository": "https://github.com/pallets/click.git",
+  "license_spdx": "BSD-3-Clause",
+  "fix_commit": "1241abaed4e441582a21f4bf90c8482de02b92df",
+  "original_buggy_revision": "f1f191ecd2c790b161187c78e7c88440e9524e5c",
+  "policy_version": "pilot-v2",
+  "model_id": "gpt-5.6-sol",
+  "prompt_version": "python-review-v2",
+  "evaluation_mode": "real",
+  "real_experiment": true,
+  "run_order": [
+    "fixed-1",
+    "adaptive-max-4",
+    "fixed-4"
+  ],
+  "hard_token_cap": 2100000,
+  "arm_token_caps": {
+    "fixed-1": 300000,
+    "adaptive-max-4": 600000,
+    "fixed-4": 1200000
+  },
+  "combined_usage": {
+    "actual_total_agents": 7,
+    "agent_input_tokens": 934387,
+    "cached_input_tokens": 750080,
+    "agent_output_tokens": 13039,
+    "reasoning_output_tokens": 2723,
+    "total_tokens": 947426,
+    "model_calls": 7,
+    "tool_calls": 72,
+    "agent_cumulative_time_seconds": 524.9652721676975,
+    "summed_wall_time_seconds": 524.9942472921685
+  },
+  "isolation": {
+    "workspaces": 3,
+    "files_scanned_per_workspace": 152,
+    "bytes_scanned_per_workspace": 1390866,
+    "all_clean": true
+  },
+  "adjudication": {
+    "method": "post-run isolated fixed-versus-defective hidden-trigger reproduction and semantic classification",
+    "model_judge_used": false,
+    "independent_blinded_human": false,
+    "pending_findings_remaining": 0
+  },
+  "status": "descriptive_only",
+  "claim_allowed": false,
+  "engineering_result": "inconclusive",
+  "raw_archive": "evals/runs/pilot-v2-real-python-pr-02-20260730"
+}

@@ -1,0 +1,16 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-02__agents-4__repeat-1-runtime-assigned-reviewer-1",
+      "verdict": "matched",
+      "defect_id": "D-CLICK-2790",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered shadowed-help-option hint defect."
+    },
+    {
+      "finding_id": "python-pr-02__agents-4__repeat-1-runtime-assigned-1",
+      "verdict": "matched",
+      "defect_id": "D-CLICK-2790",
+      "note": "Post-run isolated semantic adjudication: the independent finding describes the registered shadowed-help-option hint defect."
+    }
+  ]
+}
