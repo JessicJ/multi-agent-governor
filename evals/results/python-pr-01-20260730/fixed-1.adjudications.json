@@ -1,0 +1,15 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-01__agents-1__repeat-1-runtime-assigned-1",
+      "verdict": "matched",
+      "defect_id": "D-CLICK-3121",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered eager callable flag_value resolution defect."
+    },
+    {
+      "finding_id": "python-pr-01__agents-1__repeat-1-runtime-assigned-2",
+      "verdict": "valid_other",
+      "note": "Post-run isolated reproduction: explicit is_flag=False preserves default=True in the fixed revision but is rewritten to flag_value in the defective revision."
+    }
+  ]
+}
