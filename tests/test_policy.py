@@ -181,6 +181,16 @@ class GovernorDecisionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must be booleans"):
             BaselineObservation(confidence=0.5, verified="false")
 
+    def test_runtime_hard_budgets_require_positive_values(self) -> None:
+        for kwargs in (
+            {"max_total_tokens": 0},
+            {"max_wall_time_seconds": 0},
+            {"max_tool_calls": 0},
+        ):
+            with self.subTest(kwargs=kwargs):
+                with self.assertRaises(ValueError):
+                    Budget(**kwargs)
+
 
 class GovernorScalingReviewTests(unittest.TestCase):
     def setUp(self) -> None:

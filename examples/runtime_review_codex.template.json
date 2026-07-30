@@ -1,0 +1,51 @@
+{
+  "task": {
+    "task_id": "replace-with-task-id",
+    "prompt": "你正在进行一次只读代码审查。逐个检查声明的变更文件，只报告可由代码直接支持的问题，并严格按照输出 schema 返回 JSON。",
+    "working_directory": "/ABSOLUTE/PATH/TO/ISOLATED/TASK",
+    "signals": {
+      "parallelizable_units": 4,
+      "parallel_fraction": 0.8,
+      "decomposition_confidence": 0.9,
+      "context_coupling": 0.25,
+      "shared_context_ratio": 0.3,
+      "uncertainty": 0.8,
+      "verification_value": 0.85,
+      "failure_correlation": 0.2,
+      "aggregation_difficulty": 0.35,
+      "error_impact": 0.8
+    },
+    "metadata": {
+      "changed_files": ["src/example.py"],
+      "high_risk_files": ["src/example.py"]
+    },
+    "work_units": [
+      {
+        "work_unit_id": "high-risk-review",
+        "instruction": "独立检查高风险文件的边界条件和失败路径。",
+        "scope": ["src/example.py"],
+        "high_risk": true
+      }
+    ]
+  },
+  "runtime": {
+    "kind": "codex-cli",
+    "model": "FIXED_MODEL_ID",
+    "sandbox": "read-only",
+    "timeout_seconds": 900,
+    "ephemeral": true,
+    "output_schema": "review_output.schema.json",
+    "artifacts_directory": "/ABSOLUTE/PATH/OUTSIDE/AGENT/WORKSPACE"
+  },
+  "verifier": {"kind": "review"},
+  "budget": {
+    "max_agents": 4,
+    "max_cost_multiplier": 5,
+    "target_confidence": 0.95,
+    "min_expected_gain": 0.005,
+    "max_total_tokens": 500000,
+    "max_wall_time_seconds": 3600,
+    "max_tool_calls": 200
+  },
+  "governance_tokens": 0
+}

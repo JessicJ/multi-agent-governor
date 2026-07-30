@@ -5,6 +5,8 @@ import json
 import unittest
 from pathlib import Path
 
+import magov
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,7 +27,8 @@ class DistributionMetadataTests(unittest.TestCase):
         )
 
         self.assertEqual(plugin["name"], "multi-agent-governor")
-        self.assertEqual(plugin["version"], "0.1.0")
+        self.assertTrue(plugin["version"].startswith("0.2.0+codex."))
+        self.assertEqual(magov.__version__, "0.2.0")
         self.assertEqual(
             plugin["repository"],
             "https://github.com/JessicJ/multi-agent-governor",

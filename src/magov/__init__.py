@@ -1,10 +1,28 @@
 """Public API for Multi-Agent Governor."""
 
+__version__ = "0.2.0"
+
+from .adapters import CodexCliRuntime, CodexCliRuntimeConfig, ScriptedRuntime
 from .evidence import (
     DecisionAction,
     DecisionReceipt,
     EvidenceFact,
     EvidenceSource,
+)
+from .events import JsonlEventSink, MemoryEventSink, RunEvent, load_events
+from .execution import (
+    AdaptiveController,
+    AgentRequest,
+    AgentResult,
+    AggregatedResult,
+    ConcatenatingAggregator,
+    ExecutionCheckpoint,
+    ExecutionReport,
+    ExecutionTask,
+    JsonFindingsAggregator,
+    ReviewEvidenceVerifier,
+    VerificationResult,
+    WorkUnit,
 )
 from .evaluation import (
     AdjudicationVerdict,
@@ -41,13 +59,22 @@ from .models import (
 )
 from .policy import Governor
 from .runtime import GovernorSession
+from .telemetry import add_usage, with_governance_tokens
 
 __all__ = [
+    "__version__",
     "AdjudicationVerdict",
+    "AdaptiveController",
+    "AgentRequest",
+    "AgentResult",
+    "AggregatedResult",
     "BaselineObservation",
     "BlindAdjudication",
     "Budget",
     "CheckpointObservation",
+    "CodexCliRuntime",
+    "CodexCliRuntimeConfig",
+    "ConcatenatingAggregator",
     "CoverageObservation",
     "DatasetSplit",
     "DecisionAction",
@@ -56,14 +83,22 @@ __all__ = [
     "Decision",
     "EvidenceFact",
     "EvidenceSource",
+    "ExecutionCheckpoint",
+    "ExecutionReport",
+    "ExecutionTask",
     "GoldDefect",
     "Governor",
     "GovernorSession",
+    "JsonFindingsAggregator",
+    "JsonlEventSink",
+    "MemoryEventSink",
     "Mode",
     "ReviewFinding",
+    "ReviewEvidenceVerifier",
     "ReviewTask",
     "RoundObservation",
     "ScoreReport",
+    "ScriptedRuntime",
     "ScalingReview",
     "StopReason",
     "TaskSource",
@@ -72,10 +107,16 @@ __all__ = [
     "TrialOutcome",
     "TrialSpec",
     "UsageObservation",
+    "VerificationResult",
+    "WorkUnit",
+    "RunEvent",
+    "add_usage",
     "build_trial_matrix",
     "materialize_task",
+    "load_events",
     "parse_codex_exec_jsonl",
     "score_findings",
     "summarize_outcomes",
     "validate_task_assets",
+    "with_governance_tokens",
 ]

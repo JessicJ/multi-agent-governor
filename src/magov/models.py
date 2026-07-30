@@ -28,8 +28,12 @@ class StopReason(str, Enum):
     MARGINAL_GAIN_TOO_LOW = "marginal_gain_too_low"
     OBSERVED_PLATEAU = "observed_plateau"
     COST_BUDGET_REACHED = "cost_budget_reached"
+    TOKEN_BUDGET_REACHED = "token_budget_reached"
+    TIME_BUDGET_REACHED = "time_budget_reached"
+    TOOL_BUDGET_REACHED = "tool_budget_reached"
     AGENT_CAP_REACHED = "agent_cap_reached"
     PLANNED_CAP_REACHED = "planned_cap_reached"
+    RUNTIME_FAILURE = "runtime_failure"
 
 
 @dataclass(frozen=True)
@@ -102,6 +106,9 @@ class Budget:
     plateau_rounds: int = 2
     cost_weight: float = 0.055
     latency_weight: float = 0.05
+    max_total_tokens: int | None = None
+    max_wall_time_seconds: float | None = None
+    max_tool_calls: int | None = None
 
     def __post_init__(self) -> None:
         if type(self.max_agents) is not int or self.max_agents < 1:
@@ -129,6 +136,30 @@ class Budget:
             or self.latency_weight < 0
         ):
             raise ValueError("utility weights cannot be negative")
+        if (
+            self.max_total_tokens is not None
+            and (
+                type(self.max_total_tokens) is not int
+                or self.max_total_tokens < 1
+            )
+        ):
+            raise ValueError("max_total_tokens must be a positive integer")
+        if (
+            self.max_wall_time_seconds is not None
+            and (
+                not isfinite(self.max_wall_time_seconds)
+                or self.max_wall_time_seconds <= 0
+            )
+        ):
+            raise ValueError("max_wall_time_seconds must be positive")
+        if (
+            self.max_tool_calls is not None
+            and (
+                type(self.max_tool_calls) is not int
+                or self.max_tool_calls < 1
+            )
+        ):
+            raise ValueError("max_tool_calls must be a positive integer")
 
 
 @dataclass(frozen=True)
@@ -182,6 +213,11 @@ class RoundObservation:
     cost_multiplier: float
     marginal_quality_gain: float
     novel_finding_ratio: float = 1.0
+    total_tokens: int = 0
+    wall_time_seconds: float = 0.0
+    tool_calls: int = 0
+    coverage_complete: bool = False
+    unresolved_conflicts: int = 0
 
     def __post_init__(self) -> None:
         if type(self.total_agents) is not int or self.total_agents < 1:
@@ -194,6 +230,17 @@ class RoundObservation:
             raise ValueError("cost_multiplier must be positive")
         if not isfinite(self.marginal_quality_gain):
             raise ValueError("marginal_quality_gain must be finite")
+        for name in ("total_tokens", "tool_calls", "unresolved_conflicts"):
+            value = getattr(self, name)
+            if type(value) is not int or value < 0:
+                raise ValueError(f"{name} must be a non-negative integer")
+        if (
+            not isfinite(self.wall_time_seconds)
+            or self.wall_time_seconds < 0
+        ):
+            raise ValueError("wall_time_seconds cannot be negative")
+        if type(self.coverage_complete) is not bool:
+            raise ValueError("coverage_complete must be a boolean")
 
 
 @dataclass(frozen=True)

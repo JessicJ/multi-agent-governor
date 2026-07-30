@@ -26,7 +26,10 @@ All ratio signals use `0..1`. Start from one measured Agent baseline.
   "budget": {
     "max_agents": 3,
     "max_cost_multiplier": 3.0,
-    "target_confidence": 0.9
+    "target_confidence": 0.9,
+    "max_total_tokens": 500000,
+    "max_wall_time_seconds": 3600,
+    "max_tool_calls": 200
   }
 }
 ```
@@ -59,3 +62,7 @@ result to verify.
 `max_agents` is a total count including the baseline Agent. Cost is normalized
 against the measured baseline, so `max_cost_multiplier: 3` permits at most
 three baseline-equivalent units of work.
+
+Token, wall-time, and tool-call limits are optional hard runtime budgets. They
+are enforced by `magov run` after each completed Agent result; advisory
+`magov plan` can carry them but cannot enforce them without a runtime.

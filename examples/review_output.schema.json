@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "finding_id": {"type": "string"},
+          "file": {"type": "string"},
+          "symbol": {"type": "string"},
+          "root_cause_category": {"type": "string"},
+          "impact": {"type": "string"},
+          "evidence": {"type": "string"},
+          "claimed_severity": {
+            "type": ["string", "null"],
+            "enum": ["minor", "ordinary", "serious", null]
+          }
+        },
+        "required": [
+          "finding_id",
+          "file",
+          "symbol",
+          "root_cause_category",
+          "impact",
+          "evidence",
+          "claimed_severity"
+        ]
+      }
+    },
+    "reviewed_files": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "unresolved_conflicts": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": ["findings", "reviewed_files", "unresolved_conflicts"]
+}

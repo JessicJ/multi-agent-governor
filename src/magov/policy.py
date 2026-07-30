@@ -191,6 +191,30 @@ class Governor:
                 StopReason.COST_BUDGET_REACHED,
                 "Observed cost reached the configured budget.",
             )
+        if (
+            budget.max_total_tokens is not None
+            and latest.total_tokens >= budget.max_total_tokens
+        ):
+            return self._stop(
+                StopReason.TOKEN_BUDGET_REACHED,
+                "Observed tokens reached the configured budget.",
+            )
+        if (
+            budget.max_wall_time_seconds is not None
+            and latest.wall_time_seconds >= budget.max_wall_time_seconds
+        ):
+            return self._stop(
+                StopReason.TIME_BUDGET_REACHED,
+                "Observed wall time reached the configured budget.",
+            )
+        if (
+            budget.max_tool_calls is not None
+            and latest.tool_calls >= budget.max_tool_calls
+        ):
+            return self._stop(
+                StopReason.TOOL_BUDGET_REACHED,
+                "Observed tool calls reached the configured budget.",
+            )
         if latest.total_agents >= budget.max_agents:
             return self._stop(
                 StopReason.AGENT_CAP_REACHED,

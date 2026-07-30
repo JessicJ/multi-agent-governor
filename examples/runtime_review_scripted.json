@@ -1,0 +1,80 @@
+{
+  "task": {
+    "task_id": "scripted-review-demo",
+    "prompt": "Review the changed files and return the required structured JSON.",
+    "working_directory": "..",
+    "signals": {
+      "parallelizable_units": 4,
+      "parallel_fraction": 0.85,
+      "decomposition_confidence": 0.9,
+      "context_coupling": 0.25,
+      "shared_context_ratio": 0.3,
+      "uncertainty": 0.8,
+      "verification_value": 0.9,
+      "failure_correlation": 0.15,
+      "aggregation_difficulty": 0.3,
+      "error_impact": 0.8
+    },
+    "metadata": {
+      "changed_files": ["src/magov/runtime.py"],
+      "high_risk_files": ["src/magov/runtime.py"]
+    },
+    "work_units": [
+      {
+        "work_unit_id": "runtime-control",
+        "instruction": "Review runtime admission and stop enforcement.",
+        "scope": ["src/magov/runtime.py"],
+        "high_risk": true
+      }
+    ]
+  },
+  "runtime": {
+    "kind": "scripted",
+    "results": [
+      {
+        "output": {
+          "findings": [],
+          "reviewed_files": ["src/magov/runtime.py"],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 900,
+          "agent_output_tokens": 100,
+          "model_calls": 1,
+          "wall_time_seconds": 2
+        }
+      },
+      {
+        "output": {
+          "findings": [
+            {
+              "finding_id": "demo-agent-2-1",
+              "file": "src/magov/runtime.py",
+              "symbol": "GovernorSession",
+              "root_cause_category": "missing-runtime-admission-loop",
+              "impact": "The legacy session only returns a plan.",
+              "evidence": "plan() does not own Agent execution.",
+              "claimed_severity": "ordinary"
+            }
+          ],
+          "reviewed_files": ["src/magov/runtime.py"],
+          "unresolved_conflicts": 0
+        },
+        "usage": {
+          "agent_input_tokens": 900,
+          "agent_output_tokens": 100,
+          "model_calls": 1,
+          "wall_time_seconds": 2
+        }
+      }
+    ]
+  },
+  "verifier": {"kind": "review"},
+  "budget": {
+    "max_agents": 4,
+    "max_cost_multiplier": 6,
+    "target_confidence": 0.95,
+    "min_expected_gain": 0.005,
+    "max_total_tokens": 5000
+  }
+}

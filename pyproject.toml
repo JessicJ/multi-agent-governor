@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi-agent-governor"
-version = "0.1.0"
-description = "A lightweight, explainable controller that decides whether a task should use multiple agents."
+version = "0.2.0"
+description = "An explainable adaptive controller that admits and stops homogeneous Agents using observable evidence."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}

@@ -1,8 +1,13 @@
 # Multi-Agent Governor
 
-一个轻量、可解释的控制器：先跑单 Agent 基线，再决定是否值得增加 Agent。
+一个轻量、可解释的自适应控制层：先跑单 Agent 基线，只有可观察证据表明边际收益值得时才增加同构 Agent，并在收益平台期或预算耗尽时强制停止。
 
-它不是 Agent 编排框架。它不管理 prompt、模型、工具、队列或消息总线，只回答三个问题：
+它不是新的通用 Agent 框架。它提供两层能力：
+
+- `plan`：不接管执行，只回答三个治理问题；
+- `run`：通过可替换的 Agent Runtime 适配器实际拥有扩容权限，每次只准入一个新 Agent，再验证和决定是否继续。
+
+三个治理问题是：
 
 1. 要不要从 1 个 Agent 扩到多个？
 2. 应采用中心协调还是独立协作？
@@ -11,8 +16,9 @@
 ## 决策闭环
 
 ```text
-任务 → 单 Agent 基线 → 结构信号 → Governor → 执行计划
-                                            ↘ 每轮观测 → 继续 / 停止
+任务 → Controller → 单 Agent 基线 → 外部验证 → Governor
+           ↑                                  ↓
+           └── 聚合 ← 新 Agent ← 准入 / 停止 ─┘
 ```
 
 Governor 先使用硬门槛排除明显不适合多 Agent 的任务，再逐个估计新增 Agent 的边际质量收益、延迟收益、成本、协调压力和错误传播风险。只有净边际效用超过阈值，才允许增加下一个 Agent。
@@ -26,8 +32,15 @@ python3 --version
 cd multi-agent-governor
 PYTHONPATH=src python3 -m magov.cli examples/research_task.json
 PYTHONPATH=src python3 -m magov.cli examples/coupled_task.json
+PYTHONPATH=src python3 -m magov.cli plan examples/research_task.json
+PYTHONPATH=src python3 -m magov.cli run \
+  examples/runtime_review_scripted.json \
+  --events /tmp/magov-demo.events.jsonl
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
+
+旧的 `magov INPUT.json` 仍兼容，等价于 `magov plan INPUT.json`。
+`runtime_review_scripted.json` 不调用模型，用固定结果演示 baseline、扩容、验证和提前停止的完整状态机。
 
 如果版本低于 3.10，请先安装较新的 Python，再继续下面的安装步骤。
 
@@ -41,7 +54,7 @@ magov examples/research_task.json
 ## 作为 Codex 插件或 Skill 使用
 
 仓库包含可安装的 [`multi-agent-governor` 插件](plugins/multi-agent-governor/.codex-plugin/plugin.json)，插件内部包含一个 [`multi-agent-governor` Skill](plugins/multi-agent-governor/skills/multi-agent-governor/SKILL.md)。
-它会要求先取得单 Agent 基线，再给出是否扩容、采用何种协作方式以及何时停止的建议；它不会自行启动或编排 Agent。
+插件支持两种模式：普通任务默认只生成建议；用户明确要求执行结构化代码审查时，可以调用 `magov run`，由控制器通过 Codex CLI 启动隔离 Agent、记录真实用量并强制停止。目前可执行模式不适用于任意类型的软件开发任务。
 
 推荐以插件形式安装。克隆仓库后，在仓库根目录运行：
 
@@ -65,7 +78,37 @@ cp -R plugins/multi-agent-governor/skills/multi-agent-governor ~/.codex/skills/
 Use $multi-agent-governor to decide whether this task should use more agents and when to stop.
 ```
 
-当前 Skill 与策略均为实验性 v0.1。它们适合生成可解释的决策记录，不代表已经证明多 Agent 在所有任务上都能无损节省成本。
+当前 Skill、策略与 Codex CLI Runtime 均为实验性 v0.2。可执行闭环已经存在，但不代表已经证明多 Agent 在所有任务上都能无损节省成本。
+
+## 实际执行：结构化代码审查
+
+第一种可执行场景限定为只读代码审查。运行 JSON 必须声明：
+
+- 隔离的 Agent 工作目录；
+- 固定审查提示词与结构化输出 schema；
+- 变更文件与至少需要双重检查的高风险文件；
+- 结构信号、Agent 上限、Token、耗时和工具调用预算；
+- `codex-cli` 或仅用于测试的 `scripted` runtime。
+
+无模型示意配置见 [`runtime_review_scripted.json`](examples/runtime_review_scripted.json)，真实 Codex 配置模板见 [`runtime_review_codex.template.json`](examples/runtime_review_codex.template.json)，结构化输出约束见 [`review_output.schema.json`](examples/review_output.schema.json)。真实 Codex 运行使用：
+
+```bash
+magov run RUN.json --events RUN.events.jsonl > RUN.report.json
+magov replay RUN.events.jsonl
+magov report RUN.report.json
+```
+
+控制器会执行以下闭环：
+
+1. 启动一个全新 baseline Agent；
+2. 使用外部过程证据评估变更文件覆盖、高风险文件独立复核、冲突和结构化发现；
+3. 计算初始扩容上限；
+4. 每次只启动一个额外 Agent；
+5. 每轮重新聚合、验证、记录真实 Token/耗时/工具调用；
+6. 在质量目标、计划上限、Agent 上限、成本、Token、耗时、工具预算或边际收益平台期停止；
+7. 输出可回放事件日志和决策收据。
+
+Codex JSONL 和最终消息默认写入 Agent 工作目录之外的临时目录。适配器拒绝 `danger-full-access` 和已知的安全绕过参数。若显式指定 `artifacts_directory`，它也必须位于 Agent 工作目录之外。
 
 ## 输入信号
 
@@ -104,7 +147,7 @@ Use $multi-agent-governor to decide whether this task should use more agents and
 
 ## 接入现有 Agent runtime
 
-`GovernorSession` 强制执行“基线先行”，但不会替你启动多个 Agent：
+`GovernorSession` 保留为兼容的纯建议 API：
 
 ```python
 from magov import BaselineObservation, GovernorSession, TaskSignals
@@ -134,11 +177,52 @@ baseline, plan = session.plan(task)
 
 你的 runtime 根据 `plan.mode` 和 `plan.total_agents` 执行。每增加一个 Agent 后，将真实的质量增量、新发现比例和成本传给 `review_scaling(...)`；达到质量目标、预算上限、计划上限或连续边际收益平台期时立即停止。
 
+需要 Governor 实际拥有准入权限时，使用 `AdaptiveController`：
+
+```python
+from magov import (
+    AdaptiveController,
+    Budget,
+    ExecutionTask,
+    JsonFindingsAggregator,
+    ReviewEvidenceVerifier,
+)
+from magov.adapters import CodexCliRuntime, CodexCliRuntimeConfig
+
+controller = AdaptiveController(
+    runtime=CodexCliRuntime(
+        CodexCliRuntimeConfig(
+            sandbox="read-only",
+            output_schema=review_schema_path,
+            artifacts_directory=artifacts_outside_agent_workspace,
+        )
+    ),
+    aggregator=JsonFindingsAggregator(),
+    verifier=ReviewEvidenceVerifier(),
+)
+
+report = controller.execute(
+    ExecutionTask(
+        task_id="review-001",
+        prompt=fixed_review_prompt,
+        working_directory=isolated_task_directory,
+        signals=task_signals,
+        metadata={
+            "changed_files": changed_files,
+            "high_risk_files": high_risk_files,
+        },
+    ),
+    Budget(max_agents=4, max_total_tokens=500_000),
+)
+```
+
+`AgentRuntime`、`Aggregator` 和 `Verifier` 都是小型 Protocol。其他平台可以实现自己的适配器，而不必改动策略。
+
 `total_agents` 表示包括原始 baseline 在内的 Agent 执行总数。`centralized` 中的 coordinator 是一个逻辑角色，默认由 baseline Agent 承担；策略已将协调开销计入成本，但没有额外增加一个 coordinator 执行。如果你的 runtime 必须启用独立 coordinator，应把它的实际成本纳入 `RoundObservation.cost_multiplier`，并相应调高预算或重新校准成本权重。
 
 ## 当前策略的边界
 
-这是可运行的策略基线，不是已经证明最优的通用公式。默认权重的作用是建立可观测、可回放的决策闭环。生产校准建议记录：
+这是可执行的策略基线，不是已经证明最优的通用公式。当前代码审查 verifier 证明的是过程覆盖，不是代码无缺陷。默认权重的作用是建立可观测、可回放的决策闭环。生产校准建议记录：
 
 - 输入信号与最终计划；
 - 每个 Agent 的实际成本、延迟和边际新发现；
@@ -150,7 +234,7 @@ baseline, plan = session.plan(task)
 
 ## 证据优先的评测层
 
-项目现在提供独立的评测试跑框架，用于回答“什么时候不该增加 Agent、什么时候停止、是否真的减少消耗且没有损害结果”。它不会启动 Agent，也不会把试跑结果当成有效性证明。
+项目同时提供独立的评测试跑框架，用于回答“什么时候不该增加 Agent、什么时候停止、是否真的减少消耗且没有损害结果”。评测层与新的执行层分离：执行层不能读取真值，评分层只能在运行结束后读取真值。工程试跑仍不能被当成有效性证明。
 
 首个协议固定为 Python PR 的只读缺陷审查：
 

@@ -1,7 +1,7 @@
 {
   "name": "multi-agent-governor",
-  "version": "0.1.0",
-  "description": "Evidence-based admission and stopping decisions for multi-agent work",
+  "version": "0.2.0+codex.20260730033837",
+  "description": "Evidence-based adaptive admission and stopping control for homogeneous Agent runtimes",
   "author": {
     "name": "Multi-Agent Governor contributors"
   },
@@ -18,12 +18,13 @@
   "interface": {
     "displayName": "Multi-Agent Governor",
     "shortDescription": "Decide when more agents are worth using.",
-    "longDescription": "Start from one measured baseline, then decide whether another homogeneous agent is justified, which collaboration topology fits, and when to stop. This plugin produces an auditable plan; it does not launch or orchestrate agents.",
+    "longDescription": "Start from one measured baseline, then decide whether another homogeneous Agent is justified, which collaboration topology fits, and when to stop. Advisory mode returns an auditable plan; executable code-review mode owns Codex CLI Agent admission and emits replayable checkpoints.",
     "developerName": "Multi-Agent Governor contributors",
     "category": "Productivity",
     "capabilities": [],
     "defaultPrompt": [
       "Decide whether this task needs more agents.",
+      "Run an adaptive structured code review and stop when marginal evidence is too low.",
       "Review this agent run and tell me whether to stop.",
       "Plan an agent budget for this task."
     ]
