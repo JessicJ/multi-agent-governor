@@ -1,0 +1,16 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-06__adaptive-max-4__repeat-1-runtime-assigned-1",
+      "verdict": "matched",
+      "defect_id": "D-ATTRS-1319",
+      "note": "Post-run isolated reproduction confirms the registered generated-syntax defect."
+    },
+    {
+      "finding_id": "python-pr-06__adaptive-max-4__repeat-1-runtime-assigned-reviewer-001",
+      "verdict": "matched",
+      "defect_id": "D-ATTRS-1319",
+      "note": "Independent duplicate report of the same registered generated-syntax defect."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-06__agents-1__repeat-1-runtime-assigned-1",
+      "verdict": "matched",
+      "defect_id": "D-ATTRS-1319",
+      "note": "Post-run isolated reproduction confirms that the default expression is embedded in the generated keyword argument name."
+    }
+  ]
+}
