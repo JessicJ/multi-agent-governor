@@ -1,6 +1,6 @@
 {
   "name": "multi-agent-governor",
-  "version": "0.2.1+codex.20260731045325",
+  "version": "0.2.1+codex.20260731084721",
   "description": "Evidence-based adaptive admission and stopping control for homogeneous Agent runtimes",
   "author": {
     "name": "Multi-Agent Governor contributors"
