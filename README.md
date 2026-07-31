@@ -33,7 +33,7 @@ Governor 关注的不是“多 Agent 听起来更强”，而是三个可以检�
 | 应如何协作？ | 在集中协调与独立执行之间选择，并显式计入协调成本 |
 | 什么时候停止？ | 达到公开验证目标、观察到平台期，或触及安全预算时停止 |
 
-## 30 秒体验
+## 安装与使用
 
 推荐使用仓库内的
 [`multi-agent-governor` Codex 插件](plugins/multi-agent-governor/.codex-plugin/plugin.json)。

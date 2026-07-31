@@ -35,7 +35,7 @@ use to decide whether another homogeneous Agent is worth admitting.
 | How should they collaborate? | Choose centralized or independent execution and price in coordination |
 | When should scaling stop? | Stop at a verified target, an observed plateau, or a hard budget |
 
-## Try it in 30 seconds
+## Installation and usage
 
 Install the Codex plugin from a local clone:
 
