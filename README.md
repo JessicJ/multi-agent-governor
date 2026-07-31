@@ -2,30 +2,78 @@
 
 [English README](README.en.md) · 中文说明
 
-一个轻量、可解释的 Agent 预算控制器：先跑单 Agent 基线，只有可观察
-证据表明下一个同构 Agent 的边际收益值得时才逐个扩容，并在达到验证
-目标、收益平台期或安全边界时停止。
+[![CI](https://github.com/JessicJ/multi-agent-governor/actions/workflows/ci.yml/badge.svg)](https://github.com/JessicJ/multi-agent-governor/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-它不负责猜测一个项目存在某个普遍正确的 Agent 数量。用户给出的
-`max_agents` 是安全上限；若到达上限时仍未满足公开验证目标或平台期
-条件，运行必须返回 `cap_reached_incomplete`，不能暗示该数量已经足够。
-完整产品目标、非目标和可证伪成功指标见
-[`docs/product-goal.md`](docs/product-goal.md)。
-组件关系和运行时／真值信任边界见
-[`docs/architecture.md`](docs/architecture.md)。
+> **让多 Agent 从“凭感觉堆数量”，变成“按证据逐个准入”。**
 
-它不是新的通用 Agent 框架。它提供三层能力：
+Multi-Agent Governor 是面向 Codex 和 Agent 工作流的预算控制与决策审计
+插件。它先运行一个可测量的基线 Agent，再根据覆盖、独立复核、冲突、
+新增证据和实际资源消耗，判断下一个同构 Agent 是否仍值得加入。
 
-- `plan`：不接管执行，只回答三个治理问题；
-- `advisory`：为外部或原生 Agent 追加可回放 checkpoint，但不声称接管
-  Runtime；
-- `run`：通过可替换的 Agent Runtime 适配器实际拥有扩容权限，每次只准入一个新 Agent，再验证和决定是否继续。
+**Start with one. Scale with evidence. Stop with a reason.**
 
-三个治理问题是：
+## 为什么使用 Governor
 
-1. 要不要从 1 个 Agent 扩到多个？
-2. 应采用中心协调还是独立协作？
-3. 何时停止继续增加 Agent？
+- **先小后大**：默认从一个 Agent 开始，不必在任务开始前拍脑袋选择数量。
+- **逐个准入**：每个 checkpoint 最多增加一个 Agent，并记录扩容或停止理由。
+- **预算可控**：Agent 数、Token、墙钟时间和工具调用都有硬上限。
+- **过程可审计**：事件日志和决策收据可以确定性重放；未知用量明确保留为
+  `null`，不拿估算冒充实测。
+- **协作方式可选**：根据任务耦合度选择中心协调或相互独立的同构 Agent。
+- **真值隔离**：评测模式把隐藏答案与 Agent 工作区分开，防止“看过答案”
+  的结果被当成能力提升。
+
+Governor 关注的不是“多 Agent 听起来更强”，而是三个可以检查的问题：
+
+| 问题 | Governor 的处理方式 |
+|---|---|
+| 要不要从 1 个 Agent 扩容？ | 先测基线，再检查新增 Agent 的预期边际价值 |
+| 应如何协作？ | 在集中协调与独立执行之间选择，并显式计入协调成本 |
+| 什么时候停止？ | 达到公开验证目标、观察到平台期，或触及安全预算时停止 |
+
+## 30 秒体验
+
+推荐使用仓库内的
+[`multi-agent-governor` Codex 插件](plugins/multi-agent-governor/.codex-plugin/plugin.json)。
+克隆仓库后运行：
+
+```bash
+git clone https://github.com/JessicJ/multi-agent-governor.git
+cd multi-agent-governor
+python3 -m pip install .
+codex plugin marketplace add "$PWD"
+codex plugin add multi-agent-governor@multi-agent-governor
+```
+
+新建一个 Codex 任务，然后直接说：
+
+```text
+Use $multi-agent-governor to start with one measured Agent, decide whether
+another is justified, and stop when verified marginal value is too low.
+```
+
+Governor 会先给出可解释的 Agent 预算和协作建议。只有当你明确要求执行
+受支持的结构化代码审查时，`run` 模式才会实际控制 Agent 的逐个准入。
+
+也可以不安装插件，直接体验零第三方运行时依赖的 Python CLI：
+
+```bash
+PYTHONPATH=src python3 -m magov.cli plan examples/research_task.json
+```
+
+## 三种使用方式
+
+| 模式 | 适合场景 | Governor 是否控制 Agent Runtime |
+|---|---|---:|
+| `plan` | 在执行前估算是否值得使用多 Agent，以及选择何种拓扑 | 否 |
+| `advisory` | 外部或 Codex 原生 Agent 已在运行，需要可回放 checkpoint 和收据 | 否 |
+| `run` | 受支持的结构化代码审查，需要实际执行预算与停止规则 | 是 |
+
+`plan` 是建议层，`advisory` 是外部运行的飞行记录仪，`run` 才是执行
+控制器。这三层共享同一套“基线 → 验证 → 准入或停止”的治理逻辑，但不会
+混淆“建议过”与“实际控制过”。
 
 ## 决策闭环
 
@@ -35,93 +83,59 @@
            └── 聚合 ← 新 Agent ← 准入 / 停止 ─┘
 ```
 
-Governor 先使用硬门槛排除明显不适合多 Agent 的任务，再逐个估计新增 Agent 的边际质量收益、延迟收益、成本、协调压力和错误传播风险。只有净边际效用超过阈值，才允许增加下一个 Agent。
+Governor 先用硬门槛排除明显不适合多 Agent 的任务，再估计新增 Agent 的
+边际质量收益、延迟收益、成本、协调压力和错误传播风险。只有净边际效用
+超过阈值，才允许增加下一个 Agent。
 
-## 快速运行
+## 可复现演示
 
-项目只需要 Python 3.10+，核心没有第三方依赖：
+项目需要 Python 3.10+。下面的 scripted runtime 不调用真实模型，可以
+安全演示 baseline、扩容、验证、提前停止和事件重放：
 
 ```bash
-python3 --version
-cd multi-agent-governor
-PYTHONPATH=src python3 -m magov.cli examples/research_task.json
-PYTHONPATH=src python3 -m magov.cli examples/coupled_task.json
-PYTHONPATH=src python3 -m magov.cli plan examples/research_task.json
+PYTHONPATH=src python3 -m magov.cli run \
+  examples/runtime_review_scripted_v2.json \
+  --events /tmp/magov-demo.events.jsonl
+PYTHONPATH=src python3 -m magov.cli replay /tmp/magov-demo.events.jsonl
+```
+
+为外部 Agent 会话生成追加式收据：
+
+```bash
 PYTHONPATH=src python3 -m magov.cli advisory start \
   examples/advisory_session_start.json \
   --events /tmp/magov-advisory.events.jsonl
 PYTHONPATH=src python3 -m magov.cli advisory checkpoint \
   /tmp/magov-advisory.events.jsonl \
   examples/advisory_checkpoint_agent_2.json
-PYTHONPATH=src python3 -m magov.cli advisory checkpoint \
-  /tmp/magov-advisory.events.jsonl \
-  examples/advisory_checkpoint_agent_3.json
 PYTHONPATH=src python3 -m magov.cli advisory report \
   /tmp/magov-advisory.events.jsonl
-PYTHONPATH=src python3 -m magov.cli run \
-  examples/runtime_review_scripted.json \
-  --events /tmp/magov-demo.events.jsonl
-PYTHONPATH=src python3 -m magov.cli run \
-  examples/runtime_review_scripted_v2.json \
-  --events /tmp/magov-v2-demo.events.jsonl
-PYTHONPATH=src python3 -m magov.cli run \
-  examples/runtime_review_scripted_cap_censored_v2.json \
-  --events /tmp/magov-v2-cap-demo.events.jsonl
-PYTHONPATH=src python3 -m unittest discover -s tests -v
-python3 tools/check_markdown_links.py .
 ```
 
-旧的 `magov INPUT.json` 仍兼容，等价于 `magov plan INPUT.json`。
-`magov advisory` 适用于由当前 Codex 任务或其他外部 Runtime 实际执行的
-通用任务。它强制收据内的 Agent 数逐个增加、重放策略决策，并把未知
-Token、成本和时间保留为 `null`；但它不声称 Governor 拥有 Agent 启动或
-停止权限。详细边界和命令见
-[`docs/advisory-sessions.md`](docs/advisory-sessions.md)。
-`runtime_review_scripted.json` 不调用模型，用固定结果演示 baseline、扩容、验证和提前停止的完整状态机。scripted 配置必须显式包含
-`dry_run: {"scripted": true, "real_experiment": false}`；运行报告、outcome
-和 compare 会保留该标记，防止 dry-run 被误当成真实实验。
-`runtime_review_scripted_v2.json` 额外验证 v2 在单 Agent 已覆盖文件后仍要求
-一次独立复核，并把精确策略版本写入报告和 receipt。
-`runtime_review_scripted_cap_censored_v2.json` 使用确定性 fixture 演示达到
-用户上限但过程验证仍不完整时返回 `cap_reached_incomplete`。
+完整命令和语义见
+[`docs/advisory-sessions.md`](docs/advisory-sessions.md)。所有 scripted 配置
+都会携带 `dry_run: {"scripted": true, "real_experiment": false}`，防止演示
+结果被误当成真实实验。
 
-如果版本低于 3.10，请先安装较新的 Python，再继续下面的安装步骤。
+## 项目状态与边界
 
-也可以安装为本地命令：
+当前 Skill、策略与 Codex CLI Runtime 为实验性 `0.2.x` 软件。控制闭环、
+预算、隔离、收据和重放已经实现并有自动化测试；公开历史任务验证仍属于
+描述性工程验证，不构成“多 Agent 在所有项目上更好或更省”的普遍结论。
 
-```bash
-python3 -m pip install .
-magov examples/research_task.json
-```
-
-## 作为 Codex 插件或 Skill 使用
-
-仓库包含可安装的 [`multi-agent-governor` 插件](plugins/multi-agent-governor/.codex-plugin/plugin.json)，插件内部包含一个 [`multi-agent-governor` Skill](plugins/multi-agent-governor/skills/multi-agent-governor/SKILL.md)。
-插件支持两种模式：普通任务默认只生成建议；用户明确要求执行结构化代码审查时，可以调用 `magov run`，由控制器通过 Codex CLI 启动隔离 Agent、记录真实用量并强制停止。目前可执行模式不适用于任意类型的软件开发任务。
-
-推荐以插件形式安装。克隆仓库后，在仓库根目录运行：
-
-```bash
-python3 -m pip install .
-codex plugin marketplace add "$PWD"
-codex plugin add multi-agent-governor@multi-agent-governor
-```
-
-如果只想安装 Skill，也可以运行：
-
-```bash
-python3 -m pip install .
-mkdir -p ~/.codex/skills
-cp -R plugins/multi-agent-governor/skills/multi-agent-governor ~/.codex/skills/
-```
-
-安装后请新建一个 Codex 会话，再这样使用：
+Governor 也不会猜测一个普遍正确的 Agent 数量。`max_agents` 是安全上限，
+不是“这个数量一定足够”的承诺；若到达上限时公开过程验证仍不完整，运行
+必须返回 `cap_reached_incomplete`。
 
 ```text
-Use $multi-agent-governor to decide whether this task should use more agents and when to stop.
+status: descriptive_only
+claim_allowed: false
+engineering_result: inconclusive
 ```
 
-当前 Skill、策略与 Codex CLI Runtime 均为实验性 v0.2。可执行闭环已经存在，但不代表已经证明多 Agent 在所有任务上都能无损节省成本。
+这项边界不影响它作为预算控制、过程审计和实验基础设施使用。完整产品
+目标见 [`docs/product-goal.md`](docs/product-goal.md)，组件关系与信任边界
+见 [`docs/architecture.md`](docs/architecture.md)。
 
 ## 实际执行：结构化代码审查
 
@@ -339,3 +353,21 @@ PYTHONPATH=src python3 -m magov.eval_cli score \
 参与贡献前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。安全问题请遵循
 [`SECURITY.md`](SECURITY.md) 私下报告；发布步骤见
 [`RELEASING.md`](RELEASING.md)。
+
+## 开发与验证
+
+```bash
+PYTHONPATH=src python3 -m unittest discover -s tests -v
+PYTHONPATH=src python3 -m magov.eval_cli validate \
+  evals/pilot_manifest.json --workspace .
+python3 -m compileall -q src tests \
+  plugins/multi-agent-governor/skills/multi-agent-governor/scripts
+python3 tools/check_markdown_links.py .
+git diff --check
+```
+
+## 许可证
+
+Multi-Agent Governor 使用 [MIT License](LICENSE)。历史评测补丁保留各自的
+上游许可证，详见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) 和
+[`LICENSES/`](LICENSES/)。
