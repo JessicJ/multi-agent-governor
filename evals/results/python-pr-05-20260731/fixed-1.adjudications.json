@@ -1,0 +1,10 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-05__agents-1__repeat-1-runtime-assigned-001",
+      "verdict": "matched",
+      "defect_id": "D-ATTRS-1513",
+      "note": "Post-run isolated reproduction confirms the registered nested-context state restoration defect."
+    }
+  ]
+}

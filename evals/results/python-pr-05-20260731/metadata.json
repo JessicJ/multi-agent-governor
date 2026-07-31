@@ -1,0 +1,56 @@
+{
+  "task_id": "python-pr-05",
+  "project": "python-attrs/attrs",
+  "repository": "https://github.com/python-attrs/attrs.git",
+  "license_spdx": "MIT",
+  "fix_commit": "af9c510912ce604a94896cc35c27368d5baf6ae6",
+  "original_buggy_revision": "ab7f8b2f4c0f747d5b1575247ce35e5adaad182e",
+  "policy_version": "pilot-v2",
+  "model_id": "gpt-5.6-sol",
+  "prompt_version": "python-review-v2",
+  "evaluation_mode": "real",
+  "real_experiment": true,
+  "run_order": [
+    "fixed-1",
+    "adaptive-max-4",
+    "fixed-4"
+  ],
+  "hard_token_cap": 2100000,
+  "arm_token_caps": {
+    "fixed-1": 300000,
+    "adaptive-max-4": 600000,
+    "fixed-4": 1200000
+  },
+  "combined_usage": {
+    "actual_total_agents": 7,
+    "agent_input_tokens": 497328,
+    "cached_input_tokens": 336384,
+    "agent_output_tokens": 5126,
+    "reasoning_output_tokens": 1065,
+    "total_tokens": 502454,
+    "model_calls": 7,
+    "tool_calls": 23,
+    "agent_cumulative_time_seconds": 231.0474136224948,
+    "summed_wall_time_seconds": 231.07349258242174
+  },
+  "isolation": {
+    "workspaces": 3,
+    "files_scanned_per_workspace": 134,
+    "bytes_scanned_per_workspace": 2023200,
+    "all_clean": true
+  },
+  "reproduction": {
+    "fixed_hidden_trigger": "passed",
+    "defective_hidden_trigger": "failed_with_AssertionError"
+  },
+  "adjudication": {
+    "method": "post-run isolated fixed-versus-defective hidden-trigger reproduction and semantic classification",
+    "model_judge_used": false,
+    "independent_blinded_human": false,
+    "pending_findings_remaining": 0
+  },
+  "status": "descriptive_only",
+  "claim_allowed": false,
+  "engineering_result": "inconclusive",
+  "raw_archive": "evals/runs/pilot-v2-real-python-pr-05-20260731"
+}

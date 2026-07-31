@@ -1,0 +1,90 @@
+{
+  "trial": {
+    "trial_id": "python-pr-05__adaptive-max-4__repeat-1",
+    "task_id": "python-pr-05",
+    "max_agents": 4,
+    "repetition": 1,
+    "model_id": "gpt-5.6-sol",
+    "prompt_version": "python-review-v2",
+    "policy_version": "pilot-v2",
+    "homogeneous_agents": true
+  },
+  "actual_total_agents": 2,
+  "planned_total_agents": 3,
+  "execution_status": "completed",
+  "stop_reason": "target_reached",
+  "usage": {
+    "agent_input_tokens": 131983,
+    "agent_output_tokens": 1375,
+    "cached_input_tokens": 91648,
+    "reasoning_output_tokens": 251,
+    "governance_tokens": 0,
+    "model_calls": 2,
+    "tool_calls": 6,
+    "wall_time_seconds": 57.478899457957596,
+    "total_tokens": 133358
+  },
+  "score": {
+    "total_known_defects": 1,
+    "found_known_defects": 1,
+    "serious_defects": 0,
+    "found_serious_defects": 0,
+    "valid_other_findings": 0,
+    "false_positive_findings": 0,
+    "duplicate_findings": 1,
+    "pending_findings": [],
+    "missed_red_line_defects": [],
+    "recall": 1.0,
+    "serious_recall": 1.0,
+    "false_positive_share": 0.0,
+    "complete": true
+  },
+  "coverage_complete": true,
+  "unresolved_conflicts": 0,
+  "checkpoints": [
+    {
+      "total_agents": 1,
+      "new_finding_count": 1,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [
+        "src/attr/validators.py"
+      ],
+      "coverage_complete": false,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 66369,
+        "agent_output_tokens": 707,
+        "cached_input_tokens": 46336,
+        "reasoning_output_tokens": 150,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 30.940535749774426,
+        "total_tokens": 67076
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 2,
+      "new_finding_count": 1,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 65614,
+        "agent_output_tokens": 668,
+        "cached_input_tokens": 45312,
+        "reasoning_output_tokens": 101,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 26.53836370818317,
+        "total_tokens": 66282
+      },
+      "novel_finding_ratio": 1.0
+    }
+  ],
+  "wall_time_seconds": 57.48841516626999,
+  "scripted_dry_run": false
+}
