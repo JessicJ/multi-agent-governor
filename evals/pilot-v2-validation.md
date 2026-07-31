@@ -239,3 +239,23 @@ engineering_result: inconclusive
 本批次只回答 Governor 在 1–4 Agent 区间内的行为和成本，不能回答任意
 规模代码审查的充分 Agent 数。更高上限必须在新的未见大变更上另行
 预注册 `max-8` 压力实验，不能看到本批次真值后临时扩容。
+
+## 执行状态
+
+用户于 2026-07-30 明确确认启动冻结批次。21 个真实 arm 按预注册任务与
+arm 顺序于 2026-07-30 至 2026-07-31 全部完成，没有运行故障、预算停止
+或上限截断。机器可读冻结配置保持原样，不用事后结果改写。
+
+确定性七任务汇总和进入比较器的 outcome JSONL 位于
+[`results/pilot-v2-validation-20260731/`](results/pilot-v2-validation-20260731/)。
+汇总仍强制输出：
+
+```text
+status: descriptive_only
+claim_allowed: false
+engineering_result: inconclusive
+```
+
+所有 task-specific 结果都保留真值解锁时点、泄漏扫描、复现和裁决边界。
+裁决没有调用模型 judge，但也不是独立、隐藏组别身份的人工盲审；这项
+限制不能由本批次的数值表现抵消。

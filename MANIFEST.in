@@ -1,0 +1,24 @@
+include CHANGELOG.md
+include CODE_OF_CONDUCT.md
+include CONTRIBUTING.md
+include GOVERNANCE.md
+include LICENSE
+include README.md
+include README.en.md
+include RELEASING.md
+include SECURITY.md
+include SUPPORT.md
+include THIRD_PARTY_NOTICES.md
+recursive-include .agents *.json
+recursive-include .github *.md *.yml
+recursive-include LICENSES *.txt
+recursive-include docs *.md
+recursive-include evals *.diff *.json *.jsonl *.md *.py *.txt
+recursive-include examples *.json
+recursive-include plugins *
+recursive-include requirements *.txt
+recursive-include tools *.py
+prune evals/runs
+global-exclude .DS_Store
+global-exclude *.py[cod]
+global-exclude __pycache__

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/JessicJ/multi-agent-governor/security/advisories/new
+    about: Use the private vulnerability reporting flow; do not open a public issue.
+  - name: Usage and support
+    url: https://github.com/JessicJ/multi-agent-governor/blob/main/SUPPORT.md
+    about: Read the support guide before filing a bug.

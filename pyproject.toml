@@ -1,21 +1,49 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "multi-agent-governor"
 version = "0.2.1"
 description = "An explainable adaptive controller that admits and stops homogeneous Agents using observable evidence."
-readme = "README.md"
+readme = "README.en.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = [
+    "LICENSE",
+    "LICENSES/*",
+    "THIRD_PARTY_NOTICES.md",
+]
 authors = [{name = "Multi-Agent Governor contributors"}]
+keywords = [
+    "agents",
+    "code-review",
+    "evaluation",
+    "governance",
+    "multi-agent",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/JessicJ/multi-agent-governor"
 Repository = "https://github.com/JessicJ/multi-agent-governor"
 Issues = "https://github.com/JessicJ/multi-agent-governor/issues"
+Changelog = "https://github.com/JessicJ/multi-agent-governor/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/JessicJ/multi-agent-governor#readme"
+Security = "https://github.com/JessicJ/multi-agent-governor/blob/main/SECURITY.md"
 
 [project.scripts]
 magov = "magov.cli:main"

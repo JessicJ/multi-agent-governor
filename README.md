@@ -1,5 +1,7 @@
 # Multi-Agent Governor
 
+[English README](README.en.md) · 中文说明
+
 一个轻量、可解释的 Agent 预算控制器：先跑单 Agent 基线，只有可观察
 证据表明下一个同构 Agent 的边际收益值得时才逐个扩容，并在达到验证
 目标、收益平台期或安全边界时停止。
@@ -144,11 +146,14 @@ verifier 证明、具有至少两个可分离审查单元且采用独立拓扑�
 完整冻结规则见 [`evals/pilot-v2.md`](evals/pilot-v2.md)。这仍是开发规则，
 不是效果声明。
 
-下一批真实历史验证已在
-[`evals/pilot-v2-validation.md`](evals/pilot-v2-validation.md) 中冻结：
+冻结的七任务真实历史验证已按
+[`evals/pilot-v2-validation.md`](evals/pilot-v2-validation.md) 完成：
 使用除开发任务 `python-pr-07` 外的全部七个历史任务、一次重复和相同三臂
-顺序。当前只完成来源、触发测试、隔离、泄漏与 scripted 预检；尚未启动
-任何新的真实模型运行。
+顺序。确定性批次汇总见
+[`evals/results/pilot-v2-validation-20260731/`](evals/results/pilot-v2-validation-20260731/)。
+该批次描述了运行时隔离、停止与成本行为，但任务公开、重复数为一且没有
+独立盲审，因此仍是 `descriptive_only / claim_allowed:false /
+inconclusive`，不能证明 Governor 对未见项目普遍有效。
 
 Codex JSONL 和最终消息默认写入 Agent 工作目录之外的临时目录。适配器
 显式关闭单次 Codex 进程内部的原生多 Agent 工具，拒绝
@@ -284,16 +289,15 @@ report = controller.execute(
 
 项目同时提供独立的评测试跑框架，用于回答“什么时候不该增加 Agent、什么时候停止、是否真的减少消耗且没有损害结果”。评测层与新的执行层分离：执行层不能读取真值，评分层只能在运行结束后读取真值。工程试跑仍不能被当成有效性证明。
 
-首个协议固定为 Python PR 的只读缺陷审查：
+当前协议固定为 Python PR 的只读缺陷审查：
 
-- 12 个工程试跑任务槽位，70% 左右为历史缺陷、其余为植入缺陷；
-- 同模型、同工具、集中汇总；
-- 恰好使用 1、2、3、4 个 Agent，每组重复 2 次；
-- 最多 4 Agent、逐次准入的 Governor 自适应组，每个任务重复 2 次；
-- 仓库公开但在 Agent 运行时隔离的工程真值卡、结构化发现、自动匹配和模糊案例盲审；
+- 8 个真实历史任务和 4 个仅用于工程测试的 synthetic fixture；
+- `python-pr-07` 用于策略开发，pilot-v2 验证使用其余 7 个历史任务；
+- 同模型、同工具、同提示词，依次运行 fixed-1、adaptive-max-4、fixed-4；
+- 仓库公开但在 Agent 运行时隔离的工程真值卡、结构化发现和后置裁决；
 - 严重缺陷召回优先，误报为硬约束；
-- Token、调用、耗时以及 Governor 自身开销全部记录；
-- 所有运行结果默认只保存在本地。
+- Token、调用、Agent 数、累计 Agent 时间和墙钟时间全部记录；
+- 原始 trace 默认只保存在被 Git 忽略的本地归档，审计结果单独入库。
 
 验证示例评分：
 
@@ -308,4 +312,9 @@ PYTHONPATH=src python3 -m magov.eval_cli score \
 
 8 个历史任务包含来自第三方开源项目的补丁片段。来源、适用许可证和完整许可证文本见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
 
-在另一批未参与规则制定的代码完成正式验证之前，本项目只能称为“实验性策略”，不能声称已经证明可以无损节省成本。
+在新的真正未见任务、多次重复和独立盲审完成之前，本项目只能称为
+“实验性策略”，不能声称已经证明可以无损节省成本。
+
+参与贡献前请阅读 [`CONTRIBUTING.md`](CONTRIBUTING.md)。安全问题请遵循
+[`SECURITY.md`](SECURITY.md) 私下报告；发布步骤见
+[`RELEASING.md`](RELEASING.md)。

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Complete the frozen seven-task `pilot-v2` historical validation batch and
+  publish deterministic, descriptive-only results without changing the
+  preregistered runtime conditions.
+- Add English onboarding, community health files, security and governance
+  policies, release documentation, source-distribution completeness checks,
+  and package metadata based on PEP 639.
+- Pin GitHub Actions to reviewed commit SHAs, add CodeQL analysis, and validate
+  both wheel and source distributions in CI.
+
 ## 0.2.1
 
 - Add a separate adaptive evaluation arm with predeclared trial specs,

@@ -78,6 +78,11 @@ Agent 数针对一次具体审查任务，而不是整个仓库。用户配置�
 4. **保留集确认**：冻结策略后运行跨项目、重复的私有或未见任务；只有
    此阶段满足全部成功指标，才允许作有边界的效果声明。
 
-当前 `pilot-v2` 属于第 1 阶段结束、第 2 阶段尚未启动。现有
-`adaptive-max-4` 只能校准 1–4 Agent 区间，不能回答任意规模任务需要
-多少 Agent。
+当前 `pilot-v2` 已完成第 1 阶段，并完成了第 2 阶段的首个冻结历史任务
+批次：7 个真实任务、每个任务 1 次重复、共 21 个真实运行。结果仅为
+`descriptive_only`，`claim_allowed: false`，工程结论为 `inconclusive`；
+详见
+[`evals/results/pilot-v2-validation-20260731/`](../evals/results/pilot-v2-validation-20260731/)。
+现有 `adaptive-max-4` 只能描述 1–4 Agent 区间，不能回答任意规模任务
+需要多少 Agent。下一步是第 3 阶段的独立上限压力测试，而不是把本批次
+包装成效果证明。

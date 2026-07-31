@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose a scoped improvement
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user or integration problem needs to be solved?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe observable inputs, outputs, and stopping behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Verification
+      description: How could the behavior be tested without model self-confidence?
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks and costs
+      description: Note compatibility, security, coordination, and token-cost impact.
+    validations:
+      required: true
