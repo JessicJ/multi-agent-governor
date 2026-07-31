@@ -33,16 +33,19 @@ and OpenSSF Scorecard's
 
 ## GitHub settings that require repository-owner action
 
-- [ ] Make CI a required status check for the default branch.
-- [ ] Protect the default branch and require pull-request review.
-- [ ] Enable Dependabot alerts and security updates.
-- [ ] Enable private vulnerability reporting.
-- [ ] Enable secret scanning and push protection where available.
-- [ ] Configure repository description, topics, and social preview.
+- [x] Make CI and CodeQL required status checks for the default branch.
+- [x] Protect the default branch and require pull-request review.
+- [x] Enable Dependabot alerts and security updates.
+- [x] Enable private vulnerability reporting.
+- [x] Enable secret scanning and push protection where available.
+- [x] Configure repository description and topics.
+- [ ] Configure a repository social preview.
 - [ ] Create a signed, immutable release tag after the local gates pass.
 
 These settings cannot be proven by local files. The release report must list
-them as external blockers until a repository owner verifies them.
+them as external blockers until a repository owner verifies them. Checked
+items above were verified through the GitHub API after commit `e575164` was
+pushed and its required CI and CodeQL runs completed successfully.
 
 ## Evidence boundary
 

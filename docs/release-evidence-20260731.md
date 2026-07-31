@@ -79,20 +79,28 @@ distribution checker were strengthened, the archives were rebuilt, and the
 source-distribution suite then passed. This failed attempt is not counted as a
 passing release gate.
 
-## External owner actions
+## Remote verification
 
-The source tree is ready to become a release candidate once committed, but the
-following cannot be established by local files:
+Commit `e575164d74d541b8c934869ab029039f7c4bd713` was pushed to the public
+`main` branch after the local checks above passed. The resulting remote
+verification established:
 
-- required CI and CodeQL checks must pass on GitHub;
-- branch protection, private vulnerability reporting, Dependabot alerts,
-  secret scanning, and push protection must be enabled by the repository
-  owner;
-- the remote Codex marketplace must be refreshed after the release commit is
-  pushed, then version `0.2.1+codex.20260730085745` must be reinstalled and
-  smoke-tested;
-- a signed immutable tag and public package publication require explicit owner
-  action.
+- [CI run 30599473474](https://github.com/JessicJ/multi-agent-governor/actions/runs/30599473474)
+  passed all five supported Python versions and the distribution job.
+- [CodeQL run 30599473478](https://github.com/JessicJ/multi-agent-governor/actions/runs/30599473478)
+  passed Python analysis.
+- `main` requires those seven checks, an up-to-date branch, one approving
+  review, resolved review conversations, and linear history; force pushes and
+  deletion are disabled. Administrators retain a recovery bypass.
+- Dependabot alerts and security updates, private vulnerability reporting,
+  secret scanning, push protection, and full-SHA GitHub Actions enforcement
+  are enabled.
+- The repository description and six discovery topics are configured.
+- The Git marketplace snapshot was refreshed to `e575164`, and Codex plugin
+  version `0.2.1+codex.20260730085745` was installed into the local plugin
+  cache.
 
-No remote push, tag, GitHub setting change, or package publication was
-performed during this local audit.
+Remaining owner actions are to configure a social preview, smoke-test the
+freshly installed plugin from a new Codex task, and—only after those checks—create
+a signed immutable release tag and decide whether to publish the Python
+package. No release tag or package publication was performed.
