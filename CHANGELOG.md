@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Make the Codex plugin wrapper discover the installed Governor core across
+  supported Python interpreters, with an explicit `MAGOV_PYTHON` override,
+  instead of failing when the active project Python differs from the install
+  Python.
 - Add append-only advisory session receipts with one-Agent checkpoints,
   deterministic decision replay, explicit unavailable usage, and separate
   forecast versus observed stop reasons.
