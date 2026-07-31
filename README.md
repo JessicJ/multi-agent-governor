@@ -11,6 +11,8 @@
 条件，运行必须返回 `cap_reached_incomplete`，不能暗示该数量已经足够。
 完整产品目标、非目标和可证伪成功指标见
 [`docs/product-goal.md`](docs/product-goal.md)。
+组件关系和运行时／真值信任边界见
+[`docs/architecture.md`](docs/architecture.md)。
 
 它不是新的通用 Agent 框架。它提供两层能力：
 
@@ -53,6 +55,7 @@ PYTHONPATH=src python3 -m magov.cli run \
   examples/runtime_review_scripted_cap_censored_v2.json \
   --events /tmp/magov-v2-cap-demo.events.jsonl
 PYTHONPATH=src python3 -m unittest discover -s tests -v
+python3 tools/check_markdown_links.py .
 ```
 
 旧的 `magov INPUT.json` 仍兼容，等价于 `magov plan INPUT.json`。

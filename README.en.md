@@ -92,7 +92,8 @@ use, then admits at most one additional Agent per checkpoint.
 - Agent, token, wall-time, and tool-call budgets are hard boundaries.
 - Process coverage is not hidden-truth correctness.
 
-See [runtime control](docs/runtime-control.md) and the
+See the [architecture and trust boundaries](docs/architecture.md),
+[runtime control](docs/runtime-control.md), and the
 [evaluation protocol](docs/evaluation-protocol.md).
 
 ## Codex plugin
@@ -120,6 +121,7 @@ PYTHONPATH=src python -m magov.eval_cli validate \
   evals/pilot_manifest.json --workspace .
 python -m compileall -q src tests \
   plugins/multi-agent-governor/skills/multi-agent-governor/scripts
+python tools/check_markdown_links.py .
 git diff --check
 ```
 

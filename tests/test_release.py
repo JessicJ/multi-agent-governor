@@ -41,6 +41,7 @@ class OpenSourceReleaseTests(unittest.TestCase):
             "RELEASING.md",
             "SECURITY.md",
             "SUPPORT.md",
+            "docs/architecture.md",
             ".github/ISSUE_TEMPLATE/bug_report.yml",
             ".github/ISSUE_TEMPLATE/feature_request.yml",
             ".github/PULL_REQUEST_TEMPLATE.md",

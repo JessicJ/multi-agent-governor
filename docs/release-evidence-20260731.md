@@ -41,7 +41,7 @@ Results:
   injected engineering fixtures.
 - All selected Python files compiled.
 - All six repository YAML files parsed successfully.
-- All repository-local targets in 36 Markdown files resolved.
+- All repository-local targets in 37 Markdown files resolved.
 - No tracked symlinks, generated evaluation runs, build outputs, distribution
   outputs, egg metadata, or bytecode were found.
 - A targeted scan found no private-key headers or common AWS, GitHub, OpenAI,

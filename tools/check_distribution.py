@@ -36,6 +36,7 @@ REQUIRED_SDIST_FILES = REQUIRED_LEGAL_FILES | {
     "RELEASING.md",
     "SECURITY.md",
     "SUPPORT.md",
+    "docs/architecture.md",
     "docs/product-goal.md",
     "docs/release-evidence-20260731.md",
     "evals/pilot_manifest.json",
