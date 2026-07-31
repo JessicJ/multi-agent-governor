@@ -2,44 +2,42 @@
 
 [中文说明](README.md) · English
 
-Multi-Agent Governor is an explainable budget controller for homogeneous
-Agents. It starts with one measured Agent, admits another only when observable
-evidence justifies the marginal cost, and stops at a verified target, an
-observed plateau, or a hard safety boundary.
+[![CI](https://github.com/JessicJ/multi-agent-governor/actions/workflows/ci.yml/badge.svg)](https://github.com/JessicJ/multi-agent-governor/actions/workflows/ci.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776AB)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-It does **not** guess a universally correct Agent count. `max_agents` is a
-safety cap, not a claim that the cap is sufficient. If the cap is reached
-before the process contract is complete, the run returns
-`cap_reached_incomplete`.
+> **Turn multi-Agent scaling from a guess into an evidence-based decision.**
 
-The project provides:
+Multi-Agent Governor is a budget controller and decision recorder for Codex
+and Agent workflows. It starts with one measured baseline Agent, then uses
+coverage, independent review, conflicts, novel evidence, and observed resource
+use to decide whether another homogeneous Agent is worth admitting.
 
-- `plan`: advisory scaling and topology decisions from measured input;
-- `advisory`: append-only checkpoints for externally executed Agent sessions,
-  with deterministic replay and explicit unavailable accounting;
-- `run`: an executable baseline-first controller with replayable checkpoints;
-- a safe Codex CLI adapter for isolated, read-only structured code review;
-- deterministic scripted runtimes for tests and demonstrations;
-- fixed-count and adaptive evaluation arms with truth isolated until scoring.
+**Start with one. Scale with evidence. Stop with a reason.**
 
-## Status
+## Why use Governor
 
-The project is experimental `0.2.x` software. The runtime and accounting loop
-are implemented and tested, but public historical pilot tasks do not prove
-general effectiveness. Published pilot outputs remain:
+- **Start small:** avoid choosing an arbitrary Agent count before evidence
+  exists.
+- **Scale one at a time:** admit at most one Agent at each checkpoint and
+  record why.
+- **Enforce budgets:** cap Agent count, tokens, wall time, and tool calls.
+- **Keep an audit trail:** deterministically replay event logs and receipts;
+  unavailable usage stays `null` instead of becoming invented precision.
+- **Choose a topology:** account for task coupling when selecting centralized
+  or independent homogeneous Agents.
+- **Protect evaluation truth:** keep hidden answers, provenance, and prior
+  traces outside Agent workspaces.
 
-```text
-status: descriptive_only
-claim_allowed: false
-engineering_result: inconclusive
-```
+| Question | Governor's answer |
+|---|---|
+| Should one Agent become several? | Measure the baseline, then evaluate marginal value |
+| How should they collaborate? | Choose centralized or independent execution and price in coordination |
+| When should scaling stop? | Stop at a verified target, an observed plateau, or a hard budget |
 
-See [the product goal](docs/product-goal.md) and
-[open source readiness checklist](docs/open-source-readiness.md). The completed
-seven-task descriptive batch report is in
-[evals/results/pilot-v2-validation-20260731](evals/results/pilot-v2-validation-20260731/).
+## Try it in 30 seconds
 
-## Requirements and installation
+Install the Codex plugin from a local clone:
 
 - Python 3.10 or newer
 - no third-party runtime dependency for the core package
@@ -51,18 +49,50 @@ cd multi-agent-governor
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install .
+codex plugin marketplace add "$PWD"
+codex plugin add multi-agent-governor@multi-agent-governor
 ```
 
-## Quick start
+Start a new Codex task and ask:
 
-Advisory planning:
+```text
+Use $multi-agent-governor to start with one measured Agent, decide whether
+another is justified, and stop when verified marginal value is too low.
+```
+
+Governor will first return an explainable Agent budget and collaboration
+recommendation. It controls Agent admission only when you explicitly request a
+supported structured code-review run.
+
+For a standalone CLI preview:
 
 ```bash
 magov plan examples/research_task.json
-magov plan examples/coupled_task.json
 ```
 
-Auditable advice for a task executed by native or external Agents:
+## Three operating modes
+
+| Mode | Best for | Controls the Agent runtime? |
+|---|---|---:|
+| `plan` | Preflight scaling and topology advice | No |
+| `advisory` | Replayable checkpoints for native or external Agent sessions | No |
+| `run` | Budget-enforced execution for supported structured code review | Yes |
+
+`plan` is the adviser, `advisory` is the flight recorder, and `run` is the
+controller. All three use the same baseline-first decision loop without
+confusing advice with runtime enforcement.
+
+## Reproducible demo
+
+Run the complete controller and replay loop without a model call:
+
+```bash
+magov run examples/runtime_review_scripted_v2.json \
+  --events /tmp/magov-demo.events.jsonl
+magov replay /tmp/magov-demo.events.jsonl
+```
+
+Create an append-only receipt for externally executed Agents:
 
 ```bash
 magov advisory start examples/advisory_session_start.json \
@@ -74,20 +104,37 @@ magov advisory checkpoint /tmp/magov-advisory.events.jsonl \
 magov advisory report /tmp/magov-advisory.events.jsonl
 ```
 
-This receipt keeps forecast and observed stop reasons separate and leaves
-unavailable usage as `null`. It does not claim that Governor launched or
-stopped the external Agents. See
-[advisory session receipts](docs/advisory-sessions.md).
+All scripted fixtures carry
+`dry_run: {"scripted": true, "real_experiment": false}` so demonstrations
+cannot masquerade as real experiments. See
+[advisory session receipts](docs/advisory-sessions.md) for the full contract.
 
-Deterministic end-to-end execution without a model call:
+## Project status and boundaries
 
-```bash
-magov run examples/runtime_review_scripted_v2.json \
-  --events /tmp/magov-demo.events.jsonl
-magov replay /tmp/magov-demo.events.jsonl
+Multi-Agent Governor is experimental `0.2.x` software. Its control loop,
+budgets, isolation, receipts, and replay are implemented and tested. Public
+historical-task results are descriptive engineering validation, not proof that
+multi-Agent execution is universally better or cheaper.
+
+It does not guess a universally correct Agent count. `max_agents` is a safety
+cap, not a promise that the cap is sufficient. If the process contract is
+still incomplete at the cap, the run returns `cap_reached_incomplete`.
+
+```text
+status: descriptive_only
+claim_allowed: false
+engineering_result: inconclusive
 ```
 
-Real structured review uses an isolated configuration based on
+That boundary does not prevent Governor from being useful as budget control,
+process audit, and experiment infrastructure. See
+[the product goal](docs/product-goal.md),
+[architecture and trust boundaries](docs/architecture.md), and the
+[open source readiness checklist](docs/open-source-readiness.md).
+
+## Executable structured review
+
+Real review uses an isolated configuration based on
 [`examples/runtime_review_codex.template.json`](examples/runtime_review_codex.template.json):
 
 ```bash
@@ -114,23 +161,6 @@ use, then admits at most one additional Agent per checkpoint.
 See the [architecture and trust boundaries](docs/architecture.md),
 [runtime control](docs/runtime-control.md), and the
 [evaluation protocol](docs/evaluation-protocol.md).
-
-## Codex plugin
-
-The repository includes a Codex plugin and Skill:
-
-```bash
-python -m pip install .
-codex plugin marketplace add "$PWD"
-codex plugin add multi-agent-governor@multi-agent-governor
-```
-
-Start a new Codex task after installation, then ask:
-
-```text
-Use $multi-agent-governor to start with one measured Agent, decide whether
-another is justified, and stop when verified marginal value is too low.
-```
 
 ## Development
 
