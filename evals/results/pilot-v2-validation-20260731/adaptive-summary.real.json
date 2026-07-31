@@ -1,0 +1,27 @@
+{
+  "status": "descriptive_only",
+  "claim_allowed": false,
+  "engineering_result": "inconclusive",
+  "evaluation_mode": "real",
+  "real_experiment": true,
+  "trials": 7,
+  "complete_scores": 7,
+  "mean_actual_agents": 2.0,
+  "actual_agent_distribution": {
+    "2": 7
+  },
+  "stop_reasons": {
+    "target_reached": 7
+  },
+  "mean_serious_recall": 1.0,
+  "total_recall": 1.0,
+  "recall_aggregation": "micro_over_registered_defects",
+  "mean_false_positive_share": 0.0,
+  "mean_total_tokens": 222334.86,
+  "mean_agent_cumulative_time_seconds": 119.911,
+  "mean_wall_time_seconds": 119.923,
+  "coverage_complete_rate": 1.0,
+  "red_line_miss_trials": 0,
+  "incomplete_runtime_trials": 0,
+  "cap_censored_trials": 0
+}

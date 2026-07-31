@@ -1,0 +1,45 @@
+{
+  "status": "descriptive_only",
+  "claim_allowed": false,
+  "engineering_result": "inconclusive",
+  "evaluation_mode": "real",
+  "real_experiment": true,
+  "by_agent_count": {
+    "1": {
+      "trials": 7,
+      "complete_scores": 7,
+      "mean_serious_recall": 1.0,
+      "total_recall": 0.857143,
+      "recall_aggregation": "micro_over_registered_defects",
+      "mean_false_positive_share": 0.0,
+      "mean_total_tokens": 104245.86,
+      "mean_governance_tokens": 0.0,
+      "mean_reasoning_output_tokens": 470.86,
+      "mean_model_calls": 1.0,
+      "mean_tool_calls": 6.14,
+      "mean_agent_cumulative_time_seconds": 59.685,
+      "mean_wall_time_seconds": 59.689,
+      "coverage_complete_rate": 1.0,
+      "red_line_miss_trials": 0,
+      "mean_final_novel_finding_ratio": 0.857143
+    },
+    "4": {
+      "trials": 7,
+      "complete_scores": 7,
+      "mean_serious_recall": 1.0,
+      "total_recall": 1.0,
+      "recall_aggregation": "micro_over_registered_defects",
+      "mean_false_positive_share": 0.085714,
+      "mean_total_tokens": 467114.29,
+      "mean_governance_tokens": 0.0,
+      "mean_reasoning_output_tokens": 1629.14,
+      "mean_model_calls": 4.0,
+      "mean_tool_calls": 26.29,
+      "mean_agent_cumulative_time_seconds": 235.798,
+      "mean_wall_time_seconds": 235.812,
+      "coverage_complete_rate": 1.0,
+      "red_line_miss_trials": 0,
+      "mean_final_novel_finding_ratio": 0.642857
+    }
+  }
+}

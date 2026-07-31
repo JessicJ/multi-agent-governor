@@ -1,0 +1,111 @@
+{
+  "protocol_version": "pilot-v2-validation-v2",
+  "execution_dates": [
+    "2026-07-30",
+    "2026-07-31"
+  ],
+  "tasks": [
+    "python-pr-01",
+    "python-pr-02",
+    "python-pr-03",
+    "python-pr-04",
+    "python-pr-05",
+    "python-pr-06",
+    "python-pr-08"
+  ],
+  "model_id": "gpt-5.6-sol",
+  "prompt_version": "python-review-v2",
+  "policy_version": "pilot-v2",
+  "repetitions_per_task": 1,
+  "arms": {
+    "fixed-1": {
+      "tasks": 7,
+      "actual_total_agents": 7,
+      "registered_defects": 7,
+      "found_registered_defects": 6,
+      "serious_defects": 2,
+      "found_serious_defects": 2,
+      "false_positive_findings": 0,
+      "duplicate_findings": 0,
+      "agent_input_tokens": 719903,
+      "cached_input_tokens": 518400,
+      "agent_output_tokens": 9818,
+      "reasoning_output_tokens": 3296,
+      "total_tokens": 729721,
+      "tool_calls": 43,
+      "agent_cumulative_time_seconds": 417.7973014587,
+      "wall_time_seconds": 417.8245235831
+    },
+    "adaptive-max-4": {
+      "tasks": 7,
+      "actual_total_agents": 14,
+      "agent_distribution": {
+        "2": 7
+      },
+      "registered_defects": 7,
+      "found_registered_defects": 7,
+      "serious_defects": 2,
+      "found_serious_defects": 2,
+      "false_positive_findings": 0,
+      "duplicate_findings": 8,
+      "agent_input_tokens": 1534619,
+      "cached_input_tokens": 1102336,
+      "agent_output_tokens": 21725,
+      "reasoning_output_tokens": 6328,
+      "total_tokens": 1556344,
+      "tool_calls": 97,
+      "agent_cumulative_time_seconds": 839.3780164174,
+      "wall_time_seconds": 839.4575432916,
+      "stop_reasons": {
+        "target_reached": 7
+      },
+      "incomplete_runtime_trials": 0,
+      "cap_censored_trials": 0
+    },
+    "fixed-4": {
+      "tasks": 7,
+      "actual_total_agents": 28,
+      "registered_defects": 7,
+      "found_registered_defects": 7,
+      "serious_defects": 2,
+      "found_serious_defects": 2,
+      "false_positive_findings": 3,
+      "duplicate_findings": 15,
+      "agent_input_tokens": 3228314,
+      "cached_input_tokens": 2455552,
+      "agent_output_tokens": 41486,
+      "reasoning_output_tokens": 11404,
+      "total_tokens": 3269800,
+      "tool_calls": 184,
+      "agent_cumulative_time_seconds": 1650.5874904571,
+      "wall_time_seconds": 1650.6852481258
+    }
+  },
+  "combined_usage": {
+    "actual_total_agents": 49,
+    "agent_input_tokens": 5482836,
+    "cached_input_tokens": 4076288,
+    "agent_output_tokens": 73029,
+    "reasoning_output_tokens": 21028,
+    "total_tokens": 5555865,
+    "model_calls": 49,
+    "tool_calls": 324,
+    "agent_cumulative_time_seconds": 2907.7628083332,
+    "summed_wall_time_seconds": 2907.9673149999
+  },
+  "comparison": {
+    "paired_trials": 7,
+    "adaptive_vs_fixed_4_serious_recall_difference": 0.0,
+    "adaptive_vs_fixed_4_total_recall_difference": 0.0,
+    "adaptive_vs_fixed_4_false_positive_share_difference": -0.085714,
+    "adaptive_vs_fixed_4_token_saving_rate": 0.524025
+  },
+  "adjudication": {
+    "model_judge_used": false,
+    "independent_blinded_human": false,
+    "pending_findings_remaining": 0
+  },
+  "status": "descriptive_only",
+  "claim_allowed": false,
+  "engineering_result": "inconclusive"
+}
