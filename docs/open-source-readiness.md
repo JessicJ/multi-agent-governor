@@ -29,7 +29,7 @@ and OpenSSF Scorecard's
       descriptive report.
 - [x] Run final tests, compileall, manifest validation, package installation
       smoke tests, plugin/Skill validation, and `git diff --check`.
-- [ ] Confirm the tracked working tree is clean at a release candidate commit.
+- [x] Confirm the tracked working tree is clean at a release candidate commit.
 
 ## GitHub settings that require repository-owner action
 
