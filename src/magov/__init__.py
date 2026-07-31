@@ -16,6 +16,14 @@ from .adaptive_evaluation import (
     summarize_adaptive_outcomes,
 )
 from .adapters import CodexCliRuntime, CodexCliRuntimeConfig, ScriptedRuntime
+from .advisory import (
+    ADVISORY_SCHEMA_VERSION,
+    AdvisoryAgentObservation,
+    AdvisoryUsage,
+    advisory_report,
+    append_advisory_checkpoint,
+    start_advisory_session,
+)
 from .evidence import (
     DecisionAction,
     DecisionReceipt,
@@ -78,6 +86,9 @@ from .telemetry import add_usage, with_governance_tokens
 
 __all__ = [
     "__version__",
+    "ADVISORY_SCHEMA_VERSION",
+    "AdvisoryAgentObservation",
+    "AdvisoryUsage",
     "AdaptiveTrialOutcome",
     "AdaptiveTrialSpec",
     "AdjudicationVerdict",
@@ -130,7 +141,9 @@ __all__ = [
     "WorkUnit",
     "RunEvent",
     "add_usage",
+    "advisory_report",
     "adaptive_outcome_from_report",
+    "append_advisory_checkpoint",
     "build_adaptive_run_payload",
     "build_adaptive_trial_matrix",
     "build_fixed_run_payload",
@@ -146,6 +159,7 @@ __all__ = [
     "score_findings",
     "summarize_outcomes",
     "summarize_adaptive_outcomes",
+    "start_advisory_session",
     "validate_task_assets",
     "with_governance_tokens",
 ]

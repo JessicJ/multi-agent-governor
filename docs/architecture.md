@@ -11,6 +11,8 @@ on a hidden answer.
 flowchart LR
     input["Task signals and measured baseline"] --> policy["Governor policy"]
     policy --> plan["Advisory plan"]
+    plan --> advisory["External advisory checkpoints"]
+    advisory --> advisory_events["Append-only advisory receipt"]
 
     config["Run configuration and hard budgets"] --> controller["AdaptiveController"]
     controller --> runtime["AgentRuntime adapter"]
@@ -28,6 +30,8 @@ The policy is used in two different contexts:
 
 - `GovernorSession.plan()` and `magov plan` return advice without owning Agent
   execution.
+- `magov advisory` records and replays externally executed Agent checkpoints,
+  but does not claim runtime enforcement.
 - `AdaptiveController.execute()` and `magov run` own admission of every
   additional Agent, apply hard budgets, and record why execution continued or
   stopped.
@@ -61,6 +65,7 @@ with unresolved process requirements produces `cap_reached_incomplete`.
 | --- | --- |
 | `models.py` | Validated task signals, observations, budgets, plans, and decisions |
 | `policy.py` | Planning and checkpoint-time scaling rules |
+| `advisory.py` | Append-only externally executed session receipts and deterministic replay |
 | `execution.py` | Adaptive controller, deterministic aggregation, and review verification |
 | `runtime.py` | Runtime, aggregation, and verification protocols |
 | `adapters/codex_cli.py` | Isolated Codex process adapter and usage extraction |

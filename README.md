@@ -14,9 +14,11 @@
 组件关系和运行时／真值信任边界见
 [`docs/architecture.md`](docs/architecture.md)。
 
-它不是新的通用 Agent 框架。它提供两层能力：
+它不是新的通用 Agent 框架。它提供三层能力：
 
 - `plan`：不接管执行，只回答三个治理问题；
+- `advisory`：为外部或原生 Agent 追加可回放 checkpoint，但不声称接管
+  Runtime；
 - `run`：通过可替换的 Agent Runtime 适配器实际拥有扩容权限，每次只准入一个新 Agent，再验证和决定是否继续。
 
 三个治理问题是：
@@ -45,6 +47,17 @@ cd multi-agent-governor
 PYTHONPATH=src python3 -m magov.cli examples/research_task.json
 PYTHONPATH=src python3 -m magov.cli examples/coupled_task.json
 PYTHONPATH=src python3 -m magov.cli plan examples/research_task.json
+PYTHONPATH=src python3 -m magov.cli advisory start \
+  examples/advisory_session_start.json \
+  --events /tmp/magov-advisory.events.jsonl
+PYTHONPATH=src python3 -m magov.cli advisory checkpoint \
+  /tmp/magov-advisory.events.jsonl \
+  examples/advisory_checkpoint_agent_2.json
+PYTHONPATH=src python3 -m magov.cli advisory checkpoint \
+  /tmp/magov-advisory.events.jsonl \
+  examples/advisory_checkpoint_agent_3.json
+PYTHONPATH=src python3 -m magov.cli advisory report \
+  /tmp/magov-advisory.events.jsonl
 PYTHONPATH=src python3 -m magov.cli run \
   examples/runtime_review_scripted.json \
   --events /tmp/magov-demo.events.jsonl
@@ -59,6 +72,11 @@ python3 tools/check_markdown_links.py .
 ```
 
 旧的 `magov INPUT.json` 仍兼容，等价于 `magov plan INPUT.json`。
+`magov advisory` 适用于由当前 Codex 任务或其他外部 Runtime 实际执行的
+通用任务。它强制收据内的 Agent 数逐个增加、重放策略决策，并把未知
+Token、成本和时间保留为 `null`；但它不声称 Governor 拥有 Agent 启动或
+停止权限。详细边界和命令见
+[`docs/advisory-sessions.md`](docs/advisory-sessions.md)。
 `runtime_review_scripted.json` 不调用模型，用固定结果演示 baseline、扩容、验证和提前停止的完整状态机。scripted 配置必须显式包含
 `dry_run: {"scripted": true, "real_experiment": false}`；运行报告、outcome
 和 compare 会保留该标记，防止 dry-run 被误当成真实实验。

@@ -211,12 +211,12 @@ class RoundObservation:
 
     total_agents: int
     confidence: float
-    cost_multiplier: float
+    cost_multiplier: float | None
     marginal_quality_gain: float
     novel_finding_ratio: float = 1.0
-    total_tokens: int = 0
-    wall_time_seconds: float = 0.0
-    tool_calls: int = 0
+    total_tokens: int | None = None
+    wall_time_seconds: float | None = None
+    tool_calls: int | None = None
     coverage_complete: bool = False
     unresolved_conflicts: int = 0
 
@@ -227,19 +227,35 @@ class RoundObservation:
             value = getattr(self, name)
             if not 0.0 <= value <= 1.0:
                 raise ValueError(f"{name} must be between 0 and 1")
-        if not isfinite(self.cost_multiplier) or self.cost_multiplier <= 0:
-            raise ValueError("cost_multiplier must be positive")
+        if self.cost_multiplier is not None and (
+            not isfinite(self.cost_multiplier) or self.cost_multiplier <= 0
+        ):
+            raise ValueError("cost_multiplier must be positive or null")
         if not isfinite(self.marginal_quality_gain):
             raise ValueError("marginal_quality_gain must be finite")
-        for name in ("total_tokens", "tool_calls", "unresolved_conflicts"):
+        for name in ("total_tokens", "tool_calls"):
             value = getattr(self, name)
-            if type(value) is not int or value < 0:
-                raise ValueError(f"{name} must be a non-negative integer")
+            if value is not None and (type(value) is not int or value < 0):
+                raise ValueError(
+                    f"{name} must be a non-negative integer or null"
+                )
         if (
-            not isfinite(self.wall_time_seconds)
-            or self.wall_time_seconds < 0
+            type(self.unresolved_conflicts) is not int
+            or self.unresolved_conflicts < 0
         ):
-            raise ValueError("wall_time_seconds cannot be negative")
+            raise ValueError(
+                "unresolved_conflicts must be a non-negative integer"
+            )
+        if (
+            self.wall_time_seconds is not None
+            and (
+                not isfinite(self.wall_time_seconds)
+                or self.wall_time_seconds < 0
+            )
+        ):
+            raise ValueError(
+                "wall_time_seconds must be non-negative or null"
+            )
         if type(self.coverage_complete) is not bool:
             raise ValueError("coverage_complete must be a boolean")
 

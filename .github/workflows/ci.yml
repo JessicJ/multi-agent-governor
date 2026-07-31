@@ -52,15 +52,34 @@ jobs:
         run: |
           magov plan examples/research_task.json > /tmp/research-result.json
           magov plan examples/coupled_task.json > /tmp/coupled-result.json
+          magov advisory start examples/advisory_session_start.json \
+            --events /tmp/magov-advisory.events.jsonl \
+            > /tmp/advisory-start.json
+          magov advisory checkpoint /tmp/magov-advisory.events.jsonl \
+            examples/advisory_checkpoint_agent_2.json \
+            > /tmp/advisory-agent-2.json
+          magov advisory checkpoint /tmp/magov-advisory.events.jsonl \
+            examples/advisory_checkpoint_agent_3.json \
+            > /tmp/advisory-agent-3.json
+          magov advisory report /tmp/magov-advisory.events.jsonl \
+            > /tmp/advisory-report.json
           python - <<'PY'
           import json
           from pathlib import Path
 
           research = json.loads(Path("/tmp/research-result.json").read_text())
           coupled = json.loads(Path("/tmp/coupled-result.json").read_text())
+          advisory = json.loads(Path("/tmp/advisory-report.json").read_text())
           assert research["mode"] == "independent"
           assert research["total_agents"] == 3
           assert coupled["mode"] == "single"
+          assert advisory["status"] == "completed"
+          assert advisory["planned_total_agents"] == 3
+          assert advisory["actual_total_agents"] == 3
+          assert advisory["plan_stop_reason"] == "cost_budget_reached"
+          assert advisory["final_stop_reason"] == "target_reached"
+          assert advisory["usage"]["total_tokens"] is None
+          assert advisory["runtime_enforced"] is False
           PY
 
   package:
@@ -103,6 +122,17 @@ jobs:
           /tmp/magov-wheel-smoke/bin/magov-eval --help
           /tmp/magov-wheel-smoke/bin/magov plan \
             examples/research_task.json --compact
+          /tmp/magov-wheel-smoke/bin/magov advisory start \
+            examples/advisory_session_start.json \
+            --events /tmp/magov-wheel-advisory.events.jsonl
+          /tmp/magov-wheel-smoke/bin/magov advisory checkpoint \
+            /tmp/magov-wheel-advisory.events.jsonl \
+            examples/advisory_checkpoint_agent_2.json
+          /tmp/magov-wheel-smoke/bin/magov advisory checkpoint \
+            /tmp/magov-wheel-advisory.events.jsonl \
+            examples/advisory_checkpoint_agent_3.json
+          /tmp/magov-wheel-smoke/bin/magov advisory report \
+            /tmp/magov-wheel-advisory.events.jsonl
           /tmp/magov-wheel-smoke/bin/magov run \
             examples/runtime_review_scripted_v2.json \
             --events /tmp/magov-wheel-smoke.events.jsonl

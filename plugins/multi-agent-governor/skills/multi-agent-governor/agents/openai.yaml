@@ -1,4 +1,4 @@
 interface:
   display_name: "Multi-Agent Governor"
-  short_description: "基于证据规划或执行 Agent 自适应扩容与停止"
-  default_prompt: "Use $multi-agent-governor to start with one measured Agent, decide whether another is justified, and stop when verified marginal value is too low."
+  short_description: "基于证据规划、记录或执行 Agent 自适应扩容"
+  default_prompt: "Use $multi-agent-governor to start with one measured Agent, record each advisory checkpoint, and stop when verified marginal value is too low."
