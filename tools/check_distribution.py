@@ -44,6 +44,7 @@ REQUIRED_SDIST_FILES = REQUIRED_LEGAL_FILES | {
     "plugins/multi-agent-governor/.codex-plugin/plugin.json",
     "plugins/multi-agent-governor/skills/multi-agent-governor/SKILL.md",
     "requirements/release.txt",
+    "tools/check_markdown_links.py",
 }
 
 

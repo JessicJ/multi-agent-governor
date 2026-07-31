@@ -45,6 +45,7 @@ jobs:
         run: |
           python -m compileall -q src tests \
             plugins/multi-agent-governor/skills/multi-agent-governor/scripts
+          python tools/check_markdown_links.py .
           git diff --check
 
       - name: Run CLI smoke tests
@@ -87,9 +88,23 @@ jobs:
           python -m twine check dist/*
           python tools/check_distribution.py dist/*
 
+      - name: Test source distribution
+        run: |
+          mkdir /tmp/magov-sdist-smoke
+          tar -xzf dist/*.tar.gz -C /tmp/magov-sdist-smoke
+          cd /tmp/magov-sdist-smoke/multi_agent_governor-*
+          PYTHONPATH=src python -m unittest discover -s tests -v
+
       - name: Smoke-test the wheel
         run: |
           python -m venv /tmp/magov-wheel-smoke
           /tmp/magov-wheel-smoke/bin/python -m pip install dist/*.whl
           /tmp/magov-wheel-smoke/bin/magov --help
           /tmp/magov-wheel-smoke/bin/magov-eval --help
+          /tmp/magov-wheel-smoke/bin/magov plan \
+            examples/research_task.json --compact
+          /tmp/magov-wheel-smoke/bin/magov run \
+            examples/runtime_review_scripted_v2.json \
+            --events /tmp/magov-wheel-smoke.events.jsonl
+          /tmp/magov-wheel-smoke/bin/magov replay \
+            /tmp/magov-wheel-smoke.events.jsonl

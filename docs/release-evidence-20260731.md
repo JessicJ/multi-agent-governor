@@ -30,16 +30,18 @@ PYTHONPATH=src python -m magov.eval_cli validate \
   evals/pilot_manifest.json --workspace .
 python -m compileall -q src tests \
   plugins/multi-agent-governor/skills/multi-agent-governor/scripts tools
+python tools/check_markdown_links.py .
 git diff --check
 ```
 
 Results:
 
-- 85 unit and release tests passed.
+- 87 unit and release tests passed.
 - Manifest status was `valid`: 12 tasks, including 8 historical tasks and 4
   injected engineering fixtures.
 - All selected Python files compiled.
 - All six repository YAML files parsed successfully.
+- All repository-local targets in 36 Markdown files resolved.
 - No tracked symlinks, generated evaluation runs, build outputs, distribution
   outputs, egg metadata, or bytecode were found.
 - A targeted scan found no private-key headers or common AWS, GitHub, OpenAI,
@@ -69,7 +71,7 @@ The following checks passed:
   virtual environment;
 - `magov --help`, `magov-eval --help`, `pip check`, a scripted `pilot-v2`
   end-to-end run, and event-log replay from that environment;
-- all 85 tests from a freshly extracted source distribution.
+- all 87 tests from a freshly extracted source distribution.
 
 The first source-distribution smoke test exposed that `.github` community and
 workflow files were missing from the archive. `MANIFEST.in` and the

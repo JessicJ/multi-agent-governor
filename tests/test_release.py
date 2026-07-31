@@ -21,6 +21,14 @@ assert SPEC is not None and SPEC.loader is not None
 CHECKER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(CHECKER)
 
+LINK_CHECKER_PATH = ROOT / "tools" / "check_markdown_links.py"
+LINK_SPEC = importlib.util.spec_from_file_location(
+    "check_markdown_links", LINK_CHECKER_PATH
+)
+assert LINK_SPEC is not None and LINK_SPEC.loader is not None
+LINK_CHECKER = importlib.util.module_from_spec(LINK_SPEC)
+LINK_SPEC.loader.exec_module(LINK_CHECKER)
+
 
 class OpenSourceReleaseTests(unittest.TestCase):
     def test_community_health_files_exist(self) -> None:
@@ -62,6 +70,11 @@ class OpenSourceReleaseTests(unittest.TestCase):
         self.assertIn("python -m build", workflow)
         self.assertIn("python -m twine check dist/*", workflow)
         self.assertIn("python tools/check_distribution.py dist/*", workflow)
+        self.assertIn("python tools/check_markdown_links.py .", workflow)
+        self.assertIn("Test source distribution", workflow)
+        self.assertIn(
+            "PYTHONPATH=src python -m unittest discover -s tests -v", workflow
+        )
         self.assertIn("magov plan examples/research_task.json", workflow)
         self.assertIn("magov plan examples/coupled_task.json", workflow)
         self.assertNotIn("uses: actions/checkout@v", workflow)
@@ -71,6 +84,26 @@ class OpenSourceReleaseTests(unittest.TestCase):
         self.assertNotIn("uses: actions/checkout@v", codeql)
         self.assertNotIn("uses: github/codeql-action/init@v", codeql)
         self.assertNotIn("uses: github/codeql-action/analyze@v", codeql)
+
+    def test_repository_markdown_links_resolve_locally(self) -> None:
+        self.assertEqual(LINK_CHECKER.broken_local_links(ROOT), [])
+
+    def test_markdown_link_checker_reports_file_and_line(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "README.md").write_text(
+                "valid [file](guide.md)\n"
+                "missing [file](absent.md)\n"
+                "escape [directory](..)\n"
+            )
+            (root / "guide.md").write_text("# Guide\n")
+            self.assertEqual(
+                LINK_CHECKER.broken_local_links(root),
+                [
+                    "README.md:2: missing absent.md",
+                    "README.md:3: target escapes root ..",
+                ],
+            )
 
     def test_validation_batch_preserves_non_claim_boundary(self) -> None:
         result_root = ROOT / "evals" / "results" / "pilot-v2-validation-20260731"

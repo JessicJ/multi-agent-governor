@@ -10,6 +10,8 @@
   and package metadata based on PEP 639.
 - Pin GitHub Actions to reviewed commit SHAs, add CodeQL analysis, and validate
   both wheel and source distributions in CI.
+- Test the built source distribution and scripted wheel workflow in CI, and
+  add an offline checker for broken or repository-escaping Markdown links.
 
 ## 0.2.1
 

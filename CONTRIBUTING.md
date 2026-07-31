@@ -35,6 +35,7 @@ PYTHONPATH=src python -m magov.eval_cli validate \
   evals/pilot_manifest.json --workspace .
 python -m compileall -q src tests \
   plugins/multi-agent-governor/skills/multi-agent-governor/scripts
+python tools/check_markdown_links.py .
 git diff --check
 ```
 
