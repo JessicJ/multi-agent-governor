@@ -308,6 +308,34 @@ class GovernorScalingReviewTests(unittest.TestCase):
         self.assertFalse(review.should_continue)
         self.assertEqual(review.stop_reason, StopReason.TARGET_REACHED)
 
+    def test_unavailable_usage_does_not_trigger_a_hard_budget(self) -> None:
+        budget = Budget(
+            max_agents=4,
+            max_cost_multiplier=1,
+            max_total_tokens=1,
+            max_wall_time_seconds=1,
+            max_tool_calls=1,
+            target_confidence=0.99,
+        )
+        review = Governor("pilot-v2").review_scaling(
+            self.plan,
+            [
+                RoundObservation(
+                    total_agents=2,
+                    confidence=0.70,
+                    cost_multiplier=None,
+                    marginal_quality_gain=0.20,
+                    total_tokens=None,
+                    wall_time_seconds=None,
+                    tool_calls=None,
+                )
+            ],
+            budget,
+        )
+
+        self.assertTrue(review.should_continue)
+        self.assertIsNone(review.stop_reason)
+
     def test_unresolved_work_at_user_cap_is_explicitly_censored(self) -> None:
         budget = Budget(
             max_agents=4,

@@ -1,0 +1,33 @@
+{
+  "agent_id": "domain-reviewer",
+  "total_agents": 2,
+  "contribution": "Reviewed schema, persistence, and unit conversion boundaries.",
+  "quality_score": 0.72,
+  "marginal_quality_gain": 0.22,
+  "novel_evidence_ratio": 0.8,
+  "coverage_complete": false,
+  "unresolved_conflicts": 1,
+  "evidence": [
+    {
+      "code": "unsafe_unit_conversion",
+      "statement": "A deterministic test rejects can or clove as piece.",
+      "source": "verifier"
+    }
+  ],
+  "remaining_risks": [
+    "CLI negative paths still need independent review."
+  ],
+  "usage": {
+    "input_tokens": null,
+    "cached_input_tokens": null,
+    "output_tokens": null,
+    "reasoning_tokens": null,
+    "total_tokens": null,
+    "model_calls": null,
+    "tool_calls": null,
+    "agent_time_seconds": null
+  },
+  "model_id": "gpt-5.6-sol",
+  "cumulative_cost_multiplier": null,
+  "cumulative_wall_time_seconds": null
+}

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add append-only advisory session receipts with one-Agent checkpoints,
+  deterministic decision replay, explicit unavailable usage, and separate
+  forecast versus observed stop reasons.
 - Complete the frozen seven-task `pilot-v2` historical validation batch and
   publish deterministic, descriptive-only results without changing the
   preregistered runtime conditions.

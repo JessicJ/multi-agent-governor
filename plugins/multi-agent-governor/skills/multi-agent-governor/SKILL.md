@@ -1,6 +1,6 @@
 ---
 name: multi-agent-governor
-description: Plan or execute evidence-based homogeneous Agent scaling. Start with one measured Agent, decide whether to admit another, select centralized or independent collaboration, enforce Agent and resource budgets, and stop when verified marginal value is too low. Use when a user asks whether multi-agent work is worthwhile, requests an adaptive code-review run, wants an Agent budget, or asks whether another Agent justifies its coordination and token cost.
+description: Plan, record, or execute evidence-based homogeneous Agent scaling. Start with one measured Agent, decide whether to admit another, preserve append-only advisory checkpoints for externally executed tasks, select centralized or independent collaboration, enforce supported runtime budgets, and stop when verified marginal value is too low. Use when a user asks whether multi-agent work is worthwhile, requests an auditable advisory Agent session or adaptive code-review run, wants an Agent budget, or asks whether another Agent justifies its coordination and token cost.
 ---
 
 # Multi-Agent Governor
@@ -9,9 +9,11 @@ Treat multi-agent use as an evidence-based admission decision, not a default.
 The product is a budget controller for verifiable code review, not an oracle
 for a universally correct Agent count. Treat the user's Agent cap as a safety
 boundary, not evidence that the cap is sufficient.
-The deterministic core has two modes:
+The deterministic core has three modes:
 
 - `plan`: return an advisory decision from a measured external baseline.
+- `advisory`: record externally executed Agents and replay policy checkpoints
+  without claiming runtime enforcement.
 - `run`: let the Governor-owned runtime execute the baseline and admit one
   additional homogeneous Agent at each checkpoint.
 
@@ -40,6 +42,32 @@ verifier exists.
 7. If `mode` is not `single`, admit only the next Agent. After it returns,
    compare verified quality, coverage, unresolved conflicts, novel evidence,
    and actual cost before admitting another.
+8. When the user asks to execute or audit an advisory multi-Agent task, read
+   [references/advisory-session-schema.md](references/advisory-session-schema.md).
+   Create the receipt before the first additional Agent:
+
+   ```bash
+   python3 scripts/run_governor.py advisory start INPUT.json \
+     --events SESSION.events.jsonl
+   ```
+
+9. Append exactly one checkpoint after each external Agent, then follow only
+   the receipt's next one-Agent admission:
+
+   ```bash
+   python3 scripts/run_governor.py advisory checkpoint \
+     SESSION.events.jsonl CHECKPOINT.json
+   ```
+
+10. Use `null`, not zero, for unavailable usage or timing. Finish by running:
+
+   ```bash
+   python3 scripts/run_governor.py advisory report SESSION.events.jsonl
+   ```
+
+An advisory receipt keeps the forecast stop separate from the observed final
+stop. It remains caller-supplied evidence and must say `runtime_enforced:
+false`.
 
 ## Executable code-review workflow
 
@@ -98,6 +126,9 @@ is installed and authenticated.
   outcome as enough Agents or completed verification.
 - The executable runtime must own admission. A prose recommendation that the
   surrounding runtime may ignore is advisory mode, not enforced control.
+- Advisory checkpoints must increment the total Agent count by one, use unique
+  Agent IDs, preserve a homogeneous known model, and include non-policy
+  observable evidence. Never rewrite missing usage as zero.
 - Never place Codex JSONL artifacts inside the Agent workspace; later Agents
   must not read earlier traces.
 - Keep native Codex multi-agent tools disabled inside every Governor-owned
@@ -109,7 +140,9 @@ is installed and authenticated.
 
 ## Result boundary
 
-In advisory mode, return a decision receipt and suggested checkpoint. In
-executable code-review mode, return the runtime report and replayable event
-log. Do not claim effectiveness until an unseen evaluation set passes the
-predeclared quality and total-usage guardrails.
+In plan-only mode, return a decision receipt and suggested checkpoint. In an
+externally executed advisory task, return the replayed append-only session
+receipt and its explicit limitations. In executable code-review mode, return
+the runtime report and replayable event log. Do not claim effectiveness until
+an unseen evaluation set passes the predeclared quality and total-usage
+guardrails.

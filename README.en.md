@@ -15,6 +15,8 @@ before the process contract is complete, the run returns
 The project provides:
 
 - `plan`: advisory scaling and topology decisions from measured input;
+- `advisory`: append-only checkpoints for externally executed Agent sessions,
+  with deterministic replay and explicit unavailable accounting;
 - `run`: an executable baseline-first controller with replayable checkpoints;
 - a safe Codex CLI adapter for isolated, read-only structured code review;
 - deterministic scripted runtimes for tests and demonstrations;
@@ -59,6 +61,23 @@ Advisory planning:
 magov plan examples/research_task.json
 magov plan examples/coupled_task.json
 ```
+
+Auditable advice for a task executed by native or external Agents:
+
+```bash
+magov advisory start examples/advisory_session_start.json \
+  --events /tmp/magov-advisory.events.jsonl
+magov advisory checkpoint /tmp/magov-advisory.events.jsonl \
+  examples/advisory_checkpoint_agent_2.json
+magov advisory checkpoint /tmp/magov-advisory.events.jsonl \
+  examples/advisory_checkpoint_agent_3.json
+magov advisory report /tmp/magov-advisory.events.jsonl
+```
+
+This receipt keeps forecast and observed stop reasons separate and leaves
+unavailable usage as `null`. It does not claim that Governor launched or
+stopped the external Agents. See
+[advisory session receipts](docs/advisory-sessions.md).
 
 Deterministic end-to-end execution without a model call:
 

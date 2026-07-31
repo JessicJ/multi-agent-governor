@@ -1,6 +1,6 @@
 {
   "name": "multi-agent-governor",
-  "version": "0.2.1+codex.20260730085745",
+  "version": "0.2.1+codex.20260731045325",
   "description": "Evidence-based adaptive admission and stopping control for homogeneous Agent runtimes",
   "author": {
     "name": "Multi-Agent Governor contributors"
@@ -18,7 +18,7 @@
   "interface": {
     "displayName": "Multi-Agent Governor",
     "shortDescription": "Decide when more agents are worth using.",
-    "longDescription": "A budget controller for verifiable code review. Start from one measured baseline, admit homogeneous Agents one at a time while non-truth marginal evidence remains valuable, respect user cost and safety caps, and report target, plateau, budget, cap-censored, and runtime-failure stops without pretending a fixed Agent count is universally sufficient.",
+    "longDescription": "A baseline-first Agent budget controller. Record replayable advisory checkpoints for externally executed tasks, or enforce admission for supported structured code review. Preserve unavailable usage as unknown, respect user safety caps, and report target, plateau, budget, cap-censored, and runtime-failure stops without pretending a fixed Agent count is universally sufficient.",
     "developerName": "Multi-Agent Governor contributors",
     "category": "Productivity",
     "capabilities": [],
@@ -26,6 +26,7 @@
       "Decide whether this task needs more agents.",
       "Run an adaptive structured code review and stop when marginal evidence is too low.",
       "Review this agent run and tell me whether to stop.",
+      "Record an auditable advisory Agent session with append-only checkpoints.",
       "Plan an agent budget for this task."
     ]
   }

@@ -14,6 +14,11 @@ from .adapters import (
     CodexCliRuntimeConfig,
     ScriptedRuntime,
 )
+from .advisory import (
+    advisory_report,
+    append_advisory_checkpoint,
+    start_advisory_session,
+)
 from .events import JsonlEventSink, load_events
 from .evaluation import UsageObservation
 from .execution import (
@@ -27,7 +32,7 @@ from .models import BaselineObservation, Budget, TaskSignals
 from .policy import Governor
 
 
-COMMANDS = {"plan", "run", "replay", "report"}
+COMMANDS = {"plan", "advisory", "run", "replay", "report"}
 
 
 def _reject_json_constant(value: str) -> None:
@@ -398,6 +403,32 @@ def build_parser() -> argparse.ArgumentParser:
     plan.add_argument("input", nargs="?")
     plan.add_argument("--compact", action="store_true")
 
+    advisory = subparsers.add_parser(
+        "advisory",
+        help="record an externally executed advisory Agent session",
+    )
+    advisory_subparsers = advisory.add_subparsers(
+        dest="advisory_command", required=True
+    )
+    advisory_start = advisory_subparsers.add_parser(
+        "start", help="plan from a baseline and create an append-only receipt"
+    )
+    advisory_start.add_argument("input")
+    advisory_start.add_argument("--events", required=True)
+    advisory_start.add_argument("--compact", action="store_true")
+    advisory_checkpoint = advisory_subparsers.add_parser(
+        "checkpoint",
+        help="append one completed external Agent observation",
+    )
+    advisory_checkpoint.add_argument("events")
+    advisory_checkpoint.add_argument("observation")
+    advisory_checkpoint.add_argument("--compact", action="store_true")
+    advisory_report_parser = advisory_subparsers.add_parser(
+        "report", help="validate and summarize an advisory receipt"
+    )
+    advisory_report_parser.add_argument("events")
+    advisory_report_parser.add_argument("--compact", action="store_true")
+
     run = subparsers.add_parser(
         "run", help="execute a baseline-first adaptive runtime loop"
     )
@@ -432,6 +463,20 @@ def _main_commands(argv: list[str]) -> int:
     if args.command == "plan":
         payload, _ = _read_json(args.input)
         _write_json(evaluate(payload), compact=args.compact)
+    elif args.command == "advisory":
+        if args.advisory_command == "start":
+            payload, _ = _read_json(args.input)
+            result = start_advisory_session(
+                payload, Path(args.events).resolve()
+            )
+        elif args.advisory_command == "checkpoint":
+            payload, _ = _read_json(args.observation)
+            result = append_advisory_checkpoint(
+                Path(args.events).resolve(), payload
+            )
+        else:
+            result = advisory_report(Path(args.events).resolve())
+        _write_json(result, compact=args.compact)
     elif args.command == "run":
         payload, base_directory = _read_json(args.input)
         events_path = Path(args.events) if args.events else None

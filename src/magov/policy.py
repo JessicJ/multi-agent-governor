@@ -214,13 +214,17 @@ class Governor:
                 StopReason.TARGET_REACHED,
                 "Observed confidence reached the target.",
             )
-        if latest.cost_multiplier >= budget.max_cost_multiplier:
+        if (
+            latest.cost_multiplier is not None
+            and latest.cost_multiplier >= budget.max_cost_multiplier
+        ):
             return self._stop(
                 StopReason.COST_BUDGET_REACHED,
                 "Observed cost reached the configured budget.",
             )
         if (
             budget.max_total_tokens is not None
+            and latest.total_tokens is not None
             and latest.total_tokens >= budget.max_total_tokens
         ):
             return self._stop(
@@ -229,6 +233,7 @@ class Governor:
             )
         if (
             budget.max_wall_time_seconds is not None
+            and latest.wall_time_seconds is not None
             and latest.wall_time_seconds >= budget.max_wall_time_seconds
         ):
             return self._stop(
@@ -237,6 +242,7 @@ class Governor:
             )
         if (
             budget.max_tool_calls is not None
+            and latest.tool_calls is not None
             and latest.tool_calls >= budget.max_tool_calls
         ):
             return self._stop(
