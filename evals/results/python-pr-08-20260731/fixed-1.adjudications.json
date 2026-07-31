@@ -1,0 +1,10 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-08__agents-1__repeat-1-runtime-assigned-reviewer-001",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-438",
+      "note": "Post-run isolated reproduction confirms that dispatch iterates the mutable hook implementation list while plugins register other plugins."
+    }
+  ]
+}

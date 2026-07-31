@@ -1,0 +1,22 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "python-pr-08__agents-4__repeat-1-runtime-assigned-001",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-438",
+      "note": "Post-run isolated reproduction confirms the registered mutable hook-list dispatch defect."
+    },
+    {
+      "finding_id": "python-pr-08__agents-4__repeat-1-runtime-assigned-reviewer-1",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-438",
+      "note": "Independent duplicate report of the same registered mutable hook-list dispatch defect."
+    },
+    {
+      "finding_id": "python-pr-08__agents-4__repeat-1-runtime-assigned-reviewer-1__occurrence-2",
+      "verdict": "matched",
+      "defect_id": "D-PLUGGY-438",
+      "note": "Independent duplicate report of the same registered mutable hook-list dispatch defect."
+    }
+  ]
+}
