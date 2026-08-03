@@ -1,0 +1,35 @@
+diff --git a/more_itertools/more.py b/more_itertools/more.py
+index 1d4d183..d12acc4 100755
+--- a/more_itertools/more.py
++++ b/more_itertools/more.py
+@@ -4198,7 +4198,7 @@ def nth_product(index, *iterables, repeat=1):
+ 
+     ``IndexError`` will be raised if the given *index* is invalid.
+     """
+-    pools = tuple(map(tuple, reversed(iterables))) * repeat
++    pools = tuple(map(tuple, reversed(iterables * repeat)))
+     ns = tuple(map(len, pools))
+ 
+     c = reduce(mul, ns)
+@@ -4362,7 +4362,7 @@ def product_index(element, *iterables, repeat=1):
+     of *args*.
+     """
+     elements = tuple(element)
+-    pools = tuple(map(tuple, iterables)) * repeat
++    pools = tuple(map(tuple, iterables * repeat))
+     if len(elements) != len(pools):
+         raise ValueError('element is not a product of args')
+ 
+diff --git a/more_itertools/recipes.py b/more_itertools/recipes.py
+index 8f0774d..b56c0c1 100644
+--- a/more_itertools/recipes.py
++++ b/more_itertools/recipes.py
+@@ -580,7 +580,7 @@ def random_product(*iterables, repeat=1):
+     ``itertools.product(*args, repeat=repeat)``.
+ 
+     """
+-    pools = tuple(map(tuple, iterables)) * repeat
++    pools = tuple(map(tuple, iterables * repeat))
+     return tuple(map(choice, pools))
+ 
+ 

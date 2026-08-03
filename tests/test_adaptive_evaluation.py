@@ -217,6 +217,24 @@ class AdaptiveEvaluationTests(unittest.TestCase):
 
         self.assertEqual(len(trials), 4)
         self.assertEqual(trials[0].max_agents, 4)
+        eight_agent_trials = build_adaptive_trial_matrix(
+            [high_risk],
+            model_id="fixed-model",
+            prompt_version="python-review-v2",
+            policy_version="pilot-v2",
+            max_agents=8,
+            repetitions=1,
+        )
+        self.assertEqual(eight_agent_trials[0].max_agents, 8)
+        with self.assertRaisesRegex(ValueError, "between 1 and 8"):
+            build_adaptive_trial_matrix(
+                [high_risk],
+                model_id="fixed-model",
+                prompt_version="python-review-v2",
+                policy_version="pilot-v2",
+                max_agents=9,
+                repetitions=1,
+            )
         self.assertGreater(
             derive_pilot_review_signals(high_risk).verification_value,
             derive_pilot_review_signals(ordinary).verification_value,
@@ -409,6 +427,37 @@ class AdaptiveEvaluationTests(unittest.TestCase):
         )
         self.assertEqual(outcome.actual_total_agents, 4)
         self.assertEqual(outcome.score.found_serious_defects, 1)
+
+    def test_fixed_controller_supports_eight_agent_reference_arm(self) -> None:
+        task = ready_task()
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime(
+                [agent_result(index) for index in range(1, 9)]
+            )
+            report = FixedCountController(
+                runtime=runtime,
+                aggregator=JsonFindingsAggregator(),
+                verifier=ReviewEvidenceVerifier(),
+            ).execute(
+                ExecutionTask(
+                    task_id=task.task_id,
+                    prompt="Review and return structured JSON.",
+                    working_directory=Path(directory),
+                    signals=derive_pilot_review_signals(task),
+                    metadata={
+                        "changed_files": list(task.changed_files),
+                        "high_risk_files": list(task.high_risk_files),
+                    },
+                ),
+                exact_total_agents=8,
+            )
+
+        self.assertEqual(report.status, "completed")
+        self.assertEqual(report.actual_total_agents, 8)
+        self.assertEqual(
+            [item.total_agents for item in report.checkpoints],
+            list(range(1, 9)),
+        )
 
     def test_fixed_controller_safety_budget_invalidates_the_trial(self) -> None:
         task = ready_task()

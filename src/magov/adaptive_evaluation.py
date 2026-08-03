@@ -59,8 +59,8 @@ class AdaptiveTrialSpec:
         ):
             if not getattr(self, name).strip():
                 raise ValueError(f"{name} cannot be empty")
-        if type(self.max_agents) is not int or self.max_agents not in (1, 2, 3, 4):
-            raise ValueError("max_agents must be one of 1, 2, 3, or 4")
+        if type(self.max_agents) is not int or self.max_agents not in range(1, 9):
+            raise ValueError("max_agents must be between 1 and 8")
         if type(self.repetition) is not int or self.repetition < 1:
             raise ValueError("repetition must be a positive integer")
         if type(self.homogeneous_agents) is not bool:
@@ -104,8 +104,8 @@ def build_adaptive_trial_matrix(
         raise ValueError("at least one task is required")
     if repetitions < 1:
         raise ValueError("repetitions must be at least 1")
-    if max_agents not in (1, 2, 3, 4):
-        raise ValueError("max_agents must be one of 1, 2, 3, or 4")
+    if max_agents not in range(1, 9):
+        raise ValueError("max_agents must be between 1 and 8")
     task_ids = [task.task_id for task in tasks]
     if len(task_ids) != len(set(task_ids)):
         raise ValueError("task ids must be unique")
@@ -1085,7 +1085,12 @@ def compare_adaptive_to_fixed(
         f"fixed-{count}": arm_metrics(items)
         for count, items in sorted(fixed_by_count.items())
     }
-    arms["adaptive-max-4"] = arm_metrics(adaptive_outcomes)
+    adaptive_max_agents = max(
+        item.trial.max_agents for item in adaptive_outcomes
+    )
+    arms[f"adaptive-max-{adaptive_max_agents}"] = arm_metrics(
+        adaptive_outcomes
+    )
     return {
         "status": "descriptive_only",
         "claim_allowed": False,

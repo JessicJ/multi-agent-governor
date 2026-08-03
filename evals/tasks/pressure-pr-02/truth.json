@@ -1,0 +1,32 @@
+{
+  "task_id": "pressure-pr-02",
+  "defects": [
+    {
+      "defect_id": "D-MORE-1117-NTH-PRODUCT",
+      "file": "more_itertools/more.py",
+      "symbol": "nth_product",
+      "root_cause_category": "iterator-repeated-before-materialization",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "evals/tasks/pressure-pr-02/hidden_test.py::test_nth_product_reuses_materialized_iterator_pools"
+    },
+    {
+      "defect_id": "D-MORE-1117-PRODUCT-INDEX",
+      "file": "more_itertools/more.py",
+      "symbol": "product_index",
+      "root_cause_category": "iterator-repeated-before-materialization",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "evals/tasks/pressure-pr-02/hidden_test.py::test_product_index_reuses_materialized_iterator_pools"
+    },
+    {
+      "defect_id": "D-MORE-1117-RANDOM-PRODUCT",
+      "file": "more_itertools/recipes.py",
+      "symbol": "random_product",
+      "root_cause_category": "iterator-repeated-before-materialization",
+      "severity": "ordinary",
+      "red_line": false,
+      "trigger_test": "evals/tasks/pressure-pr-02/hidden_test.py::test_random_product_reuses_materialized_iterator_pools"
+    }
+  ]
+}
