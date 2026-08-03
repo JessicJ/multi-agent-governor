@@ -535,6 +535,32 @@ class AdaptiveEvaluationTests(unittest.TestCase):
                 "thresholds_observed_descriptively"
             ]
         )
+        with self.assertRaisesRegex(
+            ValueError, "completed adaptive outcome requires public"
+        ):
+            replace(
+                adaptive,
+                coverage_complete=False,
+                checkpoints=(
+                    adaptive.checkpoints[0],
+                    replace(
+                        adaptive.checkpoints[1], coverage_complete=False
+                    ),
+                ),
+            )
+        with self.assertRaisesRegex(
+            ValueError, "completed adaptive outcome cannot retain"
+        ):
+            replace(
+                adaptive,
+                unresolved_conflicts=1,
+                checkpoints=(
+                    adaptive.checkpoints[0],
+                    replace(
+                        adaptive.checkpoints[1], unresolved_conflicts=1
+                    ),
+                ),
+            )
         forecast_exceeded = replace(adaptive, planned_total_agents=1)
         self.assertGreater(
             forecast_exceeded.actual_total_agents,

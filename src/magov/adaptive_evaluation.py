@@ -393,6 +393,14 @@ class AdaptiveTrialOutcome:
             raise ValueError("stop_reason cannot be empty")
         if self.unresolved_conflicts < 0:
             raise ValueError("unresolved_conflicts cannot be negative")
+        if self.execution_status == "completed" and not self.coverage_complete:
+            raise ValueError(
+                "a completed adaptive outcome requires public verification coverage"
+            )
+        if self.execution_status == "completed" and self.unresolved_conflicts:
+            raise ValueError(
+                "a completed adaptive outcome cannot retain unresolved conflicts"
+            )
         if (
             not isfinite(self.wall_time_seconds)
             or self.wall_time_seconds < 0
