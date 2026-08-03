@@ -301,12 +301,38 @@ class GovernorScalingReviewTests(unittest.TestCase):
         budget = Budget(target_confidence=0.9, max_cost_multiplier=8)
         review = self.governor.review_scaling(
             self.plan,
-            [RoundObservation(2, 0.91, 2.1, 0.2)],
+            [RoundObservation(2, 0.91, 2.1, 0.2, coverage_complete=True)],
             budget,
         )
 
         self.assertFalse(review.should_continue)
         self.assertEqual(review.stop_reason, StopReason.TARGET_REACHED)
+
+    def test_target_score_does_not_stop_before_public_coverage_is_complete(
+        self,
+    ) -> None:
+        budget = Budget(
+            max_agents=4,
+            max_cost_multiplier=8,
+            target_confidence=0.9,
+        )
+        review = Governor("pilot-v2").review_scaling(
+            self.plan,
+            [
+                RoundObservation(
+                    2,
+                    0.99,
+                    2.1,
+                    0.2,
+                    coverage_complete=False,
+                )
+            ],
+            budget,
+        )
+
+        self.assertTrue(review.should_continue)
+        self.assertIsNone(review.stop_reason)
+        self.assertEqual(review.next_total_agents, 3)
 
     def test_unavailable_usage_does_not_trigger_a_hard_budget(self) -> None:
         budget = Budget(

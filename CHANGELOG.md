@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Require complete public verification coverage as well as a target score
+  before adaptive execution may stop with `target_reached`; a high score alone
+  can no longer suppress a necessary independent review.
 - Make the Codex plugin wrapper discover the installed Governor core across
   supported Python interpreters, with an explicit `MAGOV_PYTHON` override,
   instead of failing when the active project Python differs from the install

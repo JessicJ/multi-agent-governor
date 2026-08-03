@@ -234,6 +234,52 @@ class AdaptiveControllerTests(unittest.TestCase):
         self.assertEqual(report.stop_reason, StopReason.OBSERVED_PLATEAU)
         self.assertLess(report.actual_total_agents, report.plan.total_agents)
 
+    def test_target_score_waits_for_complete_public_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime(
+                [review_result(index) for index in range(1, 4)]
+            )
+            verifier = SequenceVerifier(
+                [
+                    VerificationResult(
+                        score=0.40,
+                        verified=False,
+                        evidence_keys=("baseline",),
+                    ),
+                    VerificationResult(
+                        score=0.99,
+                        verified=False,
+                        coverage_complete=False,
+                        evidence_keys=("baseline", "second"),
+                    ),
+                    VerificationResult(
+                        score=0.99,
+                        verified=False,
+                        coverage_complete=True,
+                        evidence_keys=("baseline", "second", "third"),
+                    ),
+                ]
+            )
+            report = AdaptiveController(
+                runtime=runtime,
+                verifier=verifier,
+                governor=Governor("pilot-v2"),
+            ).execute(
+                self._task(Path(directory)),
+                Budget(
+                    max_agents=4,
+                    max_cost_multiplier=8,
+                    target_confidence=0.95,
+                    min_expected_gain=0.005,
+                ),
+            )
+
+        self.assertEqual(report.actual_total_agents, 3)
+        self.assertEqual(report.stop_reason, StopReason.TARGET_REACHED)
+        self.assertFalse(report.checkpoints[1].verification.coverage_complete)
+        self.assertEqual(report.checkpoints[1].decision, "continue")
+        self.assertTrue(report.verification.coverage_complete)
+
     def test_token_budget_stops_after_observed_overrun(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             runtime = ScriptedRuntime(
