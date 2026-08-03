@@ -435,13 +435,25 @@ def _review_decision_fields(
         else:
             explanation = review.explanation
     else:
+        incomplete_verification = not observation.coverage_complete
         action = (
             "incomplete_stop"
-            if review.stop_reason in INCOMPLETE_STOP_REASONS
+            if (
+                review.stop_reason in INCOMPLETE_STOP_REASONS
+                or incomplete_verification
+            )
             else "stop"
         )
         recommended = observation.total_agents
-        explanation = review.explanation
+        explanation = (
+            review.explanation
+            + (
+                " Public verification coverage remains incomplete, so this "
+                "is not recorded as a completed verification."
+                if incomplete_verification
+                else ""
+            )
+        )
     return action, recommended, explanation
 
 
@@ -843,7 +855,7 @@ def advisory_report(events_path: Path) -> dict[str, Any]:
     )
     if active:
         status = "active"
-    elif (
+    elif last_decision["action"] == "incomplete_stop" or (
         final_stop_reason is not None
         and StopReason(final_stop_reason) in INCOMPLETE_STOP_REASONS
     ):

@@ -233,6 +233,8 @@ class AdaptiveControllerTests(unittest.TestCase):
         self.assertEqual(report.actual_total_agents, 3)
         self.assertEqual(report.stop_reason, StopReason.OBSERVED_PLATEAU)
         self.assertLess(report.actual_total_agents, report.plan.total_agents)
+        self.assertEqual(report.status, "incomplete")
+        self.assertEqual(report.receipts[-1].action.value, "incomplete_stop")
 
     def test_target_score_waits_for_complete_public_coverage(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
