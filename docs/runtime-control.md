@@ -41,7 +41,7 @@ Controller 在每个 Agent 返回后调用 `review_scaling()`。`pilot-v2` 的
 初始计划数量是预测，不是硬上限；实时证据仍有价值时，可以超过预测继续
 逐个扩容，但不能超过用户安全上限。以下任一条件可停止：
 
-- 观察分达到目标；
+- 观察分达到目标且公开验证覆盖完整；
 - 标准化成本达到上限；
 - Token、耗时或工具调用达到硬预算；
 - 最近若干 Agent 的边际质量或新证据过低；
@@ -50,7 +50,9 @@ Controller 在每个 Agent 返回后调用 `review_scaling()`。`pilot-v2` 的
 
 停止结果必须区分：
 
-- 达到目标或观察到边际平台期：运行 `completed`；
+- 达到目标且公开验证覆盖完整：运行 `completed`；
+- 观察到边际平台期：覆盖完整时运行 `completed`；若覆盖仍缺失，停止以
+  避免无价值调用，但运行 `incomplete`；
 - 成本、Token、时间或工具预算耗尽：运行 `incomplete`；
 - 达到用户上限但目标和平台期均未满足：
   `cap_reached_incomplete`，运行 `incomplete`；
