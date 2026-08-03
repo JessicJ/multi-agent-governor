@@ -805,7 +805,10 @@ class AdaptiveController:
         completed verification.
         """
 
-        return cls._is_incomplete_stop(reason) or not verification.coverage_complete
+        return (
+            cls._is_incomplete_stop(reason)
+            or not verification.coverage_complete
+        )
 
     @staticmethod
     def _runtime_stop_reason(

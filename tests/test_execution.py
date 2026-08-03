@@ -317,6 +317,55 @@ class AdaptiveControllerTests(unittest.TestCase):
             [1, 2],
         )
 
+    def test_single_agent_stop_without_public_coverage_is_incomplete(self) -> None:
+        signals = TaskSignals(
+            parallelizable_units=1,
+            parallel_fraction=0.0,
+            decomposition_confidence=0.5,
+            context_coupling=0.5,
+            shared_context_ratio=0.5,
+            uncertainty=0.1,
+            verification_value=0.0,
+            failure_correlation=0.5,
+            aggregation_difficulty=0.5,
+            error_impact=0.5,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime([review_result(1)])
+            verifier = SequenceVerifier(
+                [
+                    VerificationResult(
+                        score=0.70,
+                        verified=False,
+                        coverage_complete=False,
+                        evidence_keys=("baseline",),
+                    )
+                ]
+            )
+            report = AdaptiveController(
+                runtime=runtime,
+                verifier=verifier,
+                governor=Governor("pilot-v2"),
+            ).execute(
+                ExecutionTask(
+                    task_id="single-surface",
+                    prompt="Review one bounded surface.",
+                    working_directory=Path(directory),
+                    signals=signals,
+                    metadata={"changed_files": ["auth.py"]},
+                ),
+                Budget(
+                    max_agents=4,
+                    max_cost_multiplier=8,
+                    target_confidence=0.95,
+                ),
+            )
+
+        self.assertEqual(report.actual_total_agents, 1)
+        self.assertEqual(report.stop_reason, StopReason.NOT_PARALLELIZABLE)
+        self.assertEqual(report.status, "incomplete")
+        self.assertEqual(report.receipts[-1].action.value, "incomplete_stop")
+
     def test_pilot_v2_can_exceed_forecast_using_live_evidence(self) -> None:
         signals = TaskSignals(
             parallelizable_units=2,
