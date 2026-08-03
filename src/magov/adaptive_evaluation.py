@@ -363,6 +363,36 @@ def _pooled_defect_recall(
     return sum(getattr(item.score, found_name) for item in outcomes) / total
 
 
+def _scale_observation(outcomes: Sequence["AdaptiveTrialOutcome"]) -> dict[str, Any]:
+    """Describe which adaptive admission depths the data actually observed."""
+
+    configured_max_agents = outcomes[0].trial.max_agents
+    highest_observed_agents = max(item.actual_total_agents for item in outcomes)
+    post_independent_review_admissions = sum(
+        max(0, item.actual_total_agents - 2) for item in outcomes
+    )
+    contains_post_independent_review_observation = (
+        highest_observed_agents >= 3
+    )
+    result: dict[str, Any] = {
+        "configured_max_agents": configured_max_agents,
+        "highest_observed_agents": highest_observed_agents,
+        "trials_reaching_three_or_more_agents": sum(
+            item.actual_total_agents >= 3 for item in outcomes
+        ),
+        "post_independent_review_admissions": post_independent_review_admissions,
+        "contains_post_independent_review_observation": (
+            contains_post_independent_review_observation
+        ),
+    }
+    if not contains_post_independent_review_observation:
+        result["limitation"] = (
+            "No trial admitted an Agent beyond the required independent review; "
+            "this batch cannot calibrate third-or-later-Agent decisions."
+        )
+    return result
+
+
 @dataclass(frozen=True)
 class AdaptiveTrialOutcome:
     trial: AdaptiveTrialSpec
@@ -774,6 +804,7 @@ def summarize_adaptive_outcomes(
                 ).items()
             )
         ),
+        "scale_observation": _scale_observation(outcomes),
         "stop_reasons": dict(
             sorted(Counter(item.stop_reason for item in outcomes).items())
         ),
@@ -1073,6 +1104,7 @@ def compare_adaptive_to_fixed(
             item.stop_reason == "cap_reached_incomplete"
             for item in adaptive_outcomes
         ),
+        "adaptive_scale_observation": _scale_observation(adaptive_outcomes),
         "quality": quality,
         "fixed_mean_total_tokens": round(fixed_tokens, 2),
         "adaptive_mean_total_tokens": round(adaptive_tokens, 2),

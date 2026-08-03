@@ -8,6 +8,9 @@
 - Mark any terminal adaptive or advisory checkpoint with incomplete public
   coverage as `incomplete`, including an economical marginal-value plateau;
   stopping avoids waste without overstating verified quality.
+- Report the actually observed adaptive admission depth in evaluation summaries,
+  so a batch in which every task stops after independent review cannot be
+  mistaken for evidence about third-or-later-Agent decisions.
 - Make the Codex plugin wrapper discover the installed Governor core across
   supported Python interpreters, with an explicit `MAGOV_PYTHON` override,
   instead of failing when the active project Python differs from the install

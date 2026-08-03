@@ -527,6 +527,12 @@ class AdaptiveEvaluationTests(unittest.TestCase):
 
         self.assertFalse(summary["claim_allowed"])
         self.assertEqual(summary["mean_actual_agents"], 2)
+        self.assertFalse(
+            summary["scale_observation"][
+                "contains_post_independent_review_observation"
+            ]
+        )
+        self.assertIn("cannot calibrate", summary["scale_observation"]["limitation"])
         self.assertFalse(comparison["claim_allowed"])
         self.assertEqual(comparison["engineering_result"], "inconclusive")
         self.assertEqual(comparison["token_saving_rate"], 0.5)
@@ -535,6 +541,42 @@ class AdaptiveEvaluationTests(unittest.TestCase):
                 "thresholds_observed_descriptively"
             ]
         )
+        self.assertEqual(
+            comparison["adaptive_scale_observation"]["highest_observed_agents"],
+            2,
+        )
+        post_independent_review = replace(
+            adaptive,
+            actual_total_agents=3,
+            usage=UsageObservation(
+                agent_input_tokens=270,
+                agent_output_tokens=30,
+                model_calls=3,
+                tool_calls=3,
+                wall_time_seconds=6.0,
+            ),
+            checkpoints=(
+                *adaptive.checkpoints,
+                CheckpointObservation(
+                    total_agents=3,
+                    new_finding_count=0,
+                    repeated_finding_count=1,
+                    newly_reviewed_files=(),
+                    coverage_complete=True,
+                    unresolved_conflicts=0,
+                    usage_delta=usage(100),
+                ),
+            ),
+        )
+        observed_summary = summarize_adaptive_outcomes(
+            [post_independent_review]
+        )
+        self.assertTrue(
+            observed_summary["scale_observation"][
+                "contains_post_independent_review_observation"
+            ]
+        )
+        self.assertNotIn("limitation", observed_summary["scale_observation"])
         with self.assertRaisesRegex(
             ValueError, "completed adaptive outcome requires public"
         ):
