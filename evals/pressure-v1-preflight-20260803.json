@@ -1,0 +1,78 @@
+{
+  "protocol_version": "pressure-v1-max-8-preflight",
+  "status": "completed_without_real_model_execution",
+  "task_manifest": "evals/pressure-v1-manifest.json",
+  "provenance": "evals/pressure-v1-historical-provenance.json",
+  "selection_scope": {
+    "allowed_repositories": [
+      "pallets/click",
+      "more-itertools/more-itertools",
+      "python-attrs/attrs",
+      "pytest-dev/pluggy"
+    ],
+    "selected_tasks": ["pressure-pr-01", "pressure-pr-02"],
+    "excluded_existing_task_revisions": [
+      "python-pr-01",
+      "python-pr-02",
+      "python-pr-03",
+      "python-pr-04",
+      "python-pr-05",
+      "python-pr-06",
+      "python-pr-07",
+      "python-pr-08"
+    ]
+  },
+  "source_verification": {
+    "licenses_verified": {
+      "pressure-pr-01": "BSD-3-Clause",
+      "pressure-pr-02": "MIT"
+    },
+    "production_reverse_patches_byte_identical_to_registered_upstream_diffs": true,
+    "patches_apply_to_registered_buggy_revisions": true,
+    "fixed_trigger_tests": {
+      "pressure-pr-01": "1 passed",
+      "pressure-pr-02": "3 passed"
+    },
+    "buggy_trigger_tests": {
+      "pressure-pr-01": "1 failed",
+      "pressure-pr-02": "3 failed"
+    },
+    "ordinary_public_tests": {
+      "pressure-pr-01": "1563 passed, 85 skipped, 1 xfailed; a current pytest deprecation warning was explicitly ignored because the historical suite makes warnings errors",
+      "pressure-pr-02": "701 passed, 19866 subtests passed"
+    }
+  },
+  "isolation": {
+    "materialized_arm_directories": 6,
+    "git_history_removed": true,
+    "truth_or_hidden_tests_present_in_agent_directories": false,
+    "leak_scans_passed": 6,
+    "cross_arm_output_sharing": false
+  },
+  "scripted_dry_run": {
+    "arms_completed": 6,
+    "real_experiment": false,
+    "fixed_1_actual_agents": [1, 1],
+    "adaptive_max_8_actual_agents": [2, 2],
+    "fixed_8_actual_agents": [8, 8],
+    "adaptive_scale_limitation": "The scripted fixtures stopped after the required independent review, so they do not calibrate third-or-later-Agent decisions.",
+    "compare_status": "descriptive_only",
+    "compare_claim_allowed": false,
+    "compare_engineering_result": "inconclusive"
+  },
+  "runtime_freeze": {
+    "model_id": "gpt-5.6-sol",
+    "prompt_version": "python-review-v2",
+    "policy_version": "pilot-v2",
+    "sandbox": "read-only",
+    "user_config_disabled": true,
+    "native_multi_agent_disabled": true,
+    "batch_hard_total_tokens": 5000000,
+    "sum_of_per_arm_hard_caps": 4650000
+  },
+  "result_boundary": {
+    "status": "descriptive_only",
+    "claim_allowed": false,
+    "engineering_result": "inconclusive"
+  }
+}

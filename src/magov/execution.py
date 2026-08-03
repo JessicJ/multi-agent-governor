@@ -573,6 +573,14 @@ class ExecutionReport:
             raise ValueError(
                 "budget-, cap-, and failure-limited reports must be incomplete"
             )
+        if self.status == "completed" and not self.verification.coverage_complete:
+            raise ValueError(
+                "a completed report requires public verification coverage"
+            )
+        if self.status == "completed" and self.verification.unresolved_conflicts:
+            raise ValueError(
+                "a completed report cannot retain unresolved conflicts"
+            )
 
     def to_dict(self, *, include_agent_output: bool = False) -> dict[str, Any]:
         return {
@@ -791,6 +799,25 @@ class AdaptiveController:
             StopReason.RUNTIME_FAILURE,
         }
 
+    @classmethod
+    def _is_incomplete_outcome(
+        cls,
+        reason: StopReason,
+        verification: VerificationResult,
+    ) -> bool:
+        """Return whether a terminal decision leaves public proof incomplete.
+
+        A marginal-value stop can be the correct cost decision without proving
+        that the requested review coverage was achieved.  Preserve that
+        distinction in the report instead of treating an economical stop as a
+        completed verification.
+        """
+
+        return (
+            cls._is_incomplete_stop(reason)
+            or not verification.coverage_complete
+        )
+
     @staticmethod
     def _runtime_stop_reason(
         reason: StopReason,
@@ -895,12 +922,14 @@ class AdaptiveController:
             )
         elif (
             plan.mode is Mode.SINGLE
-            and self._is_incomplete_stop(initial_stop_reason)
+            and self._is_incomplete_outcome(
+                initial_stop_reason, verification
+            )
         ):
             initial_action = DecisionAction.INCOMPLETE_STOP
             initial_statement = (
-                "The run stopped at a configured safety boundary before the "
-                "observable verification target was satisfied."
+                "The run stopped before public verification coverage was "
+                "complete, so no completed-verification claim is made."
             )
         else:
             initial_action = (
@@ -979,7 +1008,9 @@ class AdaptiveController:
                 task=task,
                 status=(
                     "incomplete"
-                    if self._is_incomplete_stop(initial_stop_reason)
+                    if self._is_incomplete_outcome(
+                        initial_stop_reason, verification
+                    )
                     else "completed"
                 ),
                 plan=plan,
@@ -1189,9 +1220,12 @@ class AdaptiveController:
             history.append(observation)
             review = self.governor.review_scaling(plan, history, budget)
             stop_reason = review.stop_reason or plan.stop_reason
+            incomplete_outcome = self._is_incomplete_outcome(
+                stop_reason, verification
+            )
             if (
                 not review.should_continue
-                and self._is_incomplete_stop(stop_reason)
+                and incomplete_outcome
             ):
                 status = "incomplete"
             checkpoint = ExecutionCheckpoint(
@@ -1210,7 +1244,7 @@ class AdaptiveController:
                 if review.should_continue
                 else (
                     DecisionAction.INCOMPLETE_STOP
-                    if self._is_incomplete_stop(stop_reason)
+                    if incomplete_outcome
                     else DecisionAction.STOP
                 )
             )

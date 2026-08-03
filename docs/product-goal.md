@@ -41,15 +41,16 @@ Agent 数针对一次具体审查任务，而不是整个仓库。用户配置�
 
 | `stop_reason` | 含义 | 运行状态 |
 |---|---|---|
-| `target_reached` / `baseline_sufficient` | 公开 verifier 目标已满足 | `completed` |
-| `observed_plateau` / `marginal_gain_too_low` | 新 Agent 的可观察边际价值不足 | `completed` |
+| `target_reached` / `baseline_sufficient` | 公开 verifier 目标与覆盖均已满足 | `completed` |
+| `observed_plateau` / `marginal_gain_too_low` | 新 Agent 的可观察边际价值不足 | 覆盖完整时 `completed`，否则 `incomplete` |
 | `*_budget_reached` | 成本、Token、时间或工具预算耗尽 | `incomplete` |
 | `cap_reached_incomplete` | 到达用户 Agent 上限但目标和平台期条件均未满足 | `incomplete` |
 | `runtime_failure` | Agent runtime 未形成完整结果 | `incomplete` |
 
-`completed` 只表示控制器按其公开规则完成了本次决策，不表示代码已经被
-证明无缺陷。`cap_reached_incomplete` 是右截断结果，不能用于声称该上限
-足够。
+`completed` 只表示控制器按其公开规则完成了本次决策，且公开验证覆盖完整；
+不表示代码已经被证明无缺陷。若平台期或单 Agent 停止时覆盖仍缺失，控制器
+保留节省调用的决定，但必须记录为 `incomplete`，不能把经济性停止伪装成
+验证完成。`cap_reached_incomplete` 是右截断结果，不能用于声称该上限足够。
 
 ## 可证伪的产品成功指标
 

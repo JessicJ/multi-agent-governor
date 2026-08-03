@@ -1,0 +1,207 @@
+{
+  "trial": {
+    "trial_id": "pressure-pr-01__agents-8__repeat-1",
+    "task_id": "pressure-pr-01",
+    "exact_total_agents": 8,
+    "repetition": 1,
+    "model_id": "gpt-5.6-sol",
+    "prompt_version": "python-review-v2",
+    "topology": "centralized",
+    "homogeneous_agents": true
+  },
+  "actual_total_agents": 8,
+  "usage": {
+    "agent_input_tokens": 839241,
+    "agent_output_tokens": 10188,
+    "cached_input_tokens": 614912,
+    "reasoning_output_tokens": 2791,
+    "governance_tokens": 0,
+    "model_calls": 8,
+    "tool_calls": 39,
+    "wall_time_seconds": 467.21920008491725,
+    "total_tokens": 849429
+  },
+  "score": {
+    "total_known_defects": 1,
+    "found_known_defects": 1,
+    "serious_defects": 1,
+    "found_serious_defects": 1,
+    "valid_other_findings": 0,
+    "false_positive_findings": 0,
+    "duplicate_findings": 2,
+    "pending_findings": [],
+    "missed_red_line_defects": [],
+    "recall": 1.0,
+    "serious_recall": 1.0,
+    "false_positive_share": 0.0,
+    "complete": true
+  },
+  "coverage_complete": true,
+  "unresolved_conflicts": 0,
+  "checkpoints": [
+    {
+      "total_agents": 1,
+      "new_finding_count": 1,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [
+        "src/click/core.py"
+      ],
+      "coverage_complete": false,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 77890,
+        "agent_output_tokens": 1088,
+        "cached_input_tokens": 39168,
+        "reasoning_output_tokens": 378,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 4,
+        "wall_time_seconds": 58.34275449998677,
+        "total_tokens": 78978
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 2,
+      "new_finding_count": 0,
+      "repeated_finding_count": 1,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 134278,
+        "agent_output_tokens": 1417,
+        "cached_input_tokens": 105984,
+        "reasoning_output_tokens": 226,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 6,
+        "wall_time_seconds": 59.68474733317271,
+        "total_tokens": 135695
+      },
+      "novel_finding_ratio": 0.0
+    },
+    {
+      "total_agents": 3,
+      "new_finding_count": 1,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 99014,
+        "agent_output_tokens": 1245,
+        "cached_input_tokens": 73472,
+        "reasoning_output_tokens": 374,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 5,
+        "wall_time_seconds": 64.98142679175362,
+        "total_tokens": 100259
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 4,
+      "new_finding_count": 1,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 83928,
+        "agent_output_tokens": 1336,
+        "cached_input_tokens": 61440,
+        "reasoning_output_tokens": 447,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 4,
+        "wall_time_seconds": 68.17558083403856,
+        "total_tokens": 85264
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 5,
+      "new_finding_count": 0,
+      "repeated_finding_count": 1,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 63855,
+        "agent_output_tokens": 943,
+        "cached_input_tokens": 53248,
+        "reasoning_output_tokens": 296,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 44.4040356669575,
+        "total_tokens": 64798
+      },
+      "novel_finding_ratio": 0.0
+    },
+    {
+      "total_agents": 6,
+      "new_finding_count": 0,
+      "repeated_finding_count": 1,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 139440,
+        "agent_output_tokens": 1424,
+        "cached_input_tokens": 110080,
+        "reasoning_output_tokens": 384,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 6,
+        "wall_time_seconds": 62.62008058372885,
+        "total_tokens": 140864
+      },
+      "novel_finding_ratio": 0.0
+    },
+    {
+      "total_agents": 7,
+      "new_finding_count": 0,
+      "repeated_finding_count": 1,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 135384,
+        "agent_output_tokens": 1564,
+        "cached_input_tokens": 93952,
+        "reasoning_output_tokens": 335,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 6,
+        "wall_time_seconds": 59.78984108334407,
+        "total_tokens": 136948
+      },
+      "novel_finding_ratio": 0.0
+    },
+    {
+      "total_agents": 8,
+      "new_finding_count": 0,
+      "repeated_finding_count": 1,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 105452,
+        "agent_output_tokens": 1171,
+        "cached_input_tokens": 77568,
+        "reasoning_output_tokens": 351,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 5,
+        "wall_time_seconds": 49.220733291935176,
+        "total_tokens": 106623
+      },
+      "novel_finding_ratio": 0.0
+    }
+  ],
+  "wall_time_seconds": 467.2418948332779,
+  "scripted_dry_run": false
+}

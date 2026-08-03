@@ -1,0 +1,40 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "pressure-pr-02__adaptive-max-8__repeat-1-runtime-assigned-reviewer-001",
+      "verdict": "matched",
+      "defect_id": "D-MORE-1117-NTH-PRODUCT",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    },
+    {
+      "finding_id": "pressure-pr-02__adaptive-max-8__repeat-1-runtime-assigned-reviewer-002",
+      "verdict": "matched",
+      "defect_id": "D-MORE-1117-PRODUCT-INDEX",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    },
+    {
+      "finding_id": "pressure-pr-02__adaptive-max-8__repeat-1-runtime-assigned-reviewer-003",
+      "verdict": "matched",
+      "defect_id": "D-MORE-1117-RANDOM-PRODUCT",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    },
+    {
+      "finding_id": "pressure-pr-02__adaptive-max-8__repeat-1-runtime-assigned-reviewer-1",
+      "verdict": "matched",
+      "defect_id": "D-MORE-1117-NTH-PRODUCT",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    },
+    {
+      "finding_id": "pressure-pr-02__adaptive-max-8__repeat-1-runtime-assigned-reviewer-2",
+      "verdict": "matched",
+      "defect_id": "D-MORE-1117-PRODUCT-INDEX",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    },
+    {
+      "finding_id": "pressure-pr-02__adaptive-max-8__repeat-1-runtime-assigned-reviewer-3",
+      "verdict": "matched",
+      "defect_id": "D-MORE-1117-RANDOM-PRODUCT",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    }
+  ]
+}

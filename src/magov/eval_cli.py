@@ -669,7 +669,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     plan = subparsers.add_parser(
-        "plan", help="create an exact 1-4 agent trial matrix"
+        "plan", help="create an exact 1-8 agent trial matrix"
     )
     plan.add_argument("manifest", help="evaluation task manifest JSON")
     plan.add_argument("--model-id", required=True)

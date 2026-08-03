@@ -59,8 +59,8 @@ class AdaptiveTrialSpec:
         ):
             if not getattr(self, name).strip():
                 raise ValueError(f"{name} cannot be empty")
-        if type(self.max_agents) is not int or self.max_agents not in (1, 2, 3, 4):
-            raise ValueError("max_agents must be one of 1, 2, 3, or 4")
+        if type(self.max_agents) is not int or self.max_agents not in range(1, 9):
+            raise ValueError("max_agents must be between 1 and 8")
         if type(self.repetition) is not int or self.repetition < 1:
             raise ValueError("repetition must be a positive integer")
         if type(self.homogeneous_agents) is not bool:
@@ -104,8 +104,8 @@ def build_adaptive_trial_matrix(
         raise ValueError("at least one task is required")
     if repetitions < 1:
         raise ValueError("repetitions must be at least 1")
-    if max_agents not in (1, 2, 3, 4):
-        raise ValueError("max_agents must be one of 1, 2, 3, or 4")
+    if max_agents not in range(1, 9):
+        raise ValueError("max_agents must be between 1 and 8")
     task_ids = [task.task_id for task in tasks]
     if len(task_ids) != len(set(task_ids)):
         raise ValueError("task ids must be unique")
@@ -363,6 +363,36 @@ def _pooled_defect_recall(
     return sum(getattr(item.score, found_name) for item in outcomes) / total
 
 
+def _scale_observation(outcomes: Sequence["AdaptiveTrialOutcome"]) -> dict[str, Any]:
+    """Describe which adaptive admission depths the data actually observed."""
+
+    configured_max_agents = outcomes[0].trial.max_agents
+    highest_observed_agents = max(item.actual_total_agents for item in outcomes)
+    post_independent_review_admissions = sum(
+        max(0, item.actual_total_agents - 2) for item in outcomes
+    )
+    contains_post_independent_review_observation = (
+        highest_observed_agents >= 3
+    )
+    result: dict[str, Any] = {
+        "configured_max_agents": configured_max_agents,
+        "highest_observed_agents": highest_observed_agents,
+        "trials_reaching_three_or_more_agents": sum(
+            item.actual_total_agents >= 3 for item in outcomes
+        ),
+        "post_independent_review_admissions": post_independent_review_admissions,
+        "contains_post_independent_review_observation": (
+            contains_post_independent_review_observation
+        ),
+    }
+    if not contains_post_independent_review_observation:
+        result["limitation"] = (
+            "No trial admitted an Agent beyond the required independent review; "
+            "this batch cannot calibrate third-or-later-Agent decisions."
+        )
+    return result
+
+
 @dataclass(frozen=True)
 class AdaptiveTrialOutcome:
     trial: AdaptiveTrialSpec
@@ -393,6 +423,14 @@ class AdaptiveTrialOutcome:
             raise ValueError("stop_reason cannot be empty")
         if self.unresolved_conflicts < 0:
             raise ValueError("unresolved_conflicts cannot be negative")
+        if self.execution_status == "completed" and not self.coverage_complete:
+            raise ValueError(
+                "a completed adaptive outcome requires public verification coverage"
+            )
+        if self.execution_status == "completed" and self.unresolved_conflicts:
+            raise ValueError(
+                "a completed adaptive outcome cannot retain unresolved conflicts"
+            )
         if (
             not isfinite(self.wall_time_seconds)
             or self.wall_time_seconds < 0
@@ -766,6 +804,7 @@ def summarize_adaptive_outcomes(
                 ).items()
             )
         ),
+        "scale_observation": _scale_observation(outcomes),
         "stop_reasons": dict(
             sorted(Counter(item.stop_reason for item in outcomes).items())
         ),
@@ -1046,7 +1085,12 @@ def compare_adaptive_to_fixed(
         f"fixed-{count}": arm_metrics(items)
         for count, items in sorted(fixed_by_count.items())
     }
-    arms["adaptive-max-4"] = arm_metrics(adaptive_outcomes)
+    adaptive_max_agents = max(
+        item.trial.max_agents for item in adaptive_outcomes
+    )
+    arms[f"adaptive-max-{adaptive_max_agents}"] = arm_metrics(
+        adaptive_outcomes
+    )
     return {
         "status": "descriptive_only",
         "claim_allowed": False,
@@ -1065,6 +1109,7 @@ def compare_adaptive_to_fixed(
             item.stop_reason == "cap_reached_incomplete"
             for item in adaptive_outcomes
         ),
+        "adaptive_scale_observation": _scale_observation(adaptive_outcomes),
         "quality": quality,
         "fixed_mean_total_tokens": round(fixed_tokens, 2),
         "adaptive_mean_total_tokens": round(adaptive_tokens, 2),

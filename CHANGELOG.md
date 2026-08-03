@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Extend the controlled evaluation layer from a 1–4 to a bounded 1–8 Agent
+  range, including exact fixed-8 reference runs, dynamic adaptive arm labels,
+  and a preregistered max-8 historical pressure batch. The two-task real run
+  is archived as descriptive-only evidence; it did not observe an admission
+  beyond the required independent second review.
+- Require complete public verification coverage as well as a target score
+  before adaptive execution may stop with `target_reached`; a high score alone
+  can no longer suppress a necessary independent review.
+- Mark any terminal adaptive or advisory checkpoint with incomplete public
+  coverage as `incomplete`, including an economical marginal-value plateau;
+  stopping avoids waste without overstating verified quality.
+- Report the actually observed adaptive admission depth in evaluation summaries,
+  so a batch in which every task stops after independent review cannot be
+  mistaken for evidence about third-or-later-Agent decisions.
 - Make the Codex plugin wrapper discover the installed Governor core across
   supported Python interpreters, with an explicit `MAGOV_PYTHON` override,
   instead of failing when the active project Python differs from the install

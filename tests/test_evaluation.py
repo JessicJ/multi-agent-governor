@@ -69,6 +69,23 @@ class TrialMatrixTests(unittest.TestCase):
         )
         self.assertTrue(all(trial.homogeneous_agents for trial in trials))
 
+        eight_agent_trial = build_trial_matrix(
+            tasks[:1],
+            model_id="fixed-model",
+            prompt_version="python-review-v1",
+            agent_counts=(8,),
+            repetitions=1,
+        )
+        self.assertEqual(eight_agent_trial[0].exact_total_agents, 8)
+
+        with self.assertRaisesRegex(ValueError, "1 through 8"):
+            build_trial_matrix(
+                tasks[:1],
+                model_id="fixed-model",
+                prompt_version="python-review-v1",
+                agent_counts=(9,),
+            )
+
     def test_draft_tasks_cannot_be_scheduled(self) -> None:
         task = ReviewTask(
             task_id="draft-task",

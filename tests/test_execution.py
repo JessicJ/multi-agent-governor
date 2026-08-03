@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from collections import deque
+from dataclasses import replace
 from pathlib import Path
 
 from magov import (
@@ -148,6 +149,24 @@ class AdaptiveControllerTests(unittest.TestCase):
             [event.sequence for event in sink.events],
             list(range(1, len(sink.events) + 1)),
         )
+        with self.assertRaisesRegex(
+            ValueError, "completed report requires public"
+        ):
+            replace(
+                report,
+                verification=replace(
+                    report.verification, coverage_complete=False
+                ),
+            )
+        with self.assertRaisesRegex(
+            ValueError, "completed report cannot retain"
+        ):
+            replace(
+                report,
+                verification=replace(
+                    report.verification, unresolved_conflicts=1
+                ),
+            )
 
     def test_pilot_v2_requires_independent_changed_file_review(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -233,6 +252,54 @@ class AdaptiveControllerTests(unittest.TestCase):
         self.assertEqual(report.actual_total_agents, 3)
         self.assertEqual(report.stop_reason, StopReason.OBSERVED_PLATEAU)
         self.assertLess(report.actual_total_agents, report.plan.total_agents)
+        self.assertEqual(report.status, "incomplete")
+        self.assertEqual(report.receipts[-1].action.value, "incomplete_stop")
+
+    def test_target_score_waits_for_complete_public_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime(
+                [review_result(index) for index in range(1, 4)]
+            )
+            verifier = SequenceVerifier(
+                [
+                    VerificationResult(
+                        score=0.40,
+                        verified=False,
+                        evidence_keys=("baseline",),
+                    ),
+                    VerificationResult(
+                        score=0.99,
+                        verified=False,
+                        coverage_complete=False,
+                        evidence_keys=("baseline", "second"),
+                    ),
+                    VerificationResult(
+                        score=0.99,
+                        verified=False,
+                        coverage_complete=True,
+                        evidence_keys=("baseline", "second", "third"),
+                    ),
+                ]
+            )
+            report = AdaptiveController(
+                runtime=runtime,
+                verifier=verifier,
+                governor=Governor("pilot-v2"),
+            ).execute(
+                self._task(Path(directory)),
+                Budget(
+                    max_agents=4,
+                    max_cost_multiplier=8,
+                    target_confidence=0.95,
+                    min_expected_gain=0.005,
+                ),
+            )
+
+        self.assertEqual(report.actual_total_agents, 3)
+        self.assertEqual(report.stop_reason, StopReason.TARGET_REACHED)
+        self.assertFalse(report.checkpoints[1].verification.coverage_complete)
+        self.assertEqual(report.checkpoints[1].decision, "continue")
+        self.assertTrue(report.verification.coverage_complete)
 
     def test_token_budget_stops_after_observed_overrun(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -268,6 +335,55 @@ class AdaptiveControllerTests(unittest.TestCase):
             [checkpoint.total_agents for checkpoint in report.checkpoints],
             [1, 2],
         )
+
+    def test_single_agent_stop_without_public_coverage_is_incomplete(self) -> None:
+        signals = TaskSignals(
+            parallelizable_units=1,
+            parallel_fraction=0.0,
+            decomposition_confidence=0.5,
+            context_coupling=0.5,
+            shared_context_ratio=0.5,
+            uncertainty=0.1,
+            verification_value=0.0,
+            failure_correlation=0.5,
+            aggregation_difficulty=0.5,
+            error_impact=0.5,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime([review_result(1)])
+            verifier = SequenceVerifier(
+                [
+                    VerificationResult(
+                        score=0.70,
+                        verified=False,
+                        coverage_complete=False,
+                        evidence_keys=("baseline",),
+                    )
+                ]
+            )
+            report = AdaptiveController(
+                runtime=runtime,
+                verifier=verifier,
+                governor=Governor("pilot-v2"),
+            ).execute(
+                ExecutionTask(
+                    task_id="single-surface",
+                    prompt="Review one bounded surface.",
+                    working_directory=Path(directory),
+                    signals=signals,
+                    metadata={"changed_files": ["auth.py"]},
+                ),
+                Budget(
+                    max_agents=4,
+                    max_cost_multiplier=8,
+                    target_confidence=0.95,
+                ),
+            )
+
+        self.assertEqual(report.actual_total_agents, 1)
+        self.assertEqual(report.stop_reason, StopReason.NOT_PARALLELIZABLE)
+        self.assertEqual(report.status, "incomplete")
+        self.assertEqual(report.receipts[-1].action.value, "incomplete_stop")
 
     def test_pilot_v2_can_exceed_forecast_using_live_evidence(self) -> None:
         signals = TaskSignals(

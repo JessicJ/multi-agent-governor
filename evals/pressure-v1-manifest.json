@@ -1,0 +1,43 @@
+{
+  "protocol_version": "python-review-pressure-v1",
+  "notice": "Preregistered no-model preflight for a bounded max-8 stress evaluation. These are new historical tasks from pre-approved repositories, not additions to the frozen pilot-v2 result set.",
+  "truth_visibility": "repository_public_runtime_isolated",
+  "tasks": [
+    {
+      "task_id": "pressure-pr-01",
+      "status": "ready",
+      "source": "historical",
+      "split": "holdout",
+      "language": "python",
+      "repository": "https://github.com/pallets/click.git",
+      "base_revision": "7d05a59b9d46a415d85937630d1d812cf477f60a",
+      "materialization_revision": "4b24a6c8f6658ef89fd6db4dcaf8ee88eef75dfa",
+      "patch_path": "evals/tasks/pressure-pr-01/change.diff",
+      "truth_path": "evals/tasks/pressure-pr-01/truth.json",
+      "changed_files": ["src/click/core.py"],
+      "high_risk_files": ["src/click/core.py"],
+      "license_spdx": "BSD-3-Clause",
+      "source_reference": "https://github.com/pallets/click/commit/7d05a59b9d46a415d85937630d1d812cf477f60a",
+      "test_command": "PYTHONPATH=src python -m pytest -q {hidden_test}",
+      "patch_sha256": "1c5f3ca123eb0a19f56cd9a519ec0d3bcfdacb4e104b1e03d236a12cf1e4c91c"
+    },
+    {
+      "task_id": "pressure-pr-02",
+      "status": "ready",
+      "source": "historical",
+      "split": "holdout",
+      "language": "python",
+      "repository": "https://github.com/more-itertools/more-itertools.git",
+      "base_revision": "b0aa91efbb452eeb8ffa0447047519c6e84d5292",
+      "materialization_revision": "b110a77364ec0ed5bb06194b591f97a54591dbc9",
+      "patch_path": "evals/tasks/pressure-pr-02/change.diff",
+      "truth_path": "evals/tasks/pressure-pr-02/truth.json",
+      "changed_files": ["more_itertools/more.py", "more_itertools/recipes.py"],
+      "high_risk_files": [],
+      "license_spdx": "MIT",
+      "source_reference": "https://github.com/more-itertools/more-itertools/pull/1117",
+      "test_command": "python -m pytest -q {hidden_test}",
+      "patch_sha256": "ea90f335a0494439b78ad7c538faca747e6ece127db1e2064cd40fdf837df0b0"
+    }
+  ]
+}

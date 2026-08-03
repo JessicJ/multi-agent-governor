@@ -209,10 +209,13 @@ class Governor:
             )
 
         latest = history[-1]
-        if latest.confidence >= budget.target_confidence:
+        if (
+            latest.confidence >= budget.target_confidence
+            and latest.coverage_complete
+        ):
             return self._stop(
                 StopReason.TARGET_REACHED,
-                "Observed confidence reached the target.",
+                "Observed confidence reached the target and public verification coverage is complete.",
             )
         if (
             latest.cost_multiplier is not None

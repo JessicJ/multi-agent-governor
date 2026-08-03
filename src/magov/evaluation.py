@@ -170,8 +170,8 @@ class TrialSpec:
     def __post_init__(self) -> None:
         if not self.trial_id.strip() or not self.task_id.strip():
             raise ValueError("trial_id and task_id cannot be empty")
-        if self.exact_total_agents not in (1, 2, 3, 4):
-            raise ValueError("exact_total_agents must be one of 1, 2, 3, or 4")
+        if self.exact_total_agents not in range(1, 9):
+            raise ValueError("exact_total_agents must be between 1 and 8")
         if self.repetition < 1:
             raise ValueError("repetition must be at least 1")
         if not self.model_id.strip() or not self.prompt_version.strip():
@@ -225,9 +225,9 @@ def build_trial_matrix(
         raise ValueError("agent_counts cannot be empty")
     if len(set(agent_counts)) != len(agent_counts):
         raise ValueError("agent_counts cannot contain duplicates")
-    invalid_counts = set(agent_counts) - {1, 2, 3, 4}
+    invalid_counts = set(agent_counts) - set(range(1, 9))
     if invalid_counts:
-        raise ValueError("agent_counts must be drawn from 1, 2, 3, and 4")
+        raise ValueError("agent_counts must be drawn from 1 through 8")
     task_ids = [task.task_id for task in tasks]
     if len(task_ids) != len(set(task_ids)):
         raise ValueError("task ids must be unique")

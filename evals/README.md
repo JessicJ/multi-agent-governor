@@ -13,6 +13,26 @@ PYTHONPATH=src python3 -m magov.eval_cli validate \
   evals/pilot_manifest.json --workspace .
 ```
 
+## max-8 压力验证（已完成，描述性结果）
+
+[`pressure-v1-manifest.json`](pressure-v1-manifest.json) 是与冻结 pilot
+结果分离的两个真实历史任务预注册；它只来自用户限定的既有仓库，不能作为
+跨仓库泛化证据。对应的
+[`pressure-v1-preregistration.json`](pressure-v1-preregistration.json)、
+[`pressure-v1-preregistration.md`](pressure-v1-preregistration.md) 和
+[`pressure-v1-preflight-20260803.json`](pressure-v1-preflight-20260803.json)
+固定了 `fixed-1 → adaptive-max-8 → fixed-8` 的顺序、`gpt-5.6-sol`、
+`pilot-v2`、独立目录与 5M Token 总安全上限。
+
+它已经通过来源、补丁、触发、物化、泄漏与 scripted 流程验证，并于
+2026-08-03 完成六个真实 arm。结果归档在
+[`results/pressure-v1-20260803/`](results/pressure-v1-20260803/)：两个
+adaptive trial 都于第二个 Agent 后 `target_reached`，相对 fixed-8 在相同
+登记缺陷召回下少用 74.1888% Token。该批次仍只含两个既有仓库家族中的历史
+任务、一次重复且没有独立盲审；所有结果仍必须保持
+`descriptive_only / claim_allowed:false / inconclusive`。评测层现支持 1–8
+的固定或自适应上限，默认的历史 1–4 计划和既有结果不会被改写。
+
 ## 生成固定 Agent 数实验计划
 
 ```bash

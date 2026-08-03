@@ -1,0 +1,4 @@
+# A unified diff represents an empty context line as one space. Preserve that
+# canonical upstream form so historical reverse patches remain byte-for-byte
+# auditable instead of treating it as source-code trailing whitespace.
+evals/tasks/**/change.diff -whitespace

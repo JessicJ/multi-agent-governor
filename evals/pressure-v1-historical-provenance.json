@@ -1,0 +1,42 @@
+{
+  "notice": "Each change.diff is a production-code-only reverse patch taken from the selected upstream historical repair. Task pressure-pr-02 retains the cumulative two-commit repair series because its three related production fixes landed together in one merged pull request; no defect behavior was invented or weakened.",
+  "tasks": [
+    {
+      "task_id": "pressure-pr-01",
+      "project": "pallets/click",
+      "license_spdx": "BSD-3-Clause",
+      "fix_commit": "7d05a59b9d46a415d85937630d1d812cf477f60a",
+      "original_buggy_revision": "4b24a6c8f6658ef89fd6db4dcaf8ee88eef75dfa",
+      "source": "https://github.com/pallets/click/commit/7d05a59b9d46a415d85937630d1d812cf477f60a",
+      "pull_request": "https://github.com/pallets/click/pull/3484",
+      "issue": "https://github.com/pallets/click/issues/3458",
+      "fix_subject": "Fix get_parameter_source() during type conversion and eager callbacks",
+      "forbidden_agent_hints": [
+        "#3458",
+        "get_parameter_source() during type conversion",
+        "test_parameter_source_is_available_during_type_conversion"
+      ]
+    },
+    {
+      "task_id": "pressure-pr-02",
+      "project": "more-itertools/more-itertools",
+      "license_spdx": "MIT",
+      "fix_commit": "b0aa91efbb452eeb8ffa0447047519c6e84d5292",
+      "fix_commit_series": [
+        "073d23421b60e05a99872e7b174902f4aa151f31",
+        "b0aa91efbb452eeb8ffa0447047519c6e84d5292"
+      ],
+      "original_buggy_revision": "b110a77364ec0ed5bb06194b591f97a54591dbc9",
+      "source": "https://github.com/more-itertools/more-itertools/pull/1117",
+      "pull_request": "https://github.com/more-itertools/more-itertools/pull/1117",
+      "fix_subject": "Fix support for iterators using repeat",
+      "forbidden_agent_hints": [
+        "#1117",
+        "Fix support for iterators using repeat",
+        "test_nth_product_reuses_materialized_iterator_pools",
+        "test_product_index_reuses_materialized_iterator_pools",
+        "test_random_product_reuses_materialized_iterator_pools"
+      ]
+    }
+  ]
+}

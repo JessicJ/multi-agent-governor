@@ -199,6 +199,39 @@ class AdvisorySessionTests(unittest.TestCase):
         self.assertEqual(report["usage"]["total_tokens"], 110)
         self.assertEqual(report["usage"]["agent_time_seconds"], 9)
 
+    def test_plateau_without_public_coverage_is_an_incomplete_stop(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            events = Path(directory) / "advisory.jsonl"
+            start_advisory_session(self._start_payload(), events)
+            append_advisory_checkpoint(
+                events,
+                self._checkpoint(
+                    2,
+                    marginal_quality_gain=0.001,
+                    novel_evidence_ratio=0.05,
+                ),
+            )
+            report = append_advisory_checkpoint(
+                events,
+                self._checkpoint(
+                    3,
+                    quality_score=0.701,
+                    marginal_quality_gain=0.001,
+                    novel_evidence_ratio=0.05,
+                ),
+            )
+
+        self.assertEqual(report["status"], "incomplete")
+        self.assertEqual(report["final_stop_reason"], "observed_plateau")
+        self.assertEqual(
+            report["checkpoints"][-1]["decision"]["action"],
+            "incomplete_stop",
+        )
+        self.assertIn(
+            "coverage remains incomplete",
+            report["checkpoints"][-1]["decision"]["explanation"],
+        )
+
     def test_rejects_skipped_agent_count(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             events = Path(directory) / "advisory.jsonl"

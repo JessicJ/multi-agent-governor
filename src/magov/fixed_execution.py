@@ -40,10 +40,8 @@ class FixedExecutionReport:
     def __post_init__(self) -> None:
         if self.status not in {"completed", "incomplete"}:
             raise ValueError("status must be completed or incomplete")
-        if self.exact_total_agents not in (1, 2, 3, 4):
-            raise ValueError(
-                "exact_total_agents must be one of 1, 2, 3, or 4"
-            )
+        if self.exact_total_agents not in range(1, 9):
+            raise ValueError("exact_total_agents must be between 1 and 8")
         if not 1 <= self.actual_total_agents <= self.exact_total_agents:
             raise ValueError(
                 "actual_total_agents must be between 1 and the exact count"
@@ -168,10 +166,8 @@ class FixedCountController:
         max_wall_time_seconds: float | None = None,
         max_tool_calls: int | None = None,
     ) -> FixedExecutionReport:
-        if exact_total_agents not in (1, 2, 3, 4):
-            raise ValueError(
-                "exact_total_agents must be one of 1, 2, 3, or 4"
-            )
+        if exact_total_agents not in range(1, 9):
+            raise ValueError("exact_total_agents must be between 1 and 8")
         for name, value in (
             ("max_total_tokens", max_total_tokens),
             ("max_wall_time_seconds", max_wall_time_seconds),

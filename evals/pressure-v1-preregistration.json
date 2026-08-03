@@ -1,0 +1,72 @@
+{
+  "protocol_version": "pressure-v1-max-8",
+  "status": "preregistered_not_run",
+  "task_manifest": "evals/pressure-v1-manifest.json",
+  "provenance": "evals/pressure-v1-historical-provenance.json",
+  "task_order": ["pressure-pr-01", "pressure-pr-02"],
+  "arm_order": ["fixed-1", "adaptive-max-8", "fixed-8"],
+  "repetitions": 1,
+  "runtime": {
+    "model_id": "gpt-5.6-sol",
+    "allow_model_substitution": false,
+    "prompt_version": "python-review-v2",
+    "policy_version": "pilot-v2",
+    "sandbox": "read-only",
+    "ignore_user_config": true,
+    "native_multi_agent": false,
+    "single_agent_timeout_seconds": 900,
+    "deterministic_aggregation": true
+  },
+  "arms": [
+    {
+      "arm": "fixed-1",
+      "exact_total_agents": 1,
+      "max_total_tokens_per_task": 175000,
+      "max_agent_time_seconds_per_task": 1200,
+      "max_tool_calls_per_task": 100
+    },
+    {
+      "arm": "adaptive-max-8",
+      "initial_agents": 1,
+      "max_agents": 8,
+      "max_total_tokens_per_task": 750000,
+      "max_agent_time_seconds_per_task": 7200,
+      "max_tool_calls_per_task": 400
+    },
+    {
+      "arm": "fixed-8",
+      "exact_total_agents": 8,
+      "max_total_tokens_per_task": 1400000,
+      "max_agent_time_seconds_per_task": 7200,
+      "max_tool_calls_per_task": 800
+    }
+  ],
+  "batch_budget": {
+    "hard_total_tokens": 5000000,
+    "sum_of_per_arm_hard_caps": 4650000,
+    "expected_total_tokens_min": 1200000,
+    "expected_total_tokens_max": 3600000,
+    "maximum_total_agents": 34
+  },
+  "isolation": {
+    "independent_materialized_directory_per_task_and_arm": true,
+    "cross_arm_output_sharing": false,
+    "truth_visible_during_agent_run": false,
+    "hidden_tests_visible_during_agent_run": false,
+    "git_history_visible_during_agent_run": false,
+    "governor_repository_visible_during_agent_run": false
+  },
+  "adaptation_constraints": {
+    "later_prompts_may_change_after_results": false,
+    "later_budgets_may_change_after_results": false,
+    "later_signals_may_change_after_results": false,
+    "later_agent_counts_may_change_after_results": false,
+    "adaptive_admission": "one_agent_at_a_time_from_preregistered_public_signals_and_nontruth_verification"
+  },
+  "result_boundary": {
+    "status": "descriptive_only",
+    "claim_allowed": false,
+    "engineering_result": "inconclusive",
+    "scope_limitation": "new tasks, but only within previously used repository families; no cross-repository generalization claim"
+  }
+}

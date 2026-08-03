@@ -217,6 +217,24 @@ class AdaptiveEvaluationTests(unittest.TestCase):
 
         self.assertEqual(len(trials), 4)
         self.assertEqual(trials[0].max_agents, 4)
+        eight_agent_trials = build_adaptive_trial_matrix(
+            [high_risk],
+            model_id="fixed-model",
+            prompt_version="python-review-v2",
+            policy_version="pilot-v2",
+            max_agents=8,
+            repetitions=1,
+        )
+        self.assertEqual(eight_agent_trials[0].max_agents, 8)
+        with self.assertRaisesRegex(ValueError, "between 1 and 8"):
+            build_adaptive_trial_matrix(
+                [high_risk],
+                model_id="fixed-model",
+                prompt_version="python-review-v2",
+                policy_version="pilot-v2",
+                max_agents=9,
+                repetitions=1,
+            )
         self.assertGreater(
             derive_pilot_review_signals(high_risk).verification_value,
             derive_pilot_review_signals(ordinary).verification_value,
@@ -410,6 +428,37 @@ class AdaptiveEvaluationTests(unittest.TestCase):
         self.assertEqual(outcome.actual_total_agents, 4)
         self.assertEqual(outcome.score.found_serious_defects, 1)
 
+    def test_fixed_controller_supports_eight_agent_reference_arm(self) -> None:
+        task = ready_task()
+        with tempfile.TemporaryDirectory() as directory:
+            runtime = ScriptedRuntime(
+                [agent_result(index) for index in range(1, 9)]
+            )
+            report = FixedCountController(
+                runtime=runtime,
+                aggregator=JsonFindingsAggregator(),
+                verifier=ReviewEvidenceVerifier(),
+            ).execute(
+                ExecutionTask(
+                    task_id=task.task_id,
+                    prompt="Review and return structured JSON.",
+                    working_directory=Path(directory),
+                    signals=derive_pilot_review_signals(task),
+                    metadata={
+                        "changed_files": list(task.changed_files),
+                        "high_risk_files": list(task.high_risk_files),
+                    },
+                ),
+                exact_total_agents=8,
+            )
+
+        self.assertEqual(report.status, "completed")
+        self.assertEqual(report.actual_total_agents, 8)
+        self.assertEqual(
+            [item.total_agents for item in report.checkpoints],
+            list(range(1, 9)),
+        )
+
     def test_fixed_controller_safety_budget_invalidates_the_trial(self) -> None:
         task = ready_task()
         with tempfile.TemporaryDirectory() as directory:
@@ -527,6 +576,12 @@ class AdaptiveEvaluationTests(unittest.TestCase):
 
         self.assertFalse(summary["claim_allowed"])
         self.assertEqual(summary["mean_actual_agents"], 2)
+        self.assertFalse(
+            summary["scale_observation"][
+                "contains_post_independent_review_observation"
+            ]
+        )
+        self.assertIn("cannot calibrate", summary["scale_observation"]["limitation"])
         self.assertFalse(comparison["claim_allowed"])
         self.assertEqual(comparison["engineering_result"], "inconclusive")
         self.assertEqual(comparison["token_saving_rate"], 0.5)
@@ -535,6 +590,68 @@ class AdaptiveEvaluationTests(unittest.TestCase):
                 "thresholds_observed_descriptively"
             ]
         )
+        self.assertEqual(
+            comparison["adaptive_scale_observation"]["highest_observed_agents"],
+            2,
+        )
+        post_independent_review = replace(
+            adaptive,
+            actual_total_agents=3,
+            usage=UsageObservation(
+                agent_input_tokens=270,
+                agent_output_tokens=30,
+                model_calls=3,
+                tool_calls=3,
+                wall_time_seconds=6.0,
+            ),
+            checkpoints=(
+                *adaptive.checkpoints,
+                CheckpointObservation(
+                    total_agents=3,
+                    new_finding_count=0,
+                    repeated_finding_count=1,
+                    newly_reviewed_files=(),
+                    coverage_complete=True,
+                    unresolved_conflicts=0,
+                    usage_delta=usage(100),
+                ),
+            ),
+        )
+        observed_summary = summarize_adaptive_outcomes(
+            [post_independent_review]
+        )
+        self.assertTrue(
+            observed_summary["scale_observation"][
+                "contains_post_independent_review_observation"
+            ]
+        )
+        self.assertNotIn("limitation", observed_summary["scale_observation"])
+        with self.assertRaisesRegex(
+            ValueError, "completed adaptive outcome requires public"
+        ):
+            replace(
+                adaptive,
+                coverage_complete=False,
+                checkpoints=(
+                    adaptive.checkpoints[0],
+                    replace(
+                        adaptive.checkpoints[1], coverage_complete=False
+                    ),
+                ),
+            )
+        with self.assertRaisesRegex(
+            ValueError, "completed adaptive outcome cannot retain"
+        ):
+            replace(
+                adaptive,
+                unresolved_conflicts=1,
+                checkpoints=(
+                    adaptive.checkpoints[0],
+                    replace(
+                        adaptive.checkpoints[1], unresolved_conflicts=1
+                    ),
+                ),
+            )
         forecast_exceeded = replace(adaptive, planned_total_agents=1)
         self.assertGreater(
             forecast_exceeded.actual_total_agents,

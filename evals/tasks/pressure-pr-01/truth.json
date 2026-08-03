@@ -1,0 +1,14 @@
+{
+  "task_id": "pressure-pr-01",
+  "defects": [
+    {
+      "defect_id": "D-CLICK-3458-PROCESSING-SOURCE",
+      "file": "src/click/core.py",
+      "symbol": "Parameter.handle_parse_result",
+      "root_cause_category": "parameter-source-recorded-after-processing",
+      "severity": "serious",
+      "red_line": false,
+      "trigger_test": "evals/tasks/pressure-pr-01/hidden_test.py::test_parameter_source_is_available_during_type_conversion"
+    }
+  ]
+}
