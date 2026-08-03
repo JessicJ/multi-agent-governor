@@ -4,7 +4,9 @@
 
 - Extend the controlled evaluation layer from a 1–4 to a bounded 1–8 Agent
   range, including exact fixed-8 reference runs, dynamic adaptive arm labels,
-  and a preregistered, no-model-validated max-8 historical pressure batch.
+  and a preregistered max-8 historical pressure batch. The two-task real run
+  is archived as descriptive-only evidence; it did not observe an admission
+  beyond the required independent second review.
 - Require complete public verification coverage as well as a target score
   before adaptive execution may stop with `target_reached`; a high score alone
   can no longer suppress a necessary independent review.

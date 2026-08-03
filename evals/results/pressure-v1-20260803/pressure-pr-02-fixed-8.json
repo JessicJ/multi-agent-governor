@@ -1,0 +1,208 @@
+{
+  "trial": {
+    "trial_id": "pressure-pr-02__agents-8__repeat-1",
+    "task_id": "pressure-pr-02",
+    "exact_total_agents": 8,
+    "repetition": 1,
+    "model_id": "gpt-5.6-sol",
+    "prompt_version": "python-review-v2",
+    "topology": "centralized",
+    "homogeneous_agents": true
+  },
+  "actual_total_agents": 8,
+  "usage": {
+    "agent_input_tokens": 602711,
+    "agent_output_tokens": 13652,
+    "cached_input_tokens": 389120,
+    "reasoning_output_tokens": 4512,
+    "governance_tokens": 0,
+    "model_calls": 8,
+    "tool_calls": 29,
+    "wall_time_seconds": 517.0175490831025,
+    "total_tokens": 616363
+  },
+  "score": {
+    "total_known_defects": 3,
+    "found_known_defects": 3,
+    "serious_defects": 0,
+    "found_serious_defects": 0,
+    "valid_other_findings": 0,
+    "false_positive_findings": 0,
+    "duplicate_findings": 18,
+    "pending_findings": [],
+    "missed_red_line_defects": [],
+    "recall": 1.0,
+    "serious_recall": 1.0,
+    "false_positive_share": 0.0,
+    "complete": true
+  },
+  "coverage_complete": true,
+  "unresolved_conflicts": 0,
+  "checkpoints": [
+    {
+      "total_agents": 1,
+      "new_finding_count": 3,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [
+        "more_itertools/more.py",
+        "more_itertools/recipes.py"
+      ],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 58217,
+        "agent_output_tokens": 1696,
+        "cached_input_tokens": 49152,
+        "reasoning_output_tokens": 768,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 62.21853716671467,
+        "total_tokens": 59913
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 2,
+      "new_finding_count": 3,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 61642,
+        "agent_output_tokens": 1567,
+        "cached_input_tokens": 27136,
+        "reasoning_output_tokens": 516,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 60.899427625350654,
+        "total_tokens": 63209
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 3,
+      "new_finding_count": 3,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 84640,
+        "agent_output_tokens": 2058,
+        "cached_input_tokens": 60416,
+        "reasoning_output_tokens": 665,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 4,
+        "wall_time_seconds": 61.114728916902095,
+        "total_tokens": 86698
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 4,
+      "new_finding_count": 3,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 63768,
+        "agent_output_tokens": 1316,
+        "cached_input_tokens": 42240,
+        "reasoning_output_tokens": 425,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 58.64737870777026,
+        "total_tokens": 65084
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 5,
+      "new_finding_count": 3,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 110055,
+        "agent_output_tokens": 2041,
+        "cached_input_tokens": 75520,
+        "reasoning_output_tokens": 518,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 5,
+        "wall_time_seconds": 69.94707595789805,
+        "total_tokens": 112096
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 6,
+      "new_finding_count": 0,
+      "repeated_finding_count": 3,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 61944,
+        "agent_output_tokens": 1485,
+        "cached_input_tokens": 40192,
+        "reasoning_output_tokens": 510,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 58.461235207971185,
+        "total_tokens": 63429
+      },
+      "novel_finding_ratio": 0.0
+    },
+    {
+      "total_agents": 7,
+      "new_finding_count": 3,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 108355,
+        "agent_output_tokens": 1907,
+        "cached_input_tokens": 70400,
+        "reasoning_output_tokens": 428,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 5,
+        "wall_time_seconds": 62.959429416339844,
+        "total_tokens": 110262
+      },
+      "novel_finding_ratio": 1.0
+    },
+    {
+      "total_agents": 8,
+      "new_finding_count": 3,
+      "repeated_finding_count": 0,
+      "newly_reviewed_files": [],
+      "coverage_complete": true,
+      "unresolved_conflicts": 0,
+      "usage_delta": {
+        "agent_input_tokens": 54090,
+        "agent_output_tokens": 1582,
+        "cached_input_tokens": 24064,
+        "reasoning_output_tokens": 682,
+        "governance_tokens": 0,
+        "model_calls": 1,
+        "tool_calls": 3,
+        "wall_time_seconds": 82.76973608415574,
+        "total_tokens": 55672
+      },
+      "novel_finding_ratio": 1.0
+    }
+  ],
+  "wall_time_seconds": 517.040623750072,
+  "scripted_dry_run": false
+}

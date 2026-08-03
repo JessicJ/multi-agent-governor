@@ -1,0 +1,22 @@
+{
+  "adjudications": [
+    {
+      "finding_id": "pressure-pr-01__agents-8__repeat-1-runtime-assigned-reviewer-1",
+      "verdict": "matched",
+      "defect_id": "D-CLICK-3458-PROCESSING-SOURCE",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    },
+    {
+      "finding_id": "pressure-pr-01__agents-8__repeat-1-runtime-assigned-reviewer-1__occurrence-2",
+      "verdict": "matched",
+      "defect_id": "D-CLICK-3458-PROCESSING-SOURCE",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    },
+    {
+      "finding_id": "pressure-pr-01__agents-8__repeat-1-runtime-assigned-reviewer-001",
+      "verdict": "matched",
+      "defect_id": "D-CLICK-3458-PROCESSING-SOURCE",
+      "note": "Post-run isolated semantic adjudication: the finding describes the registered historical defect; this is not an independent blind review."
+    }
+  ]
+}

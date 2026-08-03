@@ -1,0 +1,35 @@
+{
+  "status": "descriptive_only",
+  "claim_allowed": false,
+  "engineering_result": "inconclusive",
+  "evaluation_mode": "real",
+  "real_experiment": true,
+  "trials": 2,
+  "complete_scores": 2,
+  "mean_actual_agents": 2.0,
+  "actual_agent_distribution": {
+    "2": 2
+  },
+  "scale_observation": {
+    "configured_max_agents": 8,
+    "highest_observed_agents": 2,
+    "trials_reaching_three_or_more_agents": 0,
+    "post_independent_review_admissions": 0,
+    "contains_post_independent_review_observation": false,
+    "limitation": "No trial admitted an Agent beyond the required independent review; this batch cannot calibrate third-or-later-Agent decisions."
+  },
+  "stop_reasons": {
+    "target_reached": 2
+  },
+  "mean_serious_recall": 1.0,
+  "total_recall": 1.0,
+  "recall_aggregation": "micro_over_registered_defects",
+  "mean_false_positive_share": 0.0,
+  "mean_total_tokens": 189169.0,
+  "mean_agent_cumulative_time_seconds": 127.112,
+  "mean_wall_time_seconds": 127.122,
+  "coverage_complete_rate": 1.0,
+  "red_line_miss_trials": 0,
+  "incomplete_runtime_trials": 0,
+  "cap_censored_trials": 0
+}
