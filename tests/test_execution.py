@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from collections import deque
+from dataclasses import replace
 from pathlib import Path
 
 from magov import (
@@ -148,6 +149,24 @@ class AdaptiveControllerTests(unittest.TestCase):
             [event.sequence for event in sink.events],
             list(range(1, len(sink.events) + 1)),
         )
+        with self.assertRaisesRegex(
+            ValueError, "completed report requires public"
+        ):
+            replace(
+                report,
+                verification=replace(
+                    report.verification, coverage_complete=False
+                ),
+            )
+        with self.assertRaisesRegex(
+            ValueError, "completed report cannot retain"
+        ):
+            replace(
+                report,
+                verification=replace(
+                    report.verification, unresolved_conflicts=1
+                ),
+            )
 
     def test_pilot_v2_requires_independent_changed_file_review(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

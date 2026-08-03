@@ -573,6 +573,14 @@ class ExecutionReport:
             raise ValueError(
                 "budget-, cap-, and failure-limited reports must be incomplete"
             )
+        if self.status == "completed" and not self.verification.coverage_complete:
+            raise ValueError(
+                "a completed report requires public verification coverage"
+            )
+        if self.status == "completed" and self.verification.unresolved_conflicts:
+            raise ValueError(
+                "a completed report cannot retain unresolved conflicts"
+            )
 
     def to_dict(self, *, include_agent_output: bool = False) -> dict[str, Any]:
         return {
